@@ -15,9 +15,16 @@ class MainScreenViewmodel(
 
     fun onAction(action: MainScreenAction) {
         when (action) {
-            is MainScreenAction.onsearchtermChange -> {
+            is MainScreenAction.OnSearchtermChange -> {
                 state = state.copy(
                     searchterm = action.newsearchTerm
+                )
+            }
+
+            is MainScreenAction.OnZoom -> {
+                state = state.copy(
+                    offset = action.offset,
+                    scale = action.scale
                 )
             }
         }
