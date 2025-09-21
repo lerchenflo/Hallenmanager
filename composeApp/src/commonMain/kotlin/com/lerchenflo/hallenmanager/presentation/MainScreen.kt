@@ -1,20 +1,35 @@
 package com.lerchenflo.hallenmanager.presentation
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,17 +37,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PointMode
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
+import com.lerchenflo.hallenmanager.data.Item
+import com.lerchenflo.hallenmanager.domain.Line
+import com.lerchenflo.hallenmanager.domain.snapToGrid
 import hallenmanager.composeapp.generated.resources.Res
+import hallenmanager.composeapp.generated.resources.add_item_titletext
+import hallenmanager.composeapp.generated.resources.desc
+import hallenmanager.composeapp.generated.resources.name
 import hallenmanager.composeapp.generated.resources.searchbarhint
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.exp
 
 @Composable
 fun MainScreenRoot(
@@ -46,11 +72,127 @@ fun MainScreenRoot(
 
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     state: MainScreenState,
     onAction: (MainScreenAction) -> Unit
 ) {
+
+    if (state.infopopupshown) {
+
+        var title by remember { mutableStateOf("") }
+        var description by remember { mutableStateOf("") }
+
+
+        val layers = listOf("Layer 1", "Layer 2", "Layer 3")
+        var selectedLayer by remember { mutableStateOf(layers.first()) }
+        var expanded by remember { mutableStateOf(false) }
+
+
+        AlertDialog(
+            title = {
+                Text(text = "Info")
+            },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(Res.string.add_item_titletext),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Input field
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text(stringResource(Res.string.name)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text(stringResource(Res.string.desc)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+
+                    // Layer dropdown (ExposedDropdownMenu)
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+
+                        Box{
+                            TextButton(
+                                onClick = { expanded = true },
+                            ){
+                                Text(
+                                    text = selectedLayer
+                                )
+                            }
+
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                            ){
+                                layers.forEach { layer ->
+                                    DropdownMenuItem(
+                                        text = { Text(layer) },
+                                        onClick = {
+                                            selectedLayer = layer
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+
+
+                    onAction(MainScreenAction.OnInfoDialogSave(
+                        Item(
+                            title = title,
+                            description = description,
+                            layer = selectedLayer,
+                            cornerPoints = state.currentDrawingOffsets
+                        )
+                    ))
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    onAction(MainScreenAction.OnInfoDialogDismiss)
+                }) {
+                    Text("Cancel")
+                }
+            },
+            onDismissRequest = {
+                onAction(MainScreenAction.OnInfoDialogDismiss)
+            }
+
+        )
+    }
+
+
+
 
     Column(
         modifier = Modifier
@@ -82,6 +224,10 @@ fun MainScreen(
                 )
             )
 
+            Switch(
+                checked = state.isDrawing,
+                onCheckedChange = { onAction(MainScreenAction.OnSliderToggle(it)) },
+            )
             //TODO: Layer dropdown
         }
 
@@ -89,26 +235,32 @@ fun MainScreen(
         //Body main canvas
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .size(2000.dp)
                 .weight(1f)
+                .clipToBounds()
+
         ){
 
             var localScale by remember { mutableStateOf(state.scale) }
             var localOffset by remember { mutableStateOf(state.offset) }
 
-            LaunchedEffect(state.scale, state.offset) {
-                localScale = state.scale
-                localOffset = state.offset
-            }
+
+
+
+
 
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    // Transform gestures (pinch/drag) first so multi-touch is handled well
+
                     .pointerInput(Unit) {
                         detectTransformGestures { centroid, pan, zoom, rotation ->
+
+                            /*
                             val oldScale = localScale
                             val newScale = (oldScale * zoom).coerceIn(0.5f, 8f)
+
+                            //println("Newscale: $newScale")
                             val scaleChangeFactor = newScale / oldScale
 
                             // Keep point under centroid stable and add pan (in screen px)
@@ -117,12 +269,15 @@ fun MainScreen(
                                 y = centroid.y - scaleChangeFactor * (centroid.y - localOffset.y) + pan.y
                             )
 
-                            localScale = newScale
-                            localOffset = newOffset
+                             */
+                            localOffset = localOffset + pan
 
-                            onAction(MainScreenAction.OnZoom(newScale, newOffset))
+                            onAction(MainScreenAction.OnZoom(1f, localOffset))
                         }
                     }
+
+
+                        /*
                     .graphicsLayer {
                         // Important: use top-left as transform origin so our math matches
                         transformOrigin = TransformOrigin(0f, 0f)
@@ -131,25 +286,35 @@ fun MainScreen(
                         scaleX = localScale
                         scaleY = localScale
                     }
+
+                         */
                     // Separate pointerInput for taps/longpress so they don't steal events from transform detector
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onTap = { raw -> println("tap at $raw") },
-                            onLongPress = { raw -> println("long at $raw") }
+                            onLongPress = { raw ->
+
+                                if (state.isDrawing){
+                                    val contentPoint = (raw - localOffset) / state.scale
+
+                                    val snapped = snapToGrid(contentPoint, state.gridspacing)
+
+                                    onAction(MainScreenAction.OnAddPoint(snapped))
+                                }
+                            }
                         )
                     }
+
             ) {
+
                 withTransform({
                     // apply the *local* transform (not VM-state, so it reflects current gestures)
-                    translate(left = localOffset.x, top = localOffset.y)
-                    scale(localScale, localScale)
+                    translate(left = state.offset.x, top = state.offset.y)
+                    scale(state.scale, state.scale)
                 }) {
-                    // Background + grid (example)
                     drawRect(Color.Gray)
 
-                    val spacingPx = 40f
-
-                    println("Line spacing: ${size.width / localScale} height ${size.height}")
+                    //Grid
                     var x = 0f
                     while (x <= size.width) {
                         drawLine(
@@ -158,7 +323,7 @@ fun MainScreen(
                             end = Offset(x, size.height),
                             strokeWidth = 1f / localScale
                         )
-                        x += spacingPx
+                        x += state.gridspacing
                     }
                     var y = 0f
                     while (y <= size.height) {
@@ -168,8 +333,32 @@ fun MainScreen(
                             end = Offset(size.width, y),
                             strokeWidth = 1f / localScale
                         )
-                        y += spacingPx
+                        y += state.gridspacing
                     }
+
+
+                    //Lines
+                    val points = state.currentDrawingOffsets
+                    if (points.size >= 2) {
+                        for (i in 0 until points.lastIndex) {
+                            drawLine(
+                                color = Color.Black,
+                                start = points[i],
+                                end = points[i + 1],
+                                strokeWidth = 20f,
+                                cap = StrokeCap.Round
+                            )
+                        }
+                    }
+
+                    //Points
+                    drawPoints(
+                        points,
+                        color = Color.Red,
+                        strokeWidth = 30f,
+                        pointMode = PointMode.Points
+
+                    )
                 }
             }
 

@@ -2,5 +2,10 @@
 <resources>
     <string name="app_name">Hallenmanager</string>
     <string name="searchbarhint">Search item</string>
+    <string name="add_item_titletext">Configure this new item</string>
+    <string name="name">Name</string>
+    <string name="desc">Description</string>
+
+
 
 </resources>
