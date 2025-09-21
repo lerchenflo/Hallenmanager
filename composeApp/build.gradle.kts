@@ -8,6 +8,10 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.room)
+    alias(libs.plugins.ksp)
+
+
 }
 
 kotlin {
@@ -64,6 +68,12 @@ kotlin {
             implementation(libs.koin.compose.viewmodel.navigation)
             api(libs.koin.annotations)
 
+            //Database
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
+
+
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -116,4 +126,20 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+
+room{
+    schemaDirectory("$projectDir/schemas")
+}
+
+dependencies{
+    //add("kspCommonMainMetadata", libs.koin.ksp.compiler)
+    ksp(libs.room.compiler)
+    debugImplementation(compose.uiTooling)
+}
+
+ksp {
+    arg("KOIN_USE_COMPOSE_VIEWMODEL","true")
+    arg("KOIN_CONFIG_CHECK","true")
 }

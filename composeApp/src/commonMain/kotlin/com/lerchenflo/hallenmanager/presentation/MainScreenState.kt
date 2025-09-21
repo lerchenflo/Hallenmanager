@@ -1,8 +1,8 @@
 package com.lerchenflo.hallenmanager.presentation
 
 import androidx.compose.ui.geometry.Offset
-import com.lerchenflo.hallenmanager.data.Area
-import com.lerchenflo.hallenmanager.data.Item
+import com.lerchenflo.hallenmanager.domain.Area
+import com.lerchenflo.hallenmanager.domain.Item
 import kotlin.collections.emptyList
 
 data class MainScreenState(
@@ -14,7 +14,8 @@ data class MainScreenState(
     val currentDrawingOffsets: List<Offset> = emptyList(),
     val infopopupshown : Boolean = false,
     val currentArea: Area = Area(
-        name = "Area 1",
+        id = 1L,
+        name = "Area1",
         description = "",
         items = emptyList()
     )

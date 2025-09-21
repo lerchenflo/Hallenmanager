@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,14 +41,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.Typeface
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.lerchenflo.hallenmanager.data.Item
+import androidx.compose.ui.unit.sp
+import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.Line
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import hallenmanager.composeapp.generated.resources.Res
@@ -59,6 +70,7 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.exp
+import kotlin.math.roundToInt
 
 @Composable
 fun MainScreenRoot(
@@ -289,7 +301,7 @@ fun MainScreen(
 
                          */
                     // Separate pointerInput for taps/longpress so they don't steal events from transform detector
-                    .pointerInput(Unit) {
+                    .pointerInput(state.isDrawing) {
                         detectTapGestures(
                             onTap = { raw -> println("tap at $raw") },
                             onLongPress = { raw ->
@@ -337,7 +349,7 @@ fun MainScreen(
                     }
 
 
-                    //Lines
+                    //Current drawing lines
                     val points = state.currentDrawingOffsets
                     if (points.size >= 2) {
                         for (i in 0 until points.lastIndex) {
@@ -350,8 +362,7 @@ fun MainScreen(
                             )
                         }
                     }
-
-                    //Points
+                    //Current drawing corner points
                     drawPoints(
                         points,
                         color = Color.Red,
@@ -359,6 +370,39 @@ fun MainScreen(
                         pointMode = PointMode.Points
 
                     )
+
+
+                    //Draw items in this area
+                    state.currentArea.items.forEach { item ->
+                        println("Item print: ${item.id} ${item.cornerPoints.size}")
+
+                        if (item.cornerPoints.size > 2){
+                            val path = Path().apply {
+                                fillType = PathFillType.NonZero // or EvenOdd depending on desired winding
+                                moveTo(item.cornerPoints[0].x, item.cornerPoints[0].y)
+                                for (i in 1 until item.cornerPoints.size) {
+                                    lineTo(item.cornerPoints[i].x, item.cornerPoints[i].y)
+                                }
+                                close() // close the polygon
+                            }
+
+                            // fill the polygon (semi-transparent so you still see underlying grid)
+                            drawPath(
+                                path = path,
+                                color = Color(0xFF90CAF9).copy(alpha = 0.5f), // pick color & alpha you like
+                                style = Fill
+                            )
+
+                            // optional: stroke the outline on top
+                            drawPath(
+                                path = path,
+                                color = Color.Black,
+                                style = Stroke(width = 6f, cap = StrokeCap.Round)
+                            )
+                        }
+
+
+                    }
                 }
             }
 
