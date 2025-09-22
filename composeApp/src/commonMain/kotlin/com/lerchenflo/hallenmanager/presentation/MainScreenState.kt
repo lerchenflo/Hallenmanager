@@ -3,31 +3,33 @@ package com.lerchenflo.hallenmanager.presentation
 import androidx.compose.ui.geometry.Offset
 import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
+import com.lerchenflo.hallenmanager.domain.Layer
 import kotlin.collections.emptyList
 
 data class MainScreenState(
     val searchterm: String = "",
-    val scale: Float = 1f,
-    val offset: Offset = Offset.Zero,
     val gridspacing: Float = 100f,
     val isDrawing: Boolean = false,
     val currentDrawingOffsets: List<Offset> = emptyList(),
-    val infopopupshown : Boolean = false,
-    val currentArea: Area = Area(
-        id = 1L,
-        name = "Area1",
-        description = "",
-        items = emptyList()
-    )
+    val iteminfopopupshown : Boolean = false,
+    val areainfopopupshown : Boolean = false,
+
+    val availableAreaNames : List<String> = emptyList<String>(),
+    val currentArea: Area? = null,
+    val availableLayers: List<Layer> = emptyList<Layer>()
 ) {
 }
 
 
 sealed interface MainScreenAction{
     data class OnSearchtermChange(val newsearchTerm: String) : MainScreenAction
-    data class OnZoom(val scale: Float, val offset: Offset) : MainScreenAction
     data class OnSliderToggle(val newvalue: Boolean) : MainScreenAction
+    data class OnSelectArea(val areaname: String) : MainScreenAction
     data class OnAddPoint(val offset: Offset) : MainScreenAction
     data object OnInfoDialogDismiss : MainScreenAction
     data class OnInfoDialogSave(val item: Item) : MainScreenAction
+    data class OnAreaDialogSave(val area: Area) : MainScreenAction
+    data object OnCreateAreaStart: MainScreenAction
+    data object OnAreaDialogDismiss : MainScreenAction
+
 }

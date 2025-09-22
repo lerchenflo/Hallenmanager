@@ -58,11 +58,13 @@ import androidx.compose.ui.text.font.Typeface
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.Line
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_item_titletext
+import hallenmanager.composeapp.generated.resources.area_not_created
 import hallenmanager.composeapp.generated.resources.desc
 import hallenmanager.composeapp.generated.resources.name
 import hallenmanager.composeapp.generated.resources.searchbarhint
@@ -91,115 +93,21 @@ fun MainScreen(
     onAction: (MainScreenAction) -> Unit
 ) {
 
-    if (state.infopopupshown) {
-
-        var title by remember { mutableStateOf("") }
-        var description by remember { mutableStateOf("") }
+    var localScale by remember { mutableStateOf(1f) }
+    var localOffset by remember { mutableStateOf(Offset.Zero) }
 
 
-        val layers = listOf("Layer 1", "Layer 2", "Layer 3")
-        var selectedLayer by remember { mutableStateOf(layers.first()) }
-        var expanded by remember { mutableStateOf(false) }
+    if (state.iteminfopopupshown) {
+        CreateItemPopup(
+            onAction = onAction,
+            state = state
+        )
+    }
 
-
-        AlertDialog(
-            title = {
-                Text(text = "Info")
-            },
-            text = {
-                Column {
-                    Text(
-                        text = stringResource(Res.string.add_item_titletext),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Input field
-                    OutlinedTextField(
-                        value = title,
-                        onValueChange = { title = it },
-                        label = { Text(stringResource(Res.string.name)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text(stringResource(Res.string.desc)) },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-
-                    // Layer dropdown (ExposedDropdownMenu)
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
-                    ) {
-
-                        Box{
-                            TextButton(
-                                onClick = { expanded = true },
-                            ){
-                                Text(
-                                    text = selectedLayer
-                                )
-                            }
-
-
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                            ){
-                                layers.forEach { layer ->
-                                    DropdownMenuItem(
-                                        text = { Text(layer) },
-                                        onClick = {
-                                            selectedLayer = layer
-                                            expanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-
-
-                    onAction(MainScreenAction.OnInfoDialogSave(
-                        Item(
-                            title = title,
-                            description = description,
-                            layer = selectedLayer,
-                            cornerPoints = state.currentDrawingOffsets
-                        )
-                    ))
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    onAction(MainScreenAction.OnInfoDialogDismiss)
-                }) {
-                    Text("Cancel")
-                }
-            },
-            onDismissRequest = {
-                onAction(MainScreenAction.OnInfoDialogDismiss)
-            }
-
+    if (state.areainfopopupshown) {
+        CreateAreaPopup(
+            onAction = onAction,
+            state = state
         )
     }
 
@@ -236,57 +144,85 @@ fun MainScreen(
                 )
             )
 
+
             Switch(
                 checked = state.isDrawing,
                 onCheckedChange = { onAction(MainScreenAction.OnSliderToggle(it)) },
             )
-            //TODO: Layer dropdown
+
+
+            var areadropdownexpanded by remember { mutableStateOf(false) }
+            Box{
+                TextButton(
+                    onClick = { areadropdownexpanded = true },
+                ){
+                    Text(
+                        text = state.currentArea?.name ?: stringResource(Res.string.area_not_created)
+                    )
+                }
+
+
+                DropdownMenu(
+                    expanded = areadropdownexpanded,
+                    onDismissRequest = { areadropdownexpanded = false },
+                ){
+                    state.availableAreaNames.forEach { areaname ->
+
+                        println(areaname)
+                        if (areaname != state.currentArea?.name){ //Exclude currently selected area
+
+                            DropdownMenuItem(
+                                text = { Text(areaname) },
+                                onClick = {
+                                    onAction(MainScreenAction.OnSelectArea(areaname))
+                                    areadropdownexpanded = false
+                                }
+                            )
+                        }
+
+
+                    }
+
+                }
+            }
         }
 
-
         //Body main canvas
-        Box(
-            modifier = Modifier
-                .size(2000.dp)
-                .weight(1f)
-                .clipToBounds()
-
-        ){
-
-            var localScale by remember { mutableStateOf(state.scale) }
-            var localOffset by remember { mutableStateOf(state.offset) }
-
-
-
-
-
-
-            Canvas(
+        if (state.currentArea != null){ //Allow painting only if an area is selected
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .size(2000.dp)
+                    .weight(1f)
+                    .clipToBounds()
 
-                    .pointerInput(Unit) {
-                        detectTransformGestures { centroid, pan, zoom, rotation ->
+            ){
 
-                            /*
-                            val oldScale = localScale
-                            val newScale = (oldScale * zoom).coerceIn(0.5f, 8f)
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
 
-                            //println("Newscale: $newScale")
-                            val scaleChangeFactor = newScale / oldScale
+                        .pointerInput(Unit) {
+                            detectTransformGestures { centroid, pan, zoom, rotation ->
 
-                            // Keep point under centroid stable and add pan (in screen px)
-                            val newOffset = Offset(
-                                x = centroid.x - scaleChangeFactor * (centroid.x - localOffset.x) + pan.x,
-                                y = centroid.y - scaleChangeFactor * (centroid.y - localOffset.y) + pan.y
-                            )
+                                /*
+                                val oldScale = localScale
+                                val newScale = (oldScale * zoom).coerceIn(0.5f, 8f)
 
-                             */
-                            localOffset = localOffset + pan
+                                //println("Newscale: $newScale")
+                                val scaleChangeFactor = newScale / oldScale
 
-                            onAction(MainScreenAction.OnZoom(1f, localOffset))
+                                // Keep point under centroid stable and add pan (in screen px)
+                                val newOffset = Offset(
+                                    x = centroid.x - scaleChangeFactor * (centroid.x - localOffset.x) + pan.x,
+                                    y = centroid.y - scaleChangeFactor * (centroid.y - localOffset.y) + pan.y
+                                )
+
+                                 */
+                                localOffset = localOffset + pan
+
+                                //onAction(MainScreenAction.OnZoom(1f, localOffset))
+                            }
                         }
-                    }
 
 
                         /*
@@ -300,114 +236,123 @@ fun MainScreen(
                     }
 
                          */
-                    // Separate pointerInput for taps/longpress so they don't steal events from transform detector
-                    .pointerInput(state.isDrawing) {
-                        detectTapGestures(
-                            onTap = { raw -> println("tap at $raw") },
-                            onLongPress = { raw ->
+                        // Separate pointerInput for taps/longpress so they don't steal events from transform detector
+                        .pointerInput(state.isDrawing) {
+                            detectTapGestures(
+                                onTap = { raw -> println("tap at $raw") },
+                                onLongPress = { raw ->
 
-                                if (state.isDrawing){
-                                    val contentPoint = (raw - localOffset) / state.scale
+                                    if (state.isDrawing){
+                                        val contentPoint = (raw - localOffset) / localScale
 
-                                    val snapped = snapToGrid(contentPoint, state.gridspacing)
+                                        val snapped = snapToGrid(contentPoint, state.gridspacing)
 
-                                    onAction(MainScreenAction.OnAddPoint(snapped))
+                                        onAction(MainScreenAction.OnAddPoint(snapped))
+                                    }
                                 }
-                            }
-                        )
-                    }
+                            )
+                        }
 
-            ) {
+                ) {
 
-                withTransform({
-                    // apply the *local* transform (not VM-state, so it reflects current gestures)
-                    translate(left = state.offset.x, top = state.offset.y)
-                    scale(state.scale, state.scale)
-                }) {
-                    drawRect(Color.Gray)
+                    withTransform({
+                        // apply the *local* transform (not VM-state, so it reflects current gestures)
+                        translate(left = localOffset.x, top = localOffset.y)
+                        scale(localScale, localScale)
+                    }) {
+                        drawRect(Color.Gray)
 
-                    //Grid
-                    var x = 0f
-                    while (x <= size.width) {
-                        drawLine(
-                            color = Color.Red,
-                            start = Offset(x, 0f),
-                            end = Offset(x, size.height),
-                            strokeWidth = 1f / localScale
-                        )
-                        x += state.gridspacing
-                    }
-                    var y = 0f
-                    while (y <= size.height) {
-                        drawLine(
-                            color = Color.Red,
-                            start = Offset(0f, y),
-                            end = Offset(size.width, y),
-                            strokeWidth = 1f / localScale
-                        )
-                        y += state.gridspacing
-                    }
-
-
-                    //Current drawing lines
-                    val points = state.currentDrawingOffsets
-                    if (points.size >= 2) {
-                        for (i in 0 until points.lastIndex) {
+                        //Grid
+                        var x = 0f
+                        while (x <= size.width) {
                             drawLine(
-                                color = Color.Black,
-                                start = points[i],
-                                end = points[i + 1],
-                                strokeWidth = 20f,
-                                cap = StrokeCap.Round
+                                color = Color.Red,
+                                start = Offset(x, 0f),
+                                end = Offset(x, size.height),
+                                strokeWidth = 1f / localScale
                             )
+                            x += state.gridspacing
                         }
-                    }
-                    //Current drawing corner points
-                    drawPoints(
-                        points,
-                        color = Color.Red,
-                        strokeWidth = 30f,
-                        pointMode = PointMode.Points
+                        var y = 0f
+                        while (y <= size.height) {
+                            drawLine(
+                                color = Color.Red,
+                                start = Offset(0f, y),
+                                end = Offset(size.width, y),
+                                strokeWidth = 1f / localScale
+                            )
+                            y += state.gridspacing
+                        }
 
-                    )
+
+                        //Current drawing lines
+                        val points = state.currentDrawingOffsets
+                        if (points.size >= 2) {
+                            for (i in 0 until points.lastIndex) {
+                                drawLine(
+                                    color = Color.Black,
+                                    start = points[i],
+                                    end = points[i + 1],
+                                    strokeWidth = 20f,
+                                    cap = StrokeCap.Round
+                                )
+                            }
+                        }
+                        //Current drawing corner points
+                        drawPoints(
+                            points,
+                            color = Color.Red,
+                            strokeWidth = 30f,
+                            pointMode = PointMode.Points
+
+                        )
 
 
-                    //Draw items in this area
-                    state.currentArea.items.forEach { item ->
-                        println("Item print: ${item.id} ${item.cornerPoints.size}")
+                        //TODO: Replace with composable on top of canvas
+                        //Draw items in this area
+                        state.currentArea?.items?.forEach { item ->
+                            println("Item print: ${item.id} ${item.cornerPoints.size}")
 
-                        if (item.cornerPoints.size > 2){
-                            val path = Path().apply {
-                                fillType = PathFillType.NonZero // or EvenOdd depending on desired winding
-                                moveTo(item.cornerPoints[0].x, item.cornerPoints[0].y)
-                                for (i in 1 until item.cornerPoints.size) {
-                                    lineTo(item.cornerPoints[i].x, item.cornerPoints[i].y)
+                            if (item.cornerPoints.size > 2){
+                                val path = Path().apply {
+                                    fillType = PathFillType.NonZero // or EvenOdd depending on desired winding
+                                    moveTo(item.cornerPoints[0].x, item.cornerPoints[0].y)
+                                    for (i in 1 until item.cornerPoints.size) {
+                                        lineTo(item.cornerPoints[i].x, item.cornerPoints[i].y)
+                                    }
+                                    close() // close the polygon
                                 }
-                                close() // close the polygon
+
+                                // fill the polygon (semi-transparent so you still see underlying grid)
+                                drawPath(
+                                    path = path,
+                                    color = Color(0xFF90CAF9).copy(alpha = 0.5f), // pick color & alpha you like
+                                    style = Fill
+                                )
+
+                                // optional: stroke the outline on top
+                                drawPath(
+                                    path = path,
+                                    color = Color.Black,
+                                    style = Stroke(width = 6f, cap = StrokeCap.Round)
+                                )
                             }
 
-                            // fill the polygon (semi-transparent so you still see underlying grid)
-                            drawPath(
-                                path = path,
-                                color = Color(0xFF90CAF9).copy(alpha = 0.5f), // pick color & alpha you like
-                                style = Fill
-                            )
 
-                            // optional: stroke the outline on top
-                            drawPath(
-                                path = path,
-                                color = Color.Black,
-                                style = Stroke(width = 6f, cap = StrokeCap.Round)
-                            )
                         }
-
-
                     }
                 }
+
+
+
             }
-
-
-
+        }else{
+            //If no area is selected show add popup
+            CreateFirstAreaPopup(
+                onclick = {
+                    onAction(MainScreenAction.OnCreateAreaStart)
+                }
+            )
         }
 
 

@@ -15,7 +15,6 @@ data class Item(
     val layer: String,
     val lastchanged: String = Clock.System.now().toEpochMilliseconds().toString(),
     val created : String = Clock.System.now().toEpochMilliseconds().toString(),
-
     val cornerPoints: List<Offset>
 ) {
 

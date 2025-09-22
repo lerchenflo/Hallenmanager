@@ -22,3 +22,12 @@ fun Area.toAreaDto(): AreaWithItemsDto = AreaWithItemsDto(
         it.toItemDto(areaid = id)
     }
 )
+
+fun AreaWithItemsDto.toArea(): Area = Area(
+    id = area.id,
+    name = area.name,
+    description = area.description,
+    items = items.map {
+        it.toItem()
+    }
+)

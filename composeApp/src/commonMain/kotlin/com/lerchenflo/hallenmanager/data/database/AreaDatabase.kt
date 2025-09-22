@@ -7,11 +7,12 @@ import androidx.room.RoomDatabaseConstructor
 import com.lerchenflo.hallenmanager.data.AreaDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
+import com.lerchenflo.hallenmanager.data.LayerDto
 
 @Database(
-    entities = [AreaDto::class, ItemDto::class, CornerPointDto::class],
+    entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class],
     exportSchema = true,
-    version = 2
+    version = 3
 )
 
 

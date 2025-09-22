@@ -9,6 +9,7 @@ import com.lerchenflo.hallenmanager.data.AreaWithItemsDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
 import com.lerchenflo.hallenmanager.data.ItemWithCornersDto
+import com.lerchenflo.hallenmanager.domain.Area
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -42,6 +43,22 @@ interface AreaDao {
     @Query("SELECT COUNT(*) FROM areas")
     suspend fun getAreaCount(): Int
 
+    @Query("SELECT * FROM areas")
+    fun getAreas(): Flow<List<AreaWithItemsDto>>
+
+    @Query("SELECT * FROM areas WHERE id = :areaid")
+    fun getAreaByIdFlow(areaid: Long) : Flow<AreaWithItemsDto?>
+
+    @Query("SELECT * FROM areas WHERE id = :areaid")
+    fun getAreaById(areaid: Long) : AreaWithItemsDto?
+
+    @Query("SELECT * FROM areas WHERE name = :areaname")
+    suspend fun getAreaByName(areaname: String) : AreaWithItemsDto?
+
+    @Query("SELECT * FROM areas ORDER BY id ASC LIMIT 1")
+    suspend fun getFirstArea(): AreaWithItemsDto?
+
+
     @Transaction
     suspend fun createDefaultArea(){
         upsertAreaEntity(AreaDto(
@@ -57,9 +74,9 @@ interface AreaDao {
 
 
     @Transaction
-    suspend fun upsertAreaWithItems(areaWithItems: AreaWithItemsDto) {
+    suspend fun upsertAreaWithItems(areaWithItems: AreaWithItemsDto) : AreaWithItemsDto {
         // upsert area
-        upsertAreaEntity(areaWithItems.area)
+        val areaid = upsertAreaEntity(areaWithItems.area)
 
         // flatten items and their corner points
         val items = mutableListOf<ItemDto>()
@@ -72,5 +89,7 @@ interface AreaDao {
 
         if (items.isNotEmpty()) upsertItems(items)
         if (cornerPoints.isNotEmpty()) upsertCornerPoints(cornerPoints)
+
+        return getAreaById(areaid)!!
     }
 }
