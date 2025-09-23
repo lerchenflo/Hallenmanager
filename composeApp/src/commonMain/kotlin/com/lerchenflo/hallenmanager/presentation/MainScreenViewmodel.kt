@@ -39,7 +39,6 @@ class MainScreenViewmodel(
             loadDefaultArea()
 
 
-
             viewModelScope.launch {
                 _selectedAreaId
                     .filterNotNull()
@@ -51,9 +50,19 @@ class MainScreenViewmodel(
 
             viewModelScope.launch {
                 areaRepository.getAreas()
-                    .map { areas -> areas.map { it.name } }
-                    .collectLatest { names ->
-                        state = state.copy(availableAreaNames = names)
+                    .map { areas ->
+                        areas.map {
+                            AvailableArea(
+                                id = it.id,
+                                name = it.name,
+                                description = it.description
+                            )
+                        }
+                    }
+                    .collectLatest { availableareas ->
+                        state = state.copy(
+                            availableAreas = availableareas
+                        )
                     }
             }
         }
@@ -128,7 +137,7 @@ class MainScreenViewmodel(
 
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val area = areaRepository.getAreaByName(action.areaname)
+                        val area = areaRepository.getAreaById(action.areaid)
 
                         state = state.copy(
                             currentArea = area

@@ -13,18 +13,18 @@ data class MainScreenState(
     val currentDrawingOffsets: List<Offset> = emptyList(),
     val iteminfopopupshown : Boolean = false,
     val areainfopopupshown : Boolean = false,
-
-    val availableAreaNames : List<String> = emptyList<String>(),
+    val availableAreas : List<AvailableArea> = emptyList(),
     val currentArea: Area? = null,
     val availableLayers: List<Layer> = emptyList<Layer>()
-) {
-}
+)
+
+
 
 
 sealed interface MainScreenAction{
     data class OnSearchtermChange(val newsearchTerm: String) : MainScreenAction
     data class OnSliderToggle(val newvalue: Boolean) : MainScreenAction
-    data class OnSelectArea(val areaname: String) : MainScreenAction
+    data class OnSelectArea(val areaid: Long) : MainScreenAction
     data class OnAddPoint(val offset: Offset) : MainScreenAction
     data object OnInfoDialogDismiss : MainScreenAction
     data class OnInfoDialogSave(val item: Item) : MainScreenAction
@@ -33,3 +33,11 @@ sealed interface MainScreenAction{
     data object OnAreaDialogDismiss : MainScreenAction
 
 }
+
+
+
+data class AvailableArea(
+    val id: Long,
+    val name: String,
+    val description: String
+)

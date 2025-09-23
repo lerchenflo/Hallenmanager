@@ -39,8 +39,8 @@ class AreaRepository(
         }
     }
 
-    suspend fun getAreaByName(areaName: String) : Area? {
-        return database.areaDao().getAreaByName(areaName)?.toArea()
+    suspend fun getAreaById(areaId: Long) : Area? {
+        return database.areaDao().getAreaById(areaId)?.toArea()
     }
 
     suspend fun getFirstArea() : Area? {

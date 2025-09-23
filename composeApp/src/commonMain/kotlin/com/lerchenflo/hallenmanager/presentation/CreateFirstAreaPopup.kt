@@ -21,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import hallenmanager.composeapp.generated.resources.Res
+import hallenmanager.composeapp.generated.resources.create_first_area
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Preview(showBackground = true)
@@ -56,7 +59,7 @@ fun CreateFirstAreaPopup(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Add your first area!"
+                    text = stringResource(Res.string.create_first_area)
                 )
             }
         }

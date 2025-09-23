@@ -1,7 +1,6 @@
 package com.lerchenflo.hallenmanager.presentation
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
@@ -10,20 +9,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -32,47 +27,33 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.Typeface
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.lerchenflo.hallenmanager.domain.Area
-import com.lerchenflo.hallenmanager.domain.Item
-import com.lerchenflo.hallenmanager.domain.Line
+import androidx.room.util.TableInfo
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import hallenmanager.composeapp.generated.resources.Res
-import hallenmanager.composeapp.generated.resources.add_item_titletext
+import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.area_not_created
-import hallenmanager.composeapp.generated.resources.desc
-import hallenmanager.composeapp.generated.resources.name
 import hallenmanager.composeapp.generated.resources.searchbarhint
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.math.exp
-import kotlin.math.roundToInt
 
 @Composable
 fun MainScreenRoot(
@@ -120,75 +101,122 @@ fun MainScreen(
             .safeContentPadding()
     ){
 
-        //Titlerow
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
 
-            //Seach textfield
-            OutlinedTextField(
-                modifier = Modifier.weight(1f),
-                value = state.searchterm,
-                maxLines = 1,
-                onValueChange = { onAction(MainScreenAction.OnSearchtermChange(it)) }, //In da datenbank gits a suchfeature
-                placeholder = { Text(stringResource(Res.string.searchbarhint)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
+        if (state.currentArea != null){ //Allow painting only if an area is selected
+
+
+            //Titlerow
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+
+                //Seach textfield
+                OutlinedTextField(
+                    modifier = Modifier.weight(1f),
+                    value = state.searchterm,
+                    maxLines = 1,
+                    onValueChange = { onAction(MainScreenAction.OnSearchtermChange(it)) }, //In da datenbank gits a suchfeature
+                    placeholder = { Text(stringResource(Res.string.searchbarhint)) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search"
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.Transparent
                     )
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent
                 )
-            )
 
 
-            Switch(
-                checked = state.isDrawing,
-                onCheckedChange = { onAction(MainScreenAction.OnSliderToggle(it)) },
-            )
+                Switch(
+                    checked = state.isDrawing,
+                    onCheckedChange = { onAction(MainScreenAction.OnSliderToggle(it)) },
+                )
 
 
-            var areadropdownexpanded by remember { mutableStateOf(false) }
-            Box{
-                TextButton(
-                    onClick = { areadropdownexpanded = true },
-                ){
-                    Text(
-                        text = state.currentArea?.name ?: stringResource(Res.string.area_not_created)
-                    )
-                }
+                var areadropdownexpanded by remember { mutableStateOf(false) }
+                Box{
+                    TextButton(
+                        onClick = { areadropdownexpanded = true },
+                    ){
+                        Text(
+                            text = state.currentArea.name
+                        )
+                    }
 
 
-                DropdownMenu(
-                    expanded = areadropdownexpanded,
-                    onDismissRequest = { areadropdownexpanded = false },
-                ){
-                    state.availableAreaNames.forEach { areaname ->
-
-                        println(areaname)
-                        if (areaname != state.currentArea?.name){ //Exclude currently selected area
+                    DropdownMenu(
+                        expanded = areadropdownexpanded,
+                        onDismissRequest = { areadropdownexpanded = false },
+                    ){
+                        state.availableAreas.forEach { availablearea ->
 
                             DropdownMenuItem(
-                                text = { Text(areaname) },
+                                text = {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CropPortrait,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Column {
+                                            Text(
+                                                text = availablearea.name,
+                                                maxLines = 1
+                                            )
+
+                                            Text(
+                                                text = availablearea.description,
+                                                maxLines = 1,
+                                                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                    }
+                                },
                                 onClick = {
-                                    onAction(MainScreenAction.OnSelectArea(areaname))
+                                    onAction(MainScreenAction.OnSelectArea(availablearea.id))
                                     areadropdownexpanded = false
                                 }
                             )
                         }
 
+                        //Add button
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = stringResource(Res.string.add_area)
+                                    )
+                                }
+                            },
+                            onClick = {
+                                areadropdownexpanded = false
+                                onAction(MainScreenAction.OnCreateAreaStart)
+                            }
+                        )
 
                     }
-
                 }
             }
-        }
 
-        //Body main canvas
-        if (state.currentArea != null){ //Allow painting only if an area is selected
+
             Box(
                 modifier = Modifier
                     .size(2000.dp)
