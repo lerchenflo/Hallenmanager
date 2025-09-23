@@ -12,7 +12,7 @@ import com.lerchenflo.hallenmanager.data.LayerDto
 @Database(
     entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class],
     exportSchema = true,
-    version = 3
+    version = 4
 )
 
 

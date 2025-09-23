@@ -3,7 +3,8 @@ package com.lerchenflo.hallenmanager.domain
 import androidx.compose.ui.geometry.Offset
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
-import com.lerchenflo.hallenmanager.data.ItemWithCornersDto
+import com.lerchenflo.hallenmanager.data.ItemWithListsDto
+import com.lerchenflo.hallenmanager.data.LayerDto
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -12,7 +13,7 @@ data class Item(
     val id: Long = 0L,
     val title: String,
     val description: String,
-    val layer: String,
+    val layer: List<Layer>,
     val lastchanged: String = Clock.System.now().toEpochMilliseconds().toString(),
     val created : String = Clock.System.now().toEpochMilliseconds().toString(),
     val cornerPoints: List<Offset>
@@ -31,13 +32,12 @@ data class Item(
     }
 }
 
-fun Item.toItemDto(areaid: Long): ItemWithCornersDto = ItemWithCornersDto(
+fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
     item = ItemDto(
         id = id,
         title = title,
         areaId = areaid,
         description = description,
-        layer = layer,
         lastChanged = lastchanged,
         created = created
     ),
@@ -47,14 +47,19 @@ fun Item.toItemDto(areaid: Long): ItemWithCornersDto = ItemWithCornersDto(
             offsetX = it.x,
             offsetY = it.y
         )
+    },
+    layers = layer.map {
+        it.toLayerDto()
     }
 )
 
-fun ItemWithCornersDto.toItem(): Item = Item(
+fun ItemWithListsDto.toItem(): Item = Item(
     id = item.id,
     title = item.title,
     description = item.description,
-    layer = item.layer,
+    layer = layers.map {
+        it.toLayer()
+    },
     lastchanged = item.lastChanged,
     created = item.created,
     cornerPoints = cornerPoints.map {

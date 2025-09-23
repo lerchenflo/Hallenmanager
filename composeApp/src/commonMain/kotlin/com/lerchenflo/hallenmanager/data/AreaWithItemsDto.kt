@@ -1,7 +1,6 @@
 package com.lerchenflo.hallenmanager.data
 
 import androidx.room.Embedded
-import androidx.room.Entity
 import androidx.room.Relation
 import kotlinx.serialization.Serializable
 
@@ -13,5 +12,5 @@ data class AreaWithItemsDto(
         entityColumn = "areaId",
         entity = ItemDto::class
     )
-    val items: List<ItemWithCornersDto> // nested relation: Room supports nested @Relation POJOs
+    val items: List<ItemWithListsDto> // nested relation: Room supports nested @Relation POJOs
 )

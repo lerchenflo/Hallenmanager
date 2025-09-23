@@ -2,12 +2,18 @@ package com.lerchenflo.hallenmanager.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -17,13 +23,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.Item
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_item_titletext
 import hallenmanager.composeapp.generated.resources.desc
+import hallenmanager.composeapp.generated.resources.done
 import hallenmanager.composeapp.generated.resources.iteminfo
+import hallenmanager.composeapp.generated.resources.layers
 import hallenmanager.composeapp.generated.resources.name
 import org.jetbrains.compose.resources.stringResource
 
@@ -35,7 +44,7 @@ fun CreateItemPopup(
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
 
-    var selectedLayer by remember { mutableStateOf(state.availableLayers.first()) } //TODO: Mehrere layer glichzittig uswähla
+    var selectedLayer by remember { mutableStateOf(state.availableLayers) }
     var expanded by remember { mutableStateOf(false) }
 
 
@@ -74,32 +83,70 @@ fun CreateItemPopup(
                 Spacer(modifier = Modifier.height(12.dp))
 
 
-                // Layer dropdown (ExposedDropdownMenu)
-                Box{
-                    TextButton(
-                        onClick = { expanded = true },
-                    ){
-                        Text(
-                            text = selectedLayer.name
-                        )
-                    }
-
-
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                    ){
-                        state.availableLayers.forEach { layer ->
-                            DropdownMenuItem(
-                                text = { Text(layer.name) },
-                                onClick = {
-                                    selectedLayer = layer
-                                    expanded = false
-                                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box{
+                        TextButton(
+                            onClick = { expanded = true },
+                        ){
+                            Text(
+                                text = stringResource(Res.string.layers)
                             )
                         }
+
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                        ){
+                            state.availableLayers.forEach { layer ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Checkbox(
+                                                checked = layer.shown,
+                                                onCheckedChange = {
+                                                    layer.shown = !layer.shown
+                                                }
+                                            )
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            Text(
+                                                text = layer.name,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        layer.shown = !layer.shown
+                                        //expanded = false
+                                    }
+                                )
+                            }
+                            //TODO: Add layer popup
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(Res.string.done)
+
+                                    )
+                                },
+                                onClick = {
+                                    expanded = false
+                                },
+
+                                )
+                        }
                     }
+
+                    //TODO: COlorpicker
                 }
+
+
             }
         },
         confirmButton = {
@@ -110,7 +157,7 @@ fun CreateItemPopup(
                     Item(
                         title = title,
                         description = description,
-                        layer = selectedLayer.name,
+                        layer = selectedLayer,
                         cornerPoints = state.currentDrawingOffsets
                     )
                 ))

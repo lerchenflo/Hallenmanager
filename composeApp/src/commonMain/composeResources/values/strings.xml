@@ -9,6 +9,10 @@
     <string name="area_not_created">No area created</string>
     <string name="create_first_area">Create your first area!</string>
     <string name="add_area">Create area</string>
+    <string name="layers">Layers</string>
+    <string name="done">Done</string>
+
+
 
 
     <string name="iteminfo">Iteminfo</string>

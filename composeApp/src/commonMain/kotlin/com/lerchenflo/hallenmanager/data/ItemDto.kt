@@ -16,7 +16,6 @@ data class ItemDto(
     val title: String,
     val areaId: Long,
     val description: String,
-    val layer: String,
     val lastChanged: String,
     val created: String
 )

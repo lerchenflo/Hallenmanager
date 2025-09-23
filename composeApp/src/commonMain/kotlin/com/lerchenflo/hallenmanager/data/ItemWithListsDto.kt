@@ -5,12 +5,20 @@ import androidx.room.Relation
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ItemWithCornersDto(
+data class ItemWithListsDto(
     @Embedded val item: ItemDto,
     @Relation(
         parentColumn = "id",
         entityColumn = "itemId",
         entity = CornerPointDto::class
     )
-    val cornerPoints: List<CornerPointDto>
+    val cornerPoints: List<CornerPointDto>,
+
+
+    @Relation(
+    parentColumn = "id",
+    entityColumn = "layerid",
+    entity = LayerDto::class
+    )
+    val layers: List<LayerDto>
 )

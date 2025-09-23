@@ -1,6 +1,6 @@
 package com.lerchenflo.hallenmanager.data.database
 
-import com.lerchenflo.hallenmanager.data.ItemWithCornersDto
+import com.lerchenflo.hallenmanager.data.ItemWithListsDto
 import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.toArea
@@ -52,7 +52,7 @@ class AreaRepository(
         database.areaDao().createDefaultArea()
     }
 
-    fun getItemsFlow(areaid: Long): Flow<List<ItemWithCornersDto>> {
+    fun getItemsFlow(areaid: Long): Flow<List<ItemWithListsDto>> {
         return database.areaDao().getItemsForAreaFlow(areaid)
     }
 
