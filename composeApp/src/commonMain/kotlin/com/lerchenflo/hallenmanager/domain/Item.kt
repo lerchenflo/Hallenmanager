@@ -23,9 +23,6 @@ data class Item(
 
 
     fun getColor(): Color {
-
-        println("getcolor long: $color")
-
         val layercolor = layer.maxByOrNull { layer ->
             layer.sortId
         }?.getColor()
@@ -33,7 +30,6 @@ data class Item(
         return if (color == null){
             layercolor ?: Color.Black
         }else {
-            println("Returnedcolor: ${Color(color)}")
             Color(color.toULong())
 
         }

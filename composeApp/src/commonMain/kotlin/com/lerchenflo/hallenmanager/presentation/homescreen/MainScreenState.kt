@@ -1,4 +1,4 @@
-package com.lerchenflo.hallenmanager.presentation
+package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.ui.geometry.Offset
 import com.lerchenflo.hallenmanager.domain.Area
@@ -23,7 +23,7 @@ data class MainScreenState(
 
 sealed interface MainScreenAction{
     data class OnSearchtermChange(val newsearchTerm: String) : MainScreenAction
-    data class OnSliderToggle(val newvalue: Boolean) : MainScreenAction
+    data object OnStopPainting : MainScreenAction
     data class OnSelectArea(val areaid: Long) : MainScreenAction
     data class OnAddPoint(val offset: Offset) : MainScreenAction
     data object OnInfoDialogDismiss : MainScreenAction

@@ -1,13 +1,11 @@
-package com.lerchenflo.hallenmanager.presentation
+package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
-import com.lerchenflo.hallenmanager.domain.toItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -18,7 +16,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainScreenViewmodel(
@@ -101,21 +98,25 @@ class MainScreenViewmodel(
                 )
             }
 
-            is MainScreenAction.OnSliderToggle -> {
+            is MainScreenAction.OnStopPainting -> {
                 state = state.copy(
-                    isDrawing = action.newvalue
+                    isDrawing = false,
+                    currentDrawingOffsets = emptyList()
                 )
             }
 
             MainScreenAction.OnInfoDialogDismiss -> {
                 state = state.copy(
-                    iteminfopopupshown = false
+                    iteminfopopupshown = false,
+                    isDrawing = false,
+                    currentDrawingOffsets = emptyList()
                 )
             }
+
             is MainScreenAction.OnInfoDialogSave -> {
                 state = state.copy(
                     iteminfopopupshown = false,
-                    currentDrawingOffsets = emptyList()
+                    currentDrawingOffsets = emptyList(),
                 )
 
                 //Area is selected (Should always be)
@@ -134,7 +135,6 @@ class MainScreenViewmodel(
             }
 
             is MainScreenAction.OnSelectArea -> {
-
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         val area = areaRepository.getAreaById(action.areaid)

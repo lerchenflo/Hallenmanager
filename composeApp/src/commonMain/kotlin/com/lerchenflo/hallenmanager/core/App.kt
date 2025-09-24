@@ -5,8 +5,8 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.lerchenflo.hallenmanager.presentation.MainScreen
-import com.lerchenflo.hallenmanager.presentation.MainScreenRoot
+import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenRoot
+import com.lerchenflo.hallenmanager.presentation.settings.SettingsScreenRoot
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -21,6 +21,10 @@ fun App() {
         ) {
             composable<Route.HomeScreen> {
                 MainScreenRoot()
+            }
+
+            composable<Route.Settings> {
+                SettingsScreenRoot()
             }
         }
 

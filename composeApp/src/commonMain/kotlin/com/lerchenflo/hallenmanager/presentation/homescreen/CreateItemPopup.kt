@@ -1,6 +1,5 @@
-package com.lerchenflo.hallenmanager.presentation
+package com.lerchenflo.hallenmanager.presentation.homescreen
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,13 +7,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -40,7 +36,6 @@ import hallenmanager.composeapp.generated.resources.name
 import hallenmanager.composeapp.generated.resources.use_custom_color
 import hallenmanager.composeapp.generated.resources.use_layer_color
 import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun CreateItemPopup(
@@ -185,8 +180,6 @@ fun CreateItemPopup(
         },
         confirmButton = {
             TextButton(onClick = {
-
-                println("savecolor long: ${color?.value?.toLong()}")
 
                 onAction(MainScreenAction.OnInfoDialogSave(
                     Item(

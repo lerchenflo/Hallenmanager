@@ -1,13 +1,10 @@
-package com.lerchenflo.hallenmanager.presentation
+package com.lerchenflo.hallenmanager.presentation.homescreen
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -20,10 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.Area
-import com.lerchenflo.hallenmanager.domain.Item
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area_titletext
-import hallenmanager.composeapp.generated.resources.add_item_titletext
 import hallenmanager.composeapp.generated.resources.areainfo
 import hallenmanager.composeapp.generated.resources.desc
 import hallenmanager.composeapp.generated.resources.name
