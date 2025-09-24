@@ -1,5 +1,6 @@
 package com.lerchenflo.hallenmanager.presentation
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,7 +37,10 @@ import hallenmanager.composeapp.generated.resources.done
 import hallenmanager.composeapp.generated.resources.iteminfo
 import hallenmanager.composeapp.generated.resources.layers
 import hallenmanager.composeapp.generated.resources.name
+import hallenmanager.composeapp.generated.resources.use_custom_color
+import hallenmanager.composeapp.generated.resources.use_layer_color
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun CreateItemPopup(
@@ -44,7 +49,11 @@ fun CreateItemPopup(
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+
+    var useCustomColor by remember { mutableStateOf(false) }
+
     var color by remember { mutableStateOf<Color?>(null) }
+
 
     var selectedLayer by remember { mutableStateOf(state.availableLayers) }
     var expanded by remember { mutableStateOf(false) }
@@ -143,14 +152,35 @@ fun CreateItemPopup(
                             )
                         }
                     }
+
+
                 }
 
-                ColorPicker(
-                    onSelectColor = {
-                        color = it
-                        println("Color selected: $it")
-                    }
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (!useCustomColor) stringResource(Res.string.use_custom_color) else stringResource(Res.string.use_layer_color)
+                    )
+
+                    Spacer(Modifier.width(12.dp))
+
+                    Switch(
+                        checked = useCustomColor,
+                        onCheckedChange = {
+                            useCustomColor = it
+                        }
+                    )
+                }
+
+                if (useCustomColor){
+                    ColorPicker(
+                        onSelectColor = {
+                            color = it
+                        }
+                    )
+                }
+
             }
         },
         confirmButton = {
