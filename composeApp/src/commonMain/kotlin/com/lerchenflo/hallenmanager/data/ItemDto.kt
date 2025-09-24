@@ -17,5 +17,6 @@ data class ItemDto(
     val areaId: Long,
     val description: String,
     val lastChanged: String,
-    val created: String
+    val created: String,
+    val color: Long?
 )

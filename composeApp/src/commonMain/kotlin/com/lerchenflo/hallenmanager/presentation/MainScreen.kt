@@ -338,12 +338,13 @@ fun MainScreen(
 
                         //TODO: Replace with composable on top of canvas
                         //Draw items in this area
-                        state.currentArea?.items?.forEach { item ->
-                            println("Item print: ${item.id} ${item.cornerPoints.size}")
+                        state.currentArea.items.forEach { item ->
+
+                            println(item.getColor())
 
                             if (item.cornerPoints.size > 2){
                                 val path = Path().apply {
-                                    fillType = PathFillType.NonZero // or EvenOdd depending on desired winding
+                                    fillType = PathFillType.NonZero
                                     moveTo(item.cornerPoints[0].x, item.cornerPoints[0].y)
                                     for (i in 1 until item.cornerPoints.size) {
                                         lineTo(item.cornerPoints[i].x, item.cornerPoints[i].y)
@@ -351,22 +352,20 @@ fun MainScreen(
                                     close() // close the polygon
                                 }
 
-                                // fill the polygon (semi-transparent so you still see underlying grid)
+                                //Outline color
                                 drawPath(
                                     path = path,
-                                    color = Color(0xFF90CAF9).copy(alpha = 0.5f), // pick color & alpha you like
-                                    style = Fill
-                                )
-
-                                // optional: stroke the outline on top
-                                drawPath(
-                                    path = path,
-                                    color = Color.Black,
+                                    color = item.getColor(),
                                     style = Stroke(width = 6f, cap = StrokeCap.Round)
                                 )
+
+                                //Fill polygon with color
+                                drawPath(
+                                    path = path,
+                                    color = item.getColor().copy(alpha = 0.5f), // pick color & alpha you like
+                                    style = Fill
+                                )
                             }
-
-
                         }
                     }
                 }

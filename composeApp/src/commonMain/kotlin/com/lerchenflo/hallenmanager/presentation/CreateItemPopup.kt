@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.Item
 import hallenmanager.composeapp.generated.resources.Res
@@ -43,6 +44,7 @@ fun CreateItemPopup(
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var color by remember { mutableStateOf<Color?>(null) }
 
     var selectedLayer by remember { mutableStateOf(state.availableLayers) }
     var expanded by remember { mutableStateOf(false) }
@@ -137,28 +139,32 @@ fun CreateItemPopup(
                                 },
                                 onClick = {
                                     expanded = false
-                                },
-
-                                )
+                                }
+                            )
                         }
                     }
-
-                    //TODO: COlorpicker
                 }
 
-
+                ColorPicker(
+                    onSelectColor = {
+                        color = it
+                        println("Color selected: $it")
+                    }
+                )
             }
         },
         confirmButton = {
             TextButton(onClick = {
 
+                println("savecolor long: ${color?.value?.toLong()}")
 
                 onAction(MainScreenAction.OnInfoDialogSave(
                     Item(
                         title = title,
                         description = description,
                         layer = selectedLayer,
-                        cornerPoints = state.currentDrawingOffsets
+                        cornerPoints = state.currentDrawingOffsets,
+                        color = color?.value?.toLong()
                     )
                 ))
             }) {

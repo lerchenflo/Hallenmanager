@@ -9,7 +9,11 @@ data class Layer(
     val sortId: Int,
     var shown: Boolean,
     val color: Long
-)
+){
+    fun getColor(): Color {
+        return Color(color.toULong())
+    }
+}
 
 
 fun Layer.toLayerDto(): LayerDto = LayerDto(
