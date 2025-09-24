@@ -3,6 +3,7 @@ package com.lerchenflo.hallenmanager.presentation.homescreen
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CropPortrait
@@ -257,17 +260,21 @@ fun MainScreen(
                 }
 
 
+
                 Box(
                     modifier = Modifier
-                        .size(2000.dp)
+                        .fillMaxWidth()
                         .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .horizontalScroll(rememberScrollState())
                         .clipToBounds()
-
                 ){
+
+
 
                     Canvas(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .size(2000.dp)
 
                             .pointerInput(Unit) {
                                 detectTransformGestures { centroid, pan, zoom, rotation ->
