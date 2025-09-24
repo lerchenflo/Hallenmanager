@@ -1,4 +1,4 @@
-package com.lerchenflo.hallenmanager.presentation.homescreen
+package com.lerchenflo.hallenmanager.presentation
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height

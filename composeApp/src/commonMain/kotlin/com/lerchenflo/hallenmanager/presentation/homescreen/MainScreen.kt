@@ -53,9 +53,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.snapToGrid
+import com.lerchenflo.hallenmanager.presentation.LegendOverlay
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.searchbarhint
@@ -260,86 +262,98 @@ fun MainScreen(
                 }
 
 
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .horizontalScroll(rememberScrollState())
-                        .clipToBounds()
                 ){
 
 
-
-                    Canvas(
+                    //Canvasbox
+                    Box(
                         modifier = Modifier
-                            .size(2000.dp)
-
-                            .pointerInput(Unit) {
-                                detectTransformGestures { centroid, pan, zoom, rotation ->
-
-                                    /*
-                                    val oldScale = localScale
-                                    val newScale = (oldScale * zoom).coerceIn(0.5f, 8f)
-
-                                    //println("Newscale: $newScale")
-                                    val scaleChangeFactor = newScale / oldScale
-
-                                    // Keep point under centroid stable and add pan (in screen px)
-                                    val newOffset = Offset(
-                                        x = centroid.x - scaleChangeFactor * (centroid.x - localOffset.x) + pan.x,
-                                        y = centroid.y - scaleChangeFactor * (centroid.y - localOffset.y) + pan.y
-                                    )
-
-                                     */
-                                    localOffset = localOffset + pan
-
-                                    //onAction(MainScreenAction.OnZoom(1f, localOffset))
-                                }
-                            }
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .horizontalScroll(rememberScrollState())
+                            .clipToBounds()
+                    ){
 
 
-                            /*
-                        .graphicsLayer {
-                            // Important: use top-left as transform origin so our math matches
-                            transformOrigin = TransformOrigin(0f, 0f)
-                            translationX = localOffset.x
-                            translationY = localOffset.y
-                            scaleX = localScale
-                            scaleY = localScale
-                        }
 
-                             */
-                            // Separate pointerInput for taps/longpress so they don't steal events from transform detector
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = { raw -> println("tap at $raw") },
-                                    onLongPress = { raw ->
+                        Canvas(
+                            modifier = Modifier
+                                .size(5000.dp)
 
-                                        val contentPoint = (raw - localOffset) / localScale
+                                .pointerInput(Unit) {
+                                    detectTransformGestures { centroid, pan, zoom, rotation ->
+                                        val oldScale = localScale
+                                        val newScale = (oldScale * zoom).coerceIn(0.1f, 8f)
+                                        val scaleChange = if (oldScale == 0f) 1f else newScale / oldScale
 
-                                        val snapped = snapToGrid(contentPoint, state.gridspacing)
+                                        // Keep the content point under the centroid fixed while zooming, and add pan
+                                        localOffset = Offset(
+                                            x = centroid.x - scaleChange * (centroid.x - localOffset.x) + pan.x,
+                                            y = centroid.y - scaleChange * (centroid.y - localOffset.y) + pan.y
+                                        )
 
-                                        onAction(MainScreenAction.OnAddPoint(snapped))
+                                        localScale = newScale
                                     }
-                                )
+                                }
+
+
+                                /*
+                            .graphicsLayer {
+                                // Important: use top-left as transform origin so our math matches
+                                transformOrigin = TransformOrigin(0f, 0f)
+                                translationX = localOffset.x
+                                translationY = localOffset.y
+                                scaleX = localScale
+                                scaleY = localScale
                             }
 
-                    ) {
+                                 */
+                                // Separate pointerInput for taps/longpress so they don't steal events from transform detector
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onTap = { raw -> println("tap at $raw") },
+                                        onLongPress = { raw ->
 
-                        withTransform({
-                            // apply the *local* transform (not VM-state, so it reflects current gestures)
-                            translate(left = localOffset.x, top = localOffset.y)
-                            scale(localScale, localScale)
-                        }) {
-                            drawRect(Color.Gray)
+                                            val contentPoint = (raw - localOffset) / localScale
+
+                                            val snapped = snapToGrid(contentPoint, state.gridspacing)
+
+                                            onAction(MainScreenAction.OnAddPoint(snapped))
+                                        },
+                                        onDoubleTap = { raw ->
+                                            // Double-tap: zoom in/out focusing at tap point
+                                            val target = if (localScale < 8f) (localScale * 2f).coerceAtMost(8f) else 0.1f
+                                            val scaleChange = target / localScale
+                                            localOffset = Offset(
+                                                x = raw.x - scaleChange * (raw.x - localOffset.x),
+                                                y = raw.y - scaleChange * (raw.y - localOffset.y)
+                                            )
+                                            localScale = target
+                                        },
+                                    )
+                                }
+                                .graphicsLayer {
+                                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
+                                    translationX = localOffset.x
+                                    translationY = localOffset.y
+                                    scaleX = localScale
+                                    scaleY = localScale
+                                    // optional: clip = true
+                                }
+
+                        ) {
+
+                            drawRect(Color.LightGray)
 
                             //Grid
                             var x = 0f
                             while (x <= size.width) {
                                 drawLine(
-                                    color = Color.Red,
+                                    color = Color.Gray,
                                     start = Offset(x, 0f),
                                     end = Offset(x, size.height),
                                     strokeWidth = 1f / localScale
@@ -349,7 +363,7 @@ fun MainScreen(
                             var y = 0f
                             while (y <= size.height) {
                                 drawLine(
-                                    color = Color.Red,
+                                    color = Color.Gray,
                                     start = Offset(0f, y),
                                     end = Offset(size.width, y),
                                     strokeWidth = 1f / localScale
@@ -414,8 +428,20 @@ fun MainScreen(
                     }
 
 
-
+                    LegendOverlay(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(6.dp),
+                        scale = localScale,
+                        gridSpacingInContentPx = state.gridspacing,
+                        metersPerGrid = 0.2f
+                    )
                 }
+
+
+
+
+
             }else{
                 //If no area is selected show add popup
                 CreateFirstAreaPopup(

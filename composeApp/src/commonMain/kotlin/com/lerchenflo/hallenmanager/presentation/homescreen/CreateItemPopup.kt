@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.Item
+import com.lerchenflo.hallenmanager.presentation.ColorPicker
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_item_titletext
 import hallenmanager.composeapp.generated.resources.desc
