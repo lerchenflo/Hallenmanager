@@ -69,8 +69,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun MainScreenRoot(
     viewmodel: MainScreenViewmodel,
 ){
-
-
+    
     MainScreen(
         state = viewmodel.state,
         onAction = viewmodel::onAction

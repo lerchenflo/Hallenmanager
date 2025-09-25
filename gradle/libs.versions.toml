@@ -10,7 +10,7 @@ androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.9.4"
 androidx-testExt = "1.3.0"
 colorpickerCompose = "1.1.2"
-composeHotReload = "1.0.0-beta07"
+composeHotReload = "1.0.0-beta08"
 composeMultiplatform = "1.10.0-alpha01"
 junit = "4.13.2"
 
@@ -19,15 +19,15 @@ ksp = "2.2.20-RC-2.0.2"
 
 
 kotlinx-coroutines = "1.10.2"
-navigationCompose = "2.8.0-alpha13"
+navigationCompose = "2.9.0"
 serialization = "1.9.0"
 adaptive = "1.1.2"
 
 koin-core = "4.1.1"
 koin-annotations = "2.1.0"
 
-room = "2.8.0"
-sqlite = "2.6.0"
+room = "2.8.1"
+sqlite = "2.6.1"
 
 
 [libraries]

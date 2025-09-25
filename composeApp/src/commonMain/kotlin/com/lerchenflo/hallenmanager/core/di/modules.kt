@@ -16,7 +16,7 @@ val sharedmodule = module {
     factory { MainScreenViewmodel(get(), get()) } //Für desktop
 
     viewModelOf(::SettingsScreenViewmodel)
-    factory { SettingsScreenViewmodel(get()) }
+    factory { SettingsScreenViewmodel(get(), get()) }
 
     single <AppDatabase> { CreateAppDatabase(get()).getDatabase() }
 
