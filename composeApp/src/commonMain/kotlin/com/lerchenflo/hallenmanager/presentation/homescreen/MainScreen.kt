@@ -52,6 +52,9 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.presentation.LegendOverlay
@@ -278,6 +281,7 @@ fun MainScreen(
                     ){
 
 
+                        val textMeasurer = rememberTextMeasurer()
 
                         Canvas(
                             modifier = Modifier
@@ -412,15 +416,46 @@ fun MainScreen(
                                     drawPath(
                                         path = path,
                                         color = item.getColor(),
-                                        style = Stroke(width = 8f, cap = StrokeCap.Round)
+                                        style = Stroke(width = 4f, cap = StrokeCap.Round)
                                     )
 
                                     //Fill polygon with color
                                     drawPath(
                                         path = path,
-                                        color = item.getColor().copy(alpha = 0.4f),
+                                        color = item.getColor().copy(alpha = 0.1f),
                                         style = Fill
                                     )
+
+                                    val textLayoutResult = textMeasurer.measure(item.title)
+                                    val textSize = textLayoutResult.size
+                                    val center = item.getCenter()
+                                    val textTopLeft = Offset(
+                                        x = center.x - textSize.width / 2,
+                                        y = center.y - textSize.height / 2
+                                    )
+
+                                    this.drawText(
+                                        textMeasurer = textMeasurer,
+                                        text = item.title,
+                                        topLeft = textTopLeft,
+                                        style = TextStyle(
+                                            color = item.getColor()
+                                        )
+                                    )
+
+                                    if (item.title.isNotEmpty()){
+                                        val descriptionstart = textMeasurer.measure(item.title).getBoundingBox(0).bottomLeft
+                                        this.drawText(
+                                            textMeasurer = textMeasurer,
+                                            text = item.description,
+                                            topLeft = textTopLeft + descriptionstart,
+                                            style = TextStyle(
+                                                color = item.getColor().copy(alpha = 0.8f)
+                                            )
+                                        )
+                                    }
+
+
                                 }
                             }
                         }

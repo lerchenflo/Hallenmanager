@@ -42,7 +42,7 @@ data class Item(
             x += point.x
             y += point.y
         }
-        return Offset(x, y)
+        return Offset(x / cornerPoints.size, y / cornerPoints.size)
     }
 
     fun isPolygonClicked(pt: Offset): Boolean {
