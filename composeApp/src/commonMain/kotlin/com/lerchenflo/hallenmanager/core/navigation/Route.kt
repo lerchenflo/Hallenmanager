@@ -1,4 +1,4 @@
-package com.lerchenflo.hallenmanager.core
+package com.lerchenflo.hallenmanager.core.navigation
 
 import kotlinx.serialization.Serializable
 

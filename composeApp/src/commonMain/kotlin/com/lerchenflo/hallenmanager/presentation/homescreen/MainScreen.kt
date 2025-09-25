@@ -23,7 +23,6 @@ import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,7 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,7 +50,6 @@ import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
@@ -67,8 +64,10 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun MainScreenRoot(
-    viewmodel: MainScreenViewmodel = koinViewModel<MainScreenViewmodel>()
+    viewmodel: MainScreenViewmodel,
 ){
+
+
     MainScreen(
         state = viewmodel.state,
         onAction = viewmodel::onAction
@@ -117,7 +116,7 @@ fun MainScreen(
                 //Floatingactionbutton for settings
                 FloatingActionButton(
                     onClick = {
-                        //TODO: Navigate to settings
+                        onAction(MainScreenAction.OnSettingsClicked)
                     },
                 ){
                     Icon(

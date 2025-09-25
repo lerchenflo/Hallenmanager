@@ -32,6 +32,8 @@ sealed interface MainScreenAction{
     data object OnCreateAreaStart: MainScreenAction
     data object OnAreaDialogDismiss : MainScreenAction
 
+    data object OnSettingsClicked : MainScreenAction
+
 }
 
 

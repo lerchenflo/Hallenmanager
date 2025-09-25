@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lerchenflo.hallenmanager.core.navigation.Navigator
+import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +21,8 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainScreenViewmodel(
-    private val areaRepository: AreaRepository
+    private val areaRepository: AreaRepository,
+    private val navigator: Navigator
 ): ViewModel() {
 
     var state by mutableStateOf(MainScreenState())
@@ -173,6 +176,12 @@ class MainScreenViewmodel(
                 state = state.copy(
                     areainfopopupshown = false
                 )
+            }
+
+            MainScreenAction.OnSettingsClicked -> {
+                viewModelScope.launch {
+                    navigator.navigate(Route.Settings)
+                }
             }
         }
     }
