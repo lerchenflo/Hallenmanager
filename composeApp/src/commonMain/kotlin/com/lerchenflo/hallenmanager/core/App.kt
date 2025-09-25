@@ -12,6 +12,7 @@ import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenRoot
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenViewmodel
 import com.lerchenflo.hallenmanager.presentation.settings.SettingsScreenRoot
+import com.lerchenflo.hallenmanager.presentation.settings.SettingsScreenViewmodel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -41,7 +42,8 @@ fun App() {
             }
 
             composable<Route.Settings> {
-                SettingsScreenRoot()
+                val viewmodel = koinViewModel<SettingsScreenViewmodel>()
+                SettingsScreenRoot(viewmodel)
             }
         }
 

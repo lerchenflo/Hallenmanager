@@ -74,6 +74,11 @@ private fun SettingsScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun SettingsScreenRoot(){
-    SettingsScreen()
+fun SettingsScreenRoot(
+    viewmodel: SettingsScreenViewmodel
+){
+    SettingsScreen(
+        state = viewmodel.state,
+        onAction = viewmodel::onAction
+    )
 }
