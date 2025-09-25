@@ -10,12 +10,13 @@ data class MainScreenState(
     val searchterm: String = "",
     val gridspacing: Float = 100f,
     val isDrawing: Boolean = false,
+    val currentSearchResult: List<Item> = emptyList<Item>(),
     val currentDrawingOffsets: List<Offset> = emptyList(),
     val iteminfopopupshown : Boolean = false,
     val areainfopopupshown : Boolean = false,
     val availableAreas : List<AvailableArea> = emptyList(),
     val currentArea: Area? = null,
-    val availableLayers: List<Layer> = emptyList<Layer>()
+    val availableLayers: List<Layer> = emptyList<Layer>(),
 )
 
 

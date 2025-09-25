@@ -6,6 +6,9 @@ import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
 import com.lerchenflo.hallenmanager.data.ItemWithListsDto
 import com.lerchenflo.hallenmanager.data.LayerDto
+import com.lerchenflo.hallenmanager.util.isFuzzySubsequence
+import com.lerchenflo.hallenmanager.util.levenshteinWithinThreshold
+import com.lerchenflo.hallenmanager.util.normalizeForSearch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -33,6 +36,51 @@ data class Item(
             Color(color.toULong())
 
         }
+    }
+
+    fun matchesSearchQuery(query: String): Boolean {
+        val q = query.trim()
+        if (q.isEmpty()) return true // treat empty query as match (change if you want false)
+
+        val titleNorm = title.normalizeForSearch()
+        val descNorm = description.normalizeForSearch()
+        val combined = (title + " " + description).normalizeForSearch()
+
+        val qNorm = q.normalizeForSearch()
+
+        // direct checks
+        if (titleNorm == qNorm || descNorm == qNorm || combined == qNorm) return true
+        if (titleNorm.contains(qNorm) || descNorm.contains(qNorm) || combined.contains(qNorm)) return true
+        if (titleNorm.startsWith(qNorm) || descNorm.startsWith(qNorm)) return true
+
+        // tokenized: all tokens from query must be matched somewhere (in any order)
+        val qTokens = qNorm.split(" ").filter { it.isNotBlank() }
+        val titleWords = titleNorm.split(" ").filter { it.isNotBlank() }
+        val descWords = descNorm.split(" ").filter { it.isNotBlank() }
+        val allWords = (titleWords + descWords).distinct()
+
+        // helper: for a single token, check if any word roughly matches
+        fun tokenMatches(token: String): Boolean {
+            // exact contains on any word
+            if (allWords.any { it.contains(token) }) return true
+            // small fuzzy distance (<=1) on any word
+            if (allWords.any { levenshteinWithinThreshold(it, token, 1) }) return true
+            // token as fuzzy subsequence of combined (characters in order with gaps)
+            if (isFuzzySubsequence(token, titleNorm) || isFuzzySubsequence(token, descNorm) || isFuzzySubsequence(token, combined)) return true
+            return false
+        }
+
+        if (qTokens.all { tokenMatches(it) }) return true
+
+        // acronym matching (e.g. "hm" for "Hallen Manager")
+        val acronym = titleWords.mapNotNull { it.firstOrNull()?.toString() }.joinToString("")
+        if (acronym.contains(qNorm)) return true
+
+        // fallback: allow up to 1 edit between whole query and title/description
+        if (levenshteinWithinThreshold(titleNorm, qNorm, 1)) return true
+        if (levenshteinWithinThreshold(descNorm, qNorm, 1)) return true
+
+        return false
     }
 
     fun getCenter(): Offset{

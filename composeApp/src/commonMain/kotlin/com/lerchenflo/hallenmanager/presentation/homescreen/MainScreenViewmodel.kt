@@ -84,8 +84,19 @@ class MainScreenViewmodel(
     fun onAction(action: MainScreenAction) {
         when (action) {
             is MainScreenAction.OnSearchtermChange -> {
+                //Searchterm not empty -> User is searching
+
+
+
                 state = state.copy(
-                    searchterm = action.newsearchTerm
+                    searchterm = action.newsearchTerm,
+                    currentSearchResult = if (action.newsearchTerm.isNotBlank()) {
+                        val query = action.newsearchTerm.trim()
+                        state.currentArea?.items.orEmpty().filter { item ->
+                            item.matchesSearchQuery(query)
+                        }
+                    } else emptyList()
+
                 )
             }
 
