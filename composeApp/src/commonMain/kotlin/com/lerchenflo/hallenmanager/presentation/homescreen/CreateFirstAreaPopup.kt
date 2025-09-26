@@ -1,6 +1,8 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,13 +40,13 @@ fun CreateFirstAreaPopup(
         contentAlignment = Alignment.Center
     ) {
         Card(
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
                     onClick = onclick
                 ),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically

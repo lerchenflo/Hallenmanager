@@ -46,12 +46,13 @@ interface AreaDao {
     @Query("SELECT * FROM areas")
     fun getAreas(): Flow<List<AreaWithItemsDto>>
 
+    @Transaction
     @Query("SELECT * FROM areas WHERE id = :areaid")
     fun getAreaByIdFlow(areaid: Long) : Flow<AreaWithItemsDto?>
 
     @Transaction
     @Query("SELECT * FROM areas WHERE id = :areaid")
-    fun getAreaById(areaid: Long) : AreaWithItemsDto?
+    suspend fun getAreaById(areaid: Long) : AreaWithItemsDto?
 
     @Transaction
     @Query("SELECT * FROM areas WHERE name = :areaname")
@@ -61,15 +62,6 @@ interface AreaDao {
     @Query("SELECT * FROM areas ORDER BY id ASC LIMIT 1")
     suspend fun getFirstArea(): AreaWithItemsDto?
 
-
-    @Transaction
-    suspend fun createDefaultArea(){
-        upsertAreaEntity(AreaDto(
-            id = 1L,
-            name = "Area1",
-            description = "Default area"
-        ))
-    }
 
     @Transaction
     @Query("SELECT * FROM itemdto WHERE areaId = :areaId")

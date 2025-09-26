@@ -46,11 +46,7 @@ class AreaRepository(
     suspend fun getFirstArea() : Area? {
         return database.areaDao().getFirstArea()?.toArea()
     }
-
-
-    suspend fun createDefaultArea() {
-        database.areaDao().createDefaultArea()
-    }
+    
 
     fun getItemsFlow(areaid: Long): Flow<List<ItemWithListsDto>> {
         return database.areaDao().getItemsForAreaFlow(areaid)
