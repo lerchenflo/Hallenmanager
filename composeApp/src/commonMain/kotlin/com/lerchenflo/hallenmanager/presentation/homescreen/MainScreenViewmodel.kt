@@ -8,12 +8,15 @@ import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
+import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -30,6 +33,8 @@ class MainScreenViewmodel(
 
 
     private val _selectedAreaId = MutableStateFlow(0L)
+    private val _searchterm = MutableStateFlow("")
+
 
 
     init {
@@ -48,6 +53,7 @@ class MainScreenViewmodel(
                     }
             }
 
+            //Available areas dropdown
             viewModelScope.launch {
                 areaRepository.getAreas()
                     .map { areas ->
@@ -62,6 +68,33 @@ class MainScreenViewmodel(
                     .collectLatest { availableareas ->
                         state = state.copy(
                             availableAreas = availableareas
+                        )
+                    }
+            }
+
+            //Item search
+            viewModelScope.launch {
+                areaRepository.getAllItems()
+                    .combine(_searchterm.asStateFlow()) { items, searchTerm ->
+                        if (searchTerm.isBlank()) {
+                            emptyList()
+                        } else {
+                            val query = searchTerm.trim().lowercase()
+                            items.filter { item ->
+                                item.matchesSearchQuery(query)
+                            }
+                        }
+                    }
+                    .collect { searchResults ->
+                        state = state.copy(
+                            currentSearchResult = searchResults.map {
+                                SearchItem(
+                                    item = it,
+                                    areaname = state.availableAreas.find { area ->
+                                        area.id == it.areaId
+                                    }?.name ?: "" //Should not happen
+                                )
+                            }
                         )
                     }
             }
@@ -85,18 +118,11 @@ class MainScreenViewmodel(
         when (action) {
             is MainScreenAction.OnSearchtermChange -> {
                 //Searchterm not empty -> User is searching
-
-
+                _searchterm.value = action.newsearchTerm
 
                 state = state.copy(
                     searchterm = action.newsearchTerm,
-                    currentSearchResult = if (action.newsearchTerm.isNotBlank()) {
-                        val query = action.newsearchTerm.trim()
-                        state.currentArea?.items.orEmpty().filter { item ->
-                            item.matchesSearchQuery(query)
-                        }
-                    } else emptyList()
-
+                    //Searchquery is handled in with the flow
                 )
             }
 

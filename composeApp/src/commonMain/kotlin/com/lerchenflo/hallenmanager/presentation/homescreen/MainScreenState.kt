@@ -4,13 +4,14 @@ import androidx.compose.ui.geometry.Offset
 import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.Layer
+import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
 import kotlin.collections.emptyList
 
 data class MainScreenState(
     val searchterm: String = "",
     val gridspacing: Float = 100f,
     val isDrawing: Boolean = false,
-    val currentSearchResult: List<Item> = emptyList<Item>(),
+    val currentSearchResult: List<SearchItem> = emptyList(),
     val currentDrawingOffsets: List<Offset> = emptyList(),
     val iteminfopopupshown : Boolean = false,
     val areainfopopupshown : Boolean = false,

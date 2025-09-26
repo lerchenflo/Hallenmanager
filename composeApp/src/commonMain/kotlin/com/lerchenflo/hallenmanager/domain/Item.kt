@@ -15,6 +15,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 data class Item(
     val id: Long = 0L,
+    val areaId: Long,
     val title: String,
     val description: String,
     val layer: List<Layer>,
@@ -144,6 +145,7 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
 
 fun ItemWithListsDto.toItem(): Item = Item(
     id = item.id,
+    areaId = item.areaId,
     title = item.title,
     description = item.description,
     layer = layers.map {

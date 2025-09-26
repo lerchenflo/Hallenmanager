@@ -1,14 +1,9 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
-import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,11 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -39,15 +32,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults.InputField
-import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PointMode
@@ -77,17 +65,12 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.presentation.LegendOverlay
+import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.searchbarhint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun MainScreenRoot(
@@ -235,12 +218,18 @@ fun MainScreen(
                                 LazyColumn(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .heightIn(max = 300.dp)
+                                        .heightIn(max = 300.dp),
                                 ) {
-                                    items(items = state.currentSearchResult) { item ->
+                                    items(items = state.currentSearchResult) { searchitem ->
                                         SearchItemUI(
-                                            item,
+                                            searchItem = searchitem,
                                             onClick = {
+                                                //Switch do different area if item is not in current area
+                                                if (state.currentArea.id != searchitem.item.areaId) {
+                                                    onAction(MainScreenAction.OnSelectArea(searchitem.item.areaId))
+                                                }
+
+
                                                 searchbaractive = false
                                                 focusManager.clearFocus()
                                                 onAction(MainScreenAction.OnSearchtermChange(""))
@@ -251,7 +240,7 @@ fun MainScreen(
 
                                                 val viewportCenterX = viewportSize.width / 2f
                                                 val viewportCenterY = viewportSize.height / 2f
-                                                val itemCenter = item.getCenter()
+                                                val itemCenter = searchitem.item.getCenter()
 
                                                 println("Height: $viewportCenterY Width: $viewportCenterX")
                                                 localOffset = Offset(
@@ -262,6 +251,8 @@ fun MainScreen(
 
                                             }
                                         )
+
+                                        Spacer(modifier = Modifier.height(8.dp))
                                     }
                                 }
                             }

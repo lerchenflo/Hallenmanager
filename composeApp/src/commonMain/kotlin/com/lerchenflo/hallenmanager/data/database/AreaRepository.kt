@@ -5,6 +5,7 @@ import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.toArea
 import com.lerchenflo.hallenmanager.domain.toAreaDto
+import com.lerchenflo.hallenmanager.domain.toItem
 import com.lerchenflo.hallenmanager.domain.toItemDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -46,7 +47,14 @@ class AreaRepository(
     suspend fun getFirstArea() : Area? {
         return database.areaDao().getFirstArea()?.toArea()
     }
-    
+
+    fun getAllItems(): Flow<List<Item>>{
+        return database.areaDao().getAllItems().map { items ->
+            items.map { itemdto ->
+                itemdto.toItem()
+            }
+        }
+    }
 
     fun getItemsFlow(areaid: Long): Flow<List<ItemWithListsDto>> {
         return database.areaDao().getItemsForAreaFlow(areaid)

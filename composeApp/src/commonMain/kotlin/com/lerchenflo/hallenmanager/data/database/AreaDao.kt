@@ -9,6 +9,7 @@ import com.lerchenflo.hallenmanager.data.AreaWithItemsDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
 import com.lerchenflo.hallenmanager.data.ItemWithListsDto
+import com.lerchenflo.hallenmanager.domain.Item
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -66,6 +67,9 @@ interface AreaDao {
     @Transaction
     @Query("SELECT * FROM itemdto WHERE areaId = :areaId")
     fun getItemsForAreaFlow(areaId: Long): Flow<List<ItemWithListsDto>>
+
+    @Query("SELECT * FROM itemdto")
+    fun getAllItems(): Flow<List<ItemWithListsDto>>
 
 
     @Transaction

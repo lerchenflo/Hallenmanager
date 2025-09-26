@@ -188,7 +188,8 @@ fun CreateItemPopup(
                         description = description,
                         layer = selectedLayer,
                         cornerPoints = state.currentDrawingOffsets,
-                        color = color?.value?.toLong()
+                        color = color?.value?.toLong(),
+                        areaId = state.currentArea?.id ?: 0
                     )
                 ))
             }) {
