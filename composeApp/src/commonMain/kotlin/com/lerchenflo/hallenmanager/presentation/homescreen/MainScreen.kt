@@ -1,5 +1,7 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -32,8 +34,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
+import androidx.compose.material3.SearchBarDefaults.InputField
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +54,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -163,22 +170,44 @@ fun MainScreen(
                 ) {
 
                     //Seach textfield
-                    OutlinedTextField(
-                        modifier = Modifier.weight(1f),
-                        value = state.searchterm,
-                        maxLines = 1,
-                        onValueChange = { onAction(MainScreenAction.OnSearchtermChange(it)) }, //In da datenbank gits a suchfeature
-                        placeholder = { Text(stringResource(Res.string.searchbarhint)) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search"
-                            )
-                        },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent
-                        )
+
+                    var searchbaractive by remember { mutableStateOf(false) }
+
+                    val searchBarState = rememberSearchBarState(
+                        initialValue = SearchBarValue.Collapsed,
+                        animationSpecForExpand = spring(),   // AnimationSpec<Float>
+                        animationSpecForCollapse = spring()  // AnimationSpec<Float>
                     )
+                    //@OptIn(ExperimentalMaterial3Api::class)
+                    SearchBar(
+                        modifier = Modifier.weight(1f),
+                        state = searchBarState,
+                        inputField = {
+                            InputField(
+                                placeholder = { Text(stringResource(Res.string.searchbarhint)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search"
+                                    )
+                                },
+                                query = state.searchterm,
+                                onQueryChange = {
+                                    searchbaractive = it.isNotBlank()
+                                    onAction(MainScreenAction.OnSearchtermChange(it))
+                                },
+                                onSearch = { searchbaractive = false },
+                                expanded = searchbaractive,
+                                onExpandedChange = {},
+                            )
+                        }
+                    ){
+                        Column {
+
+                        }
+                    }
+
+
 
 
 
@@ -339,7 +368,7 @@ fun MainScreen(
                                     )
                                 }
                                 .graphicsLayer {
-                                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0f)
+                                    transformOrigin = TransformOrigin(0f, 0f)
                                     translationX = localOffset.x
                                     translationY = localOffset.y
                                     scaleX = localScale
