@@ -220,6 +220,50 @@ class MainScreenViewmodel(
                     navigator.navigate(Route.Settings)
                 }
             }
+
+            is MainScreenAction.OnZoom -> {
+                println("Zoomlevel: ${action.newzoomlevel}")
+
+                val newzoom = action.newzoomlevel
+
+                val newgridspacing = when {
+                    newzoom < 0.15f -> {
+                        800f
+                    }
+
+                    newzoom < 0.5f -> {
+                        400f
+                    }
+
+                    newzoom < 0.8f -> {
+                        200f
+                    }
+
+                    newzoom < 1.5f -> {
+                        100f
+                    }
+
+                    newzoom < 2.5f -> {
+                        50f
+                    }
+
+                    else -> {
+                        25f
+                    }
+                }
+
+
+                state = state.copy(
+                    gridspacing = newgridspacing
+                )
+            }
+
+            is MainScreenAction.OnItemClicked -> {
+                state = state.copy(
+                    iteminfopopupshown = true,
+                    iteminfopopupItem = action.item
+                )
+            }
         }
     }
 

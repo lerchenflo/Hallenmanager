@@ -55,6 +55,7 @@ fun CreateItemPopup(
     var expanded by remember { mutableStateOf(false) }
 
 
+
     AlertDialog(
         title = {
             Text(text = stringResource(Res.string.iteminfo))
@@ -62,7 +63,7 @@ fun CreateItemPopup(
         text = {
             Column {
                 Text(
-                    text = stringResource(Res.string.add_item_titletext),
+                    text = state.iteminfopopupItem?.title ?: stringResource(Res.string.add_item_titletext),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -72,9 +73,12 @@ fun CreateItemPopup(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text(stringResource(Res.string.name)) },
+                    label = {
+                        Text(
+                            state.iteminfopopupItem?.title ?: stringResource(Res.string.name)
+                        )},
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -82,8 +86,9 @@ fun CreateItemPopup(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(stringResource(Res.string.desc)) },
-                    singleLine = true,
+                    label = { Text(
+                        state.iteminfopopupItem?.description ?: stringResource(Res.string.desc)
+                    ) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -163,8 +168,13 @@ fun CreateItemPopup(
 
                     Switch(
                         checked = useCustomColor,
-                        onCheckedChange = {
-                            useCustomColor = it
+                        onCheckedChange = {newstate ->
+                            useCustomColor = newstate
+
+                            //If unchecked reset selected color
+                            if (!newstate){
+                                color = null
+                            }
                         }
                     )
                 }

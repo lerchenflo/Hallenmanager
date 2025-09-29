@@ -20,8 +20,10 @@ import com.lerchenflo.hallenmanager.domain.Area
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area_titletext
 import hallenmanager.composeapp.generated.resources.areainfo
+import hallenmanager.composeapp.generated.resources.cancel
 import hallenmanager.composeapp.generated.resources.desc
 import hallenmanager.composeapp.generated.resources.name
+import hallenmanager.composeapp.generated.resources.save
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -77,14 +79,14 @@ fun CreateAreaPopup(
                     )
                 ))
             }) {
-                Text("OK")
+                Text(stringResource(Res.string.save))
             }
         },
         dismissButton = {
             TextButton(onClick = {
                 onAction(MainScreenAction.OnAreaDialogDismiss)
             }) {
-                Text("Cancel")
+                Text(stringResource(Res.string.cancel))
             }
         },
         onDismissRequest = {

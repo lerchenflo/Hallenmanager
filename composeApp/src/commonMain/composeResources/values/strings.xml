@@ -13,6 +13,9 @@
     <string name="done">Done</string>
     <string name="use_custom_color">Use custom color</string>
     <string name="use_layer_color">Use layer color</string>
+    <string name="cancel">cancel</string>
+    <string name="save">save</string>
+
 
 
     <string name="settings">Settings</string>

@@ -1,6 +1,7 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
@@ -58,11 +60,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.lerchenflo.hallenmanager.core.di.sharedmodule
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.presentation.LegendOverlay
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
@@ -71,6 +76,7 @@ import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.searchbarhint
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.math.min
 
 @Composable
 fun MainScreenRoot(
@@ -91,6 +97,9 @@ fun MainScreen(
     state: MainScreenState,
     onAction: (MainScreenAction) -> Unit
 ) {
+    val maxzoomlevel = 8f
+    val minzoomlevel = 0.02f
+
 
     var localScale by remember { mutableStateOf(1f) }
     var localOffset by remember { mutableStateOf(Offset.Zero) }
@@ -218,7 +227,6 @@ fun MainScreen(
                                 LazyColumn(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .heightIn(max = 300.dp),
                                 ) {
                                     items(items = state.currentSearchResult) { searchitem ->
                                         SearchItemUI(
@@ -352,6 +360,7 @@ fun MainScreen(
                                 if (!searchbaractive) viewportSize = it
                             }
 
+
                     ){
 
 
@@ -370,12 +379,12 @@ fun MainScreen(
 
                             Canvas(
                                 modifier = Modifier
-                                    .size(5000.dp)
+                                    .size(10000.dp)
 
                                     .pointerInput(Unit) {
                                         detectTransformGestures { centroid, pan, zoom, rotation ->
                                             val oldScale = localScale
-                                            val newScale = (oldScale * zoom).coerceIn(0.1f, 8f)
+                                            val newScale = (oldScale * zoom).coerceIn(minzoomlevel, maxzoomlevel)
                                             val scaleChange = if (oldScale == 0f) 1f else newScale / oldScale
 
                                             // Keep the content point under the centroid fixed while zooming, and add pan
@@ -385,25 +394,24 @@ fun MainScreen(
                                             )
 
                                             localScale = newScale
+
+                                            onAction(MainScreenAction.OnZoom(newScale))
                                         }
                                     }
 
-
-                                    /*
-                                .graphicsLayer {
-                                    // Important: use top-left as transform origin so our math matches
-                                    transformOrigin = TransformOrigin(0f, 0f)
-                                    translationX = localOffset.x
-                                    translationY = localOffset.y
-                                    scaleX = localScale
-                                    scaleY = localScale
-                                }
-
-                                     */
-                                    // Separate pointerInput for taps/longpress so they don't steal events from transform detector
                                     .pointerInput(Unit) {
                                         detectTapGestures(
-                                            onTap = { raw -> println("tap at $raw") },
+                                            onTap = { raw ->
+                                                val contentPoint = (raw - localOffset) / localScale
+
+                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
+
+                                                state.currentArea.items.forEach { item ->
+                                                    if (item.isPolygonClicked(contentPoint)){
+                                                        onAction(MainScreenAction.OnItemClicked(item))
+                                                    }
+                                                }
+                                            },
                                             onLongPress = { raw ->
 
                                                 val contentPoint = (raw - localOffset) / localScale
@@ -414,7 +422,7 @@ fun MainScreen(
                                             },
                                             onDoubleTap = { raw ->
                                                 // Double-tap: zoom in/out focusing at tap point
-                                                val target = if (localScale < 8f) (localScale * 2f).coerceAtMost(8f) else 0.1f
+                                                val target = if (localScale < maxzoomlevel) (localScale * 2f).coerceAtMost(maxzoomlevel) else minzoomlevel
                                                 val scaleChange = target / localScale
                                                 localOffset = Offset(
                                                     x = raw.x - scaleChange * (raw.x - localOffset.x),
@@ -424,14 +432,16 @@ fun MainScreen(
                                             },
                                         )
                                     }
+
+
                                     .graphicsLayer {
                                         transformOrigin = TransformOrigin(0f, 0f)
                                         translationX = localOffset.x
                                         translationY = localOffset.y
                                         scaleX = localScale
                                         scaleY = localScale
-                                        // optional: clip = true
                                     }
+
 
                             ) {
 
@@ -511,32 +521,61 @@ fun MainScreen(
                                             style = Fill
                                         )
 
-                                        val textLayoutResult = textMeasurer.measure(item.title)
-                                        val textSize = textLayoutResult.size
+
+                                        val titleFontSp = (25f / localScale).coerceIn(10f, 64f).sp
+                                        val descFontSp  = (17f / localScale).coerceIn(8f, 48f).sp
+
+                                        val titleStyle = TextStyle(color = item.getColor(), fontSize = titleFontSp)
+                                        val descStyle  = TextStyle(color = item.getColor().copy(alpha = 0.8f), fontSize = descFontSp)
+
+                                        val titleText = AnnotatedString(item.title)
+                                        val descText = AnnotatedString(item.description)
+
+                                        val titleLayout = textMeasurer.measure(text = titleText, style = titleStyle)
+                                        val titleSize = titleLayout.size // IntSize (px)
+                                        val titleW = titleSize.width.toFloat()
+                                        val titleH = titleSize.height.toFloat()
+
+                                        var descW = 0f
+                                        var descH = 0f
+                                        val hasDesc = item.description.isNotBlank()
+                                        val descLayout = if (hasDesc) {
+                                            textMeasurer.measure(text = descText, style = descStyle)
+                                        } else null
+
+                                        if (descLayout != null) {
+                                            val ds = descLayout.size
+                                            descW = ds.width.toFloat()
+                                            descH = ds.height.toFloat()
+                                        }
+
+                                        val spacing = (4f / localScale)
+                                        val totalHeight = titleH + (if (hasDesc) spacing + descH else 0f)
                                         val center = item.getCenter()
-                                        val textTopLeft = Offset(
-                                            x = center.x - textSize.width / 2,
-                                            y = center.y - textSize.height / 2
+                                        val stackTopY = center.y - totalHeight / 2f
+                                        val titleTopLeft = Offset(
+                                            x = center.x - titleW / 2f,
+                                            y = stackTopY
                                         )
 
                                         this.drawText(
                                             textMeasurer = textMeasurer,
-                                            text = item.title,
-                                            topLeft = textTopLeft,
-                                            style = TextStyle(
-                                                color = item.getColor()
-                                            )
+                                            text = titleText,
+                                            topLeft = titleTopLeft,
+                                            style = titleStyle
                                         )
 
-                                        if (item.title.isNotEmpty()){
-                                            val descriptionstart = textMeasurer.measure(item.title).getBoundingBox(0).bottomLeft
+                                        if (hasDesc && descLayout != null) {
+                                            val descTopLeft = Offset(
+                                                x = center.x - descW,
+                                                y = stackTopY + titleH + spacing
+                                            )
+
                                             this.drawText(
                                                 textMeasurer = textMeasurer,
-                                                text = item.description,
-                                                topLeft = textTopLeft + descriptionstart,
-                                                style = TextStyle(
-                                                    color = item.getColor().copy(alpha = 0.8f)
-                                                )
+                                                text = descText,
+                                                topLeft = descTopLeft,
+                                                style = descStyle
                                             )
                                         }
 
@@ -547,13 +586,15 @@ fun MainScreen(
                         }
 
 
+                        println(state.gridspacing)
+
                         LegendOverlay(
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
                                 .padding(6.dp),
                             scale = localScale,
                             gridSpacingInContentPx = state.gridspacing,
-                            metersPerGrid = 0.2f
+                            metersPerGrid = state.gridspacing / 50
                         )
                     }
 

@@ -14,6 +14,7 @@ data class MainScreenState(
     val currentSearchResult: List<SearchItem> = emptyList(),
     val currentDrawingOffsets: List<Offset> = emptyList(),
     val iteminfopopupshown : Boolean = false,
+    val iteminfopopupItem: Item? = null,
     val areainfopopupshown : Boolean = false,
     val availableAreas : List<AvailableArea> = emptyList(),
     val currentArea: Area? = null,
@@ -33,6 +34,8 @@ sealed interface MainScreenAction{
     data class OnAreaDialogSave(val area: Area) : MainScreenAction
     data object OnCreateAreaStart: MainScreenAction
     data object OnAreaDialogDismiss : MainScreenAction
+    data class OnZoom(val newzoomlevel: Float) : MainScreenAction
+    data class OnItemClicked(val item: Item) : MainScreenAction
 
     data object OnSettingsClicked : MainScreenAction
 
