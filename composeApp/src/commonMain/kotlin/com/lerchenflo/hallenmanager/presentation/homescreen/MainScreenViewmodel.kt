@@ -17,8 +17,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -46,11 +49,24 @@ class MainScreenViewmodel(
 
             viewModelScope.launch {
                 _selectedAreaId
-                    .filterNotNull()
+                    .filter { it > 0L }
                     .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
-                    .collect { area ->
-                        state = state.copy(currentArea = area)
+                    .flowOn(Dispatchers.IO)
+                    .collectLatest { area ->
+                        state = state.copy(
+                            currentArea = area
+                        )
                     }
+            }
+
+            viewModelScope.launch {
+                areaRepository.getAllLayers()
+                    .flowOn(Dispatchers.IO)
+                    .collectLatest { layers ->
+                    state = state.copy(
+                        availableLayers = layers
+                    )
+                }
             }
 
             //Available areas dropdown
@@ -65,6 +81,8 @@ class MainScreenViewmodel(
                             )
                         }
                     }
+                    .flowOn(Dispatchers.Default)
+                    .distinctUntilChanged()
                     .collectLatest { availableareas ->
                         state = state.copy(
                             availableAreas = availableareas
@@ -85,6 +103,7 @@ class MainScreenViewmodel(
                             }
                         }
                     }
+                    .flowOn(Dispatchers.Default)
                     .collect { searchResults ->
                         state = state.copy(
                             currentSearchResult = searchResults.map {

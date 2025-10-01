@@ -43,8 +43,8 @@ fun CreateItemPopup(
     onAction: (MainScreenAction) -> Unit = {},
     state : MainScreenState = MainScreenState()
 ) {
-    var title by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(state.iteminfopopupItem?.title ?: "") }
+    var description by remember { mutableStateOf(state.iteminfopopupItem?.description ?: "") }
 
     var useCustomColor by remember { mutableStateOf(false) }
 
@@ -63,7 +63,7 @@ fun CreateItemPopup(
         text = {
             Column {
                 Text(
-                    text = state.iteminfopopupItem?.title ?: stringResource(Res.string.add_item_titletext),
+                    text = stringResource(Res.string.add_item_titletext),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -75,7 +75,7 @@ fun CreateItemPopup(
                     onValueChange = { title = it },
                     label = {
                         Text(
-                            state.iteminfopopupItem?.title ?: stringResource(Res.string.name)
+                            stringResource(Res.string.name)
                         )},
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -87,7 +87,7 @@ fun CreateItemPopup(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text(
-                        state.iteminfopopupItem?.description ?: stringResource(Res.string.desc)
+                        stringResource(Res.string.desc)
                     ) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -194,12 +194,13 @@ fun CreateItemPopup(
 
                 onAction(MainScreenAction.OnInfoDialogSave(
                     Item(
+                        id = state.iteminfopopupItem?.id ?: 0L,
                         title = title,
                         description = description,
                         layer = selectedLayer,
                         cornerPoints = state.currentDrawingOffsets,
                         color = color?.value?.toLong(),
-                        areaId = state.currentArea?.id ?: 0
+                        areaId = state.iteminfopopupItem?.id ?: state.currentArea?.id ?: 0
                     )
                 ))
             }) {

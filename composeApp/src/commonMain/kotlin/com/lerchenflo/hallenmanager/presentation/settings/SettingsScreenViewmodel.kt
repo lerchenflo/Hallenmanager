@@ -13,6 +13,7 @@ import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class SettingsScreenViewmodel(
@@ -24,6 +25,16 @@ class SettingsScreenViewmodel(
         private set
 
 
+    init {
+        viewModelScope.launch {
+            areaRepository.getAllLayers().collectLatest { layers ->
+                state = state.copy(
+                    availableLayers = layers
+                )
+            }
+        }
+    }
+
 
     fun onAction(action: SettingsScreenAction) {
         when (action) {
@@ -32,6 +43,27 @@ class SettingsScreenViewmodel(
                     navigator.navigateUp()
                 }
             }
+
+            SettingsScreenAction.OnCreateLayerStart -> {
+                state = state.copy(
+                    addlayerpopupshown = true
+                )
+            }
+
+            SettingsScreenAction.OnCreateLayerDismiss -> {
+                state = state.copy(
+                    addlayerpopupshown = false
+                )
+            }
+
+            is SettingsScreenAction.OnCreateLayerSave -> {
+                viewModelScope.launch {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        areaRepository.upsertLayer(action.layer)
+                    }
+                }
+            }
+
         }
     }
 }

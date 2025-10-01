@@ -3,10 +3,13 @@ package com.lerchenflo.hallenmanager.data.database
 import com.lerchenflo.hallenmanager.data.ItemWithListsDto
 import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
+import com.lerchenflo.hallenmanager.domain.Layer
 import com.lerchenflo.hallenmanager.domain.toArea
 import com.lerchenflo.hallenmanager.domain.toAreaDto
 import com.lerchenflo.hallenmanager.domain.toItem
 import com.lerchenflo.hallenmanager.domain.toItemDto
+import com.lerchenflo.hallenmanager.domain.toLayer
+import com.lerchenflo.hallenmanager.domain.toLayerDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -20,6 +23,10 @@ class AreaRepository(
 
     suspend fun upsertItem(item: Item, areaid: Long) {
         database.areaDao().upsertItemWithCorners(item.toItemDto(areaid))
+    }
+
+    suspend fun upsertLayer(layer: Layer) {
+        database.areaDao().upsertLayer(layer.toLayerDto())
     }
 
     suspend fun getAreaCount(): Int {
@@ -58,6 +65,14 @@ class AreaRepository(
 
     fun getItemsFlow(areaid: Long): Flow<List<ItemWithListsDto>> {
         return database.areaDao().getItemsForAreaFlow(areaid)
+    }
+
+    fun getAllLayers(): Flow<List<Layer>>{
+        return database.areaDao().getAllLayers().map { layerDtos ->
+            layerDtos.map { layerDto ->
+                layerDto.toLayer()
+            }
+        }
     }
 
 }

@@ -9,21 +9,30 @@ import com.lerchenflo.hallenmanager.data.AreaWithItemsDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
 import com.lerchenflo.hallenmanager.data.ItemWithListsDto
+import com.lerchenflo.hallenmanager.data.LayerDto
 import com.lerchenflo.hallenmanager.domain.Item
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AreaDao {
 
+    @Transaction
     @Upsert
     suspend fun upsertAreaEntity(area: AreaDto): Long
 
+    @Transaction
     @Upsert
     suspend fun upsertItems(items: List<ItemDto>): List<Long>
 
+    @Transaction
     @Upsert
     suspend fun upsertItem(item: ItemDto): Long
 
+    @Transaction
+    @Upsert
+    suspend fun upsertLayer(layer: LayerDto): Long
+
+    @Transaction
     @Upsert
     suspend fun upsertCornerPoints(points: List<CornerPointDto>): List<Long>
 
@@ -68,8 +77,13 @@ interface AreaDao {
     @Query("SELECT * FROM itemdto WHERE areaId = :areaId")
     fun getItemsForAreaFlow(areaId: Long): Flow<List<ItemWithListsDto>>
 
+    @Transaction
     @Query("SELECT * FROM itemdto")
     fun getAllItems(): Flow<List<ItemWithListsDto>>
+
+    @Transaction
+    @Query("SELECT * FROM LayerDto")
+    fun getAllLayers(): Flow<List<LayerDto>>
 
 
     @Transaction
