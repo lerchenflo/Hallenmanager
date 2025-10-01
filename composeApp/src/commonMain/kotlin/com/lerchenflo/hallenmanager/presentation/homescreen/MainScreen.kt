@@ -39,6 +39,7 @@ import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -74,6 +76,7 @@ import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.searchbarhint
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.math.min
@@ -375,7 +378,10 @@ fun MainScreen(
                         ){
 
 
-                            val textMeasurer = rememberTextMeasurer()
+                            LaunchedEffect(localScale){
+                                delay(100)
+                                onAction(MainScreenAction.OnZoom(localScale))
+                            }
 
                             Canvas(
                                 modifier = Modifier
@@ -395,7 +401,6 @@ fun MainScreen(
 
                                             localScale = newScale
 
-                                            onAction(MainScreenAction.OnZoom(newScale))
                                         }
                                     }
 
@@ -405,12 +410,6 @@ fun MainScreen(
                                                 val contentPoint = (raw - localOffset) / localScale
 
                                                 val snapped = snapToGrid(contentPoint, state.gridspacing)
-
-                                                state.currentArea.items.forEach { item ->
-                                                    if (item.isPolygonClicked(contentPoint)){
-                                                        onAction(MainScreenAction.OnItemClicked(item))
-                                                    }
-                                                }
                                             },
                                             onLongPress = { raw ->
 
@@ -443,11 +442,10 @@ fun MainScreen(
                                     }
 
 
+
+
                             ) {
 
-                                drawRect(Color.LightGray)
-
-                                //Grid
                                 var x = 0f
                                 while (x <= size.width) {
                                     drawLine(
@@ -493,100 +491,25 @@ fun MainScreen(
                                 )
 
 
-                                //TODO: Replace with composable on top of canvas
-                                //Draw items in this area
-                                state.currentArea.items.forEach { item ->
 
-                                    if (item.cornerPoints.size > 2){
-                                        val path = Path().apply {
-                                            fillType = PathFillType.NonZero
-                                            moveTo(item.cornerPoints[0].x, item.cornerPoints[0].y)
-                                            for (i in 1 until item.cornerPoints.size) {
-                                                lineTo(item.cornerPoints[i].x, item.cornerPoints[i].y)
-                                            }
-                                            close() // close the polygon
-                                        }
-
-                                        //Outline color
-                                        drawPath(
-                                            path = path,
-                                            color = item.getColor(),
-                                            style = Stroke(width = 4f, cap = StrokeCap.Round)
-                                        )
-
-                                        //Fill polygon with color
-                                        drawPath(
-                                            path = path,
-                                            color = item.getColor().copy(alpha = 0.1f),
-                                            style = Fill
-                                        )
+                            }
 
 
-                                        val titleFontSp = (25f / localScale).coerceIn(10f, 64f).sp
-                                        val descFontSp  = (17f / localScale).coerceIn(8f, 48f).sp
-
-                                        val titleStyle = TextStyle(color = item.getColor(), fontSize = titleFontSp)
-                                        val descStyle  = TextStyle(color = item.getColor().copy(alpha = 0.8f), fontSize = descFontSp)
-
-                                        val titleText = AnnotatedString(item.title)
-                                        val descText = AnnotatedString(item.description)
-
-                                        val titleLayout = textMeasurer.measure(text = titleText, style = titleStyle)
-                                        val titleSize = titleLayout.size // IntSize (px)
-                                        val titleW = titleSize.width.toFloat()
-                                        val titleH = titleSize.height.toFloat()
-
-                                        var descW = 0f
-                                        var descH = 0f
-                                        val hasDesc = item.description.isNotBlank()
-                                        val descLayout = if (hasDesc) {
-                                            textMeasurer.measure(text = descText, style = descStyle)
-                                        } else null
-
-                                        if (descLayout != null) {
-                                            val ds = descLayout.size
-                                            descW = ds.width.toFloat()
-                                            descH = ds.height.toFloat()
-                                        }
-
-                                        val spacing = (4f / localScale)
-                                        val totalHeight = titleH + (if (hasDesc) spacing + descH else 0f)
-                                        val center = item.getCenter()
-                                        val stackTopY = center.y - totalHeight / 2f
-                                        val titleTopLeft = Offset(
-                                            x = center.x - titleW / 2f,
-                                            y = stackTopY
-                                        )
-
-                                        this.drawText(
-                                            textMeasurer = textMeasurer,
-                                            text = titleText,
-                                            topLeft = titleTopLeft,
-                                            style = titleStyle
-                                        )
-
-                                        if (hasDesc && descLayout != null) {
-                                            val descTopLeft = Offset(
-                                                x = center.x - descW,
-                                                y = stackTopY + titleH + spacing
-                                            )
-
-                                            this.drawText(
-                                                textMeasurer = textMeasurer,
-                                                text = descText,
-                                                topLeft = descTopLeft,
-                                                style = descStyle
-                                            )
-                                        }
-
-
-                                    }
+                            //Draw items in this area
+                            state.currentArea.items.forEach { item ->
+                                if (item.cornerPoints.size > 2) {
+                                    ItemPolygon(
+                                        item = item,
+                                        scale = localScale,
+                                        offset = localOffset,
+                                        onClick = {onAction(MainScreenAction.OnItemClicked(item)) }
+                                    )
                                 }
                             }
                         }
 
 
-                        println(state.gridspacing)
+
 
                         LegendOverlay(
                             modifier = Modifier
