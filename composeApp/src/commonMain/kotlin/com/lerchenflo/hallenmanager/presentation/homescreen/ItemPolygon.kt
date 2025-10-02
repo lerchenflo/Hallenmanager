@@ -1,7 +1,6 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -32,9 +32,8 @@ fun ItemPolygon(
     item: Item,
     scale: Float,
     offset: Offset,
-    onClick: () -> Unit
 ) {
-    // Calculate bounding box (world/item coordinates)
+    // Calculate bounding box in CONTENT coordinates (pixels)
     val minX = item.cornerPoints.minOf { it.x }
     val minY = item.cornerPoints.minOf { it.y }
     val maxX = item.cornerPoints.maxOf { it.x }
@@ -43,57 +42,31 @@ fun ItemPolygon(
     val width = maxX - minX
     val height = maxY - minY
 
-    // Transform to screen coordinates for Box placement
-    val screenX = minX * scale + offset.x
-    val screenY = minY * scale + offset.y
-    val screenWidth = width * scale
-    val screenHeight = height * scale
+    // Convert pixels to dp for Compose
+    val density = LocalDensity.current
+    val widthDp = with(density) { width.toDp() }
+    val heightDp = with(density) { height.toDp() }
 
+    // Position the Box in CONTENT space using pixel offset
     Box(
         modifier = Modifier
-            .offset { IntOffset(screenX.toInt(), screenY.toInt()) }
-            .size(screenWidth.dp, screenHeight.dp)
+            .offset { IntOffset(minX.toInt(), minY.toInt()) }
+            .size(widthDp, heightDp)
     ) {
-        // Keep current canvas size in pixels so pointerInput can compute relative points
-        val canvasSizeState = remember { mutableStateOf(IntSize(0, 0)) }
-
         Canvas(
-            modifier = Modifier
-                .fillMaxSize()
-                .onSizeChanged { canvasSizeState.value = it } // save current size (px)
-                .pointerInput(item) {
-                    detectTapGestures { tapOffset ->
-                        // compute polygon points in canvas-local coordinates
-                        val cs = canvasSizeState.value
-                        if (cs.width == 0 || cs.height == 0 || width == 0f || height == 0f) return@detectTapGestures
-
-                        val canvasW = cs.width.toFloat()
-                        val canvasH = cs.height.toFloat()
-
-                        val relativePoints = item.cornerPoints.map {
-                            Offset(
-                                ((it.x - minX) / width) * canvasW,
-                                ((it.y - minY) / height) * canvasH
-                            )
-                        }
-
-                        if (isPointInPolygon(tapOffset, relativePoints)) {
-                            onClick()
-                        }
-                    }
-                }
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Build path in the same way (use drawScope.size here)
+            // Build path using RELATIVE coordinates within the bounding box
             val path = Path().apply {
                 fillType = PathFillType.NonZero
 
-                // drawScope size corresponds to the same canvas-local coordinates we used above
                 val relativePoints = item.cornerPoints.map {
                     Offset(
                         ((it.x - minX) / width) * size.width,
                         ((it.y - minY) / height) * size.height
                     )
                 }
+
                 if (relativePoints.isNotEmpty()) {
                     moveTo(relativePoints[0].x, relativePoints[0].y)
                     for (i in 1 until relativePoints.size) {
@@ -103,11 +76,11 @@ fun ItemPolygon(
                 }
             }
 
-            // Outline
+            // Outline - stroke width adjusted for scale
             drawPath(
                 path = path,
                 color = item.getColor(),
-                style = Stroke(width = 4f / scale * (screenWidth / size.width), cap = StrokeCap.Round)
+                style = Stroke(width = 4f / scale, cap = StrokeCap.Round)
             )
 
             // Fill
@@ -118,13 +91,13 @@ fun ItemPolygon(
             )
         }
 
-        // Text overlays - as regular Compose Text
+        // Text overlays
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val titleFontSp = (25f / scale).coerceIn(10f, 64f).sp
-            val descFontSp = (17f / scale).coerceIn(8f, 48f).sp
+            val titleFontSp = (25f / scale).coerceIn(10f, 20f).sp
+            val descFontSp = (17f / scale).coerceIn(8f, 18f).sp
 
             Text(
                 text = item.title,
@@ -145,22 +118,36 @@ fun ItemPolygon(
     }
 }
 
-/** Ray-casting point-in-polygon test (works for convex & concave polygons). */
-private fun isPointInPolygon(point: Offset, polygon: List<Offset>): Boolean {
-    var inside = false
-    val n = polygon.size
-    if (n < 3) return false
-    var j = n - 1
-    for (i in 0 until n) {
-        val xi = polygon[i].x
-        val yi = polygon[i].y
-        val xj = polygon[j].x
-        val yj = polygon[j].y
+fun isPointInPolygon(point: Offset, polygon: List<Offset>): Boolean {
+    if (polygon.size < 3) return false
 
-        val intersect = ((yi > point.y) != (yj > point.y)) &&
-                (point.x < (xj - xi) * (point.y - yi) / (yj - yi + 0.0f) + xi)
-        if (intersect) inside = !inside
+    val cleanPolygon = if (polygon.first() == polygon.last() && polygon.size > 3) {
+        polygon.dropLast(1)
+    } else {
+        polygon
+    }
+
+    if (cleanPolygon.size < 3) return false
+
+    var inside = false
+    var j = cleanPolygon.size - 1
+
+    for (i in cleanPolygon.indices) {
+        val xi = cleanPolygon[i].x
+        val yi = cleanPolygon[i].y
+        val xj = cleanPolygon[j].x
+        val yj = cleanPolygon[j].y
+
+        val cond1 = (yi > point.y) != (yj > point.y)
+
+        if (cond1) {
+            val xIntersect = (xj - xi) * (point.y - yi) / (yj - yi) + xi
+            if (point.x < xIntersect) {
+                inside = !inside
+            }
+        }
         j = i
     }
+
     return inside
 }

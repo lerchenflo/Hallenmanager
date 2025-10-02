@@ -41,6 +41,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -367,6 +368,21 @@ fun MainScreen(
                     ){
 
 
+
+                        val visibleItems = remember(state.currentArea.items, localScale, localOffset, viewportSize) {
+                            state.currentArea.items.filter { item ->
+                                val minX = item.cornerPoints.minOf { it.x } * localScale + localOffset.x
+                                val maxX = item.cornerPoints.maxOf { it.x } * localScale + localOffset.x
+                                val minY = item.cornerPoints.minOf { it.y } * localScale + localOffset.y
+                                val maxY = item.cornerPoints.maxOf { it.y } * localScale + localOffset.y
+
+                                // Check if bounding box intersects viewport
+                                maxX >= 0 && minX <= viewportSize.width &&
+                                        maxY >= 0 && minY <= viewportSize.height
+                            }
+                        }
+
+
                         //Canvasbox
                         Box(
                             modifier = Modifier
@@ -374,6 +390,62 @@ fun MainScreen(
                                 .verticalScroll(rememberScrollState())
                                 .horizontalScroll(rememberScrollState())
                                 .clipToBounds()
+                                .pointerInput(Unit) {
+                                    detectTransformGestures { centroid, pan, zoom, rotation ->
+                                        val oldScale = localScale
+                                        val newScale = (oldScale * zoom).coerceIn(minzoomlevel, maxzoomlevel)
+                                        val scaleChange = if (oldScale == 0f) 1f else newScale / oldScale
+
+                                        // Keep the content point under the centroid fixed while zooming, and add pan
+                                        localOffset = Offset(
+                                            x = centroid.x - scaleChange * (centroid.x - localOffset.x) + pan.x,
+                                            y = centroid.y - scaleChange * (centroid.y - localOffset.y) + pan.y
+                                        )
+
+                                        localScale = newScale
+
+                                    }
+                                }
+
+                                .pointerInput(visibleItems) {
+                                    detectTapGestures(
+                                        onTap = { raw ->
+                                            val contentPoint = (raw - localOffset) / localScale
+                                            for (item in visibleItems) { //In viewmodel coroutinescope??
+
+                                                if (isPointInPolygon(contentPoint, item.cornerPoints)) {
+                                                    onAction(MainScreenAction.OnItemClicked(item))
+                                                    break
+                                                }
+                                            }
+                                        },
+                                        onLongPress = { raw ->
+
+                                            val contentPoint = (raw - localOffset) / localScale
+
+                                            val snapped = snapToGrid(contentPoint, state.gridspacing)
+
+                                            onAction(MainScreenAction.OnAddPoint(snapped))
+                                        },
+                                        onDoubleTap = { raw ->
+                                            // Double-tap: zoom in/out focusing at tap point
+                                            val target = if (localScale < maxzoomlevel) (localScale * 2f).coerceAtMost(maxzoomlevel) else minzoomlevel
+                                            val scaleChange = target / localScale
+                                            localOffset = Offset(
+                                                x = raw.x - scaleChange * (raw.x - localOffset.x),
+                                                y = raw.y - scaleChange * (raw.y - localOffset.y)
+                                            )
+                                            localScale = target
+                                        },
+                                    )
+                                }
+                                .graphicsLayer {
+                                    transformOrigin = TransformOrigin(0f, 0f)
+                                    translationX = localOffset.x
+                                    translationY = localOffset.y
+                                    scaleX = localScale
+                                    scaleY = localScale
+                                }
 
                         ){
 
@@ -386,63 +458,6 @@ fun MainScreen(
                             Canvas(
                                 modifier = Modifier
                                     .size(10000.dp)
-
-                                    .pointerInput(Unit) {
-                                        detectTransformGestures { centroid, pan, zoom, rotation ->
-                                            val oldScale = localScale
-                                            val newScale = (oldScale * zoom).coerceIn(minzoomlevel, maxzoomlevel)
-                                            val scaleChange = if (oldScale == 0f) 1f else newScale / oldScale
-
-                                            // Keep the content point under the centroid fixed while zooming, and add pan
-                                            localOffset = Offset(
-                                                x = centroid.x - scaleChange * (centroid.x - localOffset.x) + pan.x,
-                                                y = centroid.y - scaleChange * (centroid.y - localOffset.y) + pan.y
-                                            )
-
-                                            localScale = newScale
-
-                                        }
-                                    }
-
-                                    .pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onTap = { raw ->
-                                                val contentPoint = (raw - localOffset) / localScale
-
-                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
-                                            },
-                                            onLongPress = { raw ->
-
-                                                val contentPoint = (raw - localOffset) / localScale
-
-                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
-
-                                                onAction(MainScreenAction.OnAddPoint(snapped))
-                                            },
-                                            onDoubleTap = { raw ->
-                                                // Double-tap: zoom in/out focusing at tap point
-                                                val target = if (localScale < maxzoomlevel) (localScale * 2f).coerceAtMost(maxzoomlevel) else minzoomlevel
-                                                val scaleChange = target / localScale
-                                                localOffset = Offset(
-                                                    x = raw.x - scaleChange * (raw.x - localOffset.x),
-                                                    y = raw.y - scaleChange * (raw.y - localOffset.y)
-                                                )
-                                                localScale = target
-                                            },
-                                        )
-                                    }
-
-
-                                    .graphicsLayer {
-                                        transformOrigin = TransformOrigin(0f, 0f)
-                                        translationX = localOffset.x
-                                        translationY = localOffset.y
-                                        scaleX = localScale
-                                        scaleY = localScale
-                                    }
-
-
-
 
                             ) {
 
@@ -496,14 +511,17 @@ fun MainScreen(
 
 
                             //Draw items in this area
-                            state.currentArea.items.forEach { item ->
+                            visibleItems.forEach { item ->
                                 if (item.cornerPoints.size > 2) {
-                                    ItemPolygon(
-                                        item = item,
-                                        scale = localScale,
-                                        offset = localOffset,
-                                        onClick = {onAction(MainScreenAction.OnItemClicked(item)) }
-                                    )
+                                    key("${item.id}_${item.title}") {
+                                        ItemPolygon(
+                                            item = item,
+                                            scale = localScale,
+                                            offset = localOffset,
+
+                                        )
+                                    }
+
                                 }
                             }
                         }
