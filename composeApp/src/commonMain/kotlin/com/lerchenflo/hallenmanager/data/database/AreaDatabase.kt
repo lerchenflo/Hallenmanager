@@ -13,7 +13,7 @@ import com.lerchenflo.hallenmanager.data.relations.ItemLayerCrossRef
 @Database(
     entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class, ItemLayerCrossRef::class],
     exportSchema = true,
-    version = 7
+    version = 8
 )
 
 

@@ -41,7 +41,7 @@ fun LayeritemUi(
 
         Text(
             modifier = Modifier.weight(1f),
-            text = layer.name
+            text = layer.name + " ${layer.sortId}"
         )
 
 

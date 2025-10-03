@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.Item
+import com.lerchenflo.hallenmanager.domain.Layer
 import com.lerchenflo.hallenmanager.presentation.ColorPicker
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_item_titletext
@@ -37,6 +38,7 @@ import hallenmanager.composeapp.generated.resources.name
 import hallenmanager.composeapp.generated.resources.use_custom_color
 import hallenmanager.composeapp.generated.resources.use_layer_color
 import org.jetbrains.compose.resources.stringResource
+import kotlin.collections.emptyList
 
 @Composable
 fun CreateItemPopup(
@@ -46,12 +48,12 @@ fun CreateItemPopup(
     var title by remember { mutableStateOf(state.iteminfopopupItem?.title ?: "") }
     var description by remember { mutableStateOf(state.iteminfopopupItem?.description ?: "") }
 
-    var useCustomColor by remember { mutableStateOf(false) }
+    var useCustomColor by remember { mutableStateOf(state.iteminfopopupItem?.color != null) }
 
-    var color by remember { mutableStateOf<Color?>(null) }
+    var color by remember { mutableStateOf<Color?>(state.iteminfopopupItem?.getColor()) }
 
 
-    var selectedLayer by remember { mutableStateOf(state.availableLayers) }
+    var selectedLayers by remember { mutableStateOf(state.iteminfopopupItem?.layers ?: emptyList<Layer>()) }
     var expanded by remember { mutableStateOf(false) }
 
 
@@ -119,9 +121,11 @@ fun CreateItemPopup(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Checkbox(
-                                                checked = layer.shown,
+                                                checked = selectedLayers.contains(layer),
                                                 onCheckedChange = {
-                                                    layer.shown = !layer.shown
+                                                    if (!selectedLayers.contains(layer)){
+                                                        selectedLayers += layer
+                                                    }
                                                 }
                                             )
 
@@ -134,7 +138,11 @@ fun CreateItemPopup(
                                         }
                                     },
                                     onClick = {
-                                        layer.shown = !layer.shown
+                                        if (!selectedLayers.contains(layer)){
+                                            selectedLayers += layer
+                                        }else {
+                                            selectedLayers -= layer
+                                        }
                                         //expanded = false
                                     }
                                 )
@@ -197,10 +205,10 @@ fun CreateItemPopup(
                         itemid = state.iteminfopopupItem?.itemid ?: 0L,
                         title = title,
                         description = description,
-                        layer = selectedLayer,
+                        layers = selectedLayers,
                         cornerPoints = state.currentDrawingOffsets,
-                        color = color?.value?.toLong(),
-                        areaId = state.iteminfopopupItem?.itemid ?: state.currentArea?.id ?: 0
+                        color = color?.value?.toLong() ?: state.iteminfopopupItem?.color,
+                        areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: 0
                     )
                 ))
             }) {

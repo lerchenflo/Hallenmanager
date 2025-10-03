@@ -7,10 +7,11 @@ data class Layer(
     val layerid: Long,
     val name: String,
     val sortId: Int,
-    var shown: Boolean,
+    val shown: Boolean,
     val color: Long
 ){
     fun getColor(): Color {
+        println("Layercolor: ${Color(color.toULong())}")
         return Color(color.toULong())
     }
 }

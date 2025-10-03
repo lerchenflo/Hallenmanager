@@ -10,6 +10,7 @@ import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
 import com.lerchenflo.hallenmanager.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.data.LayerDto
+import com.lerchenflo.hallenmanager.data.relations.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.domain.Item
 import kotlinx.coroutines.flow.Flow
 
@@ -36,16 +37,43 @@ interface AreaDao {
     @Upsert
     suspend fun upsertCornerPoints(points: List<CornerPointDto>): List<Long>
 
+    @Upsert
+    suspend fun upsertItemLayerCrossRef(crossRef: ItemLayerCrossRef)
+
+    @Upsert
+    suspend fun upsertItemLayerCrossRefs(crossRefs: List<ItemLayerCrossRef>)
+
+    @Query("DELETE FROM itemlayercrossref WHERE itemId = :itemId")
+    suspend fun deleteItemLayerCrossRefsForItem(itemId: Long)
+
     @Transaction
     suspend fun upsertItemWithCorners(item: ItemWithListsDto) {
 
-        val itemid = upsertItem(item.item)
+        var itemid = upsertItem(item.item)
+
+        if (itemid == -1L){
+            itemid = item.item.itemid
+        }
 
         if (item.cornerPoints.isNotEmpty()) {
             val pointsWithIds = item.cornerPoints.map { cp ->
                 cp.copy(itemId = itemid)
             }
             upsertCornerPoints(pointsWithIds)
+        }
+
+        if (item.layers.isNotEmpty()) {
+            // Delete existing cross-references for this item
+            deleteItemLayerCrossRefsForItem(itemid)
+
+            // Insert new cross-references
+            val crossRefs = item.layers.map { layer ->
+                ItemLayerCrossRef(
+                    itemid = itemid,
+                    layerid = layer.layerid
+                )
+            }
+            upsertItemLayerCrossRefs(crossRefs)
         }
     }
 
@@ -109,10 +137,8 @@ interface AreaDao {
 
     @Transaction
     suspend fun upsertLayerList(layers: List<LayerDto>) {
-        for (i in layers.indices){
-            upsertLayer(layers[i].copy(
-                sortId = i
-            ))
+        layers.forEach {
+            upsertLayer(it)
         }
     }
 }

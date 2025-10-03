@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
 import com.lerchenflo.hallenmanager.data.relations.ItemWithListsDto
-import com.lerchenflo.hallenmanager.data.LayerDto
 import com.lerchenflo.hallenmanager.util.isFuzzySubsequence
 import com.lerchenflo.hallenmanager.util.levenshteinWithinThreshold
 import com.lerchenflo.hallenmanager.util.normalizeForSearch
@@ -18,7 +17,7 @@ data class Item(
     val areaId: Long,
     val title: String,
     val description: String,
-    val layer: List<Layer>,
+    val layers: List<Layer>,
     val color: Long?,
     val lastchanged: String = Clock.System.now().toEpochMilliseconds().toString(),
     val created : String = Clock.System.now().toEpochMilliseconds().toString(),
@@ -27,15 +26,16 @@ data class Item(
 
 
     fun getColor(): Color {
-        val layercolor = layer.maxByOrNull { layer ->
+        val layercolor = layers.minByOrNull { layer ->
             layer.sortId
         }?.getColor()
+        println("Layercolor for item: $layercolor layercount: ${layers.size}")
 
+        //Return itemcolor, else layercolor
         return if (color == null){
             layercolor ?: Color.Black
         }else {
             Color(color.toULong())
-
         }
     }
 
@@ -138,7 +138,7 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
             offsetY = it.y
         )
     },
-    layers = layer.map {
+    layers = layers.map {
         it.toLayerDto()
     }
 )
@@ -148,7 +148,7 @@ fun ItemWithListsDto.toItem(): Item = Item(
     areaId = item.areaId,
     title = item.title,
     description = item.description,
-    layer = layers.map {
+    layers = layers.map {
         it.toLayer()
     },
     lastchanged = item.lastChanged,
