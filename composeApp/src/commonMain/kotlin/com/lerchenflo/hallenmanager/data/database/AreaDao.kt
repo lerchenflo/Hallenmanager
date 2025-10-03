@@ -105,4 +105,14 @@ interface AreaDao {
 
         return getAreaById(areaid)!!
     }
+
+
+    @Transaction
+    suspend fun upsertLayerList(layers: List<LayerDto>) {
+        for (i in layers.indices){
+            upsertLayer(layers[i].copy(
+                sortId = i
+            ))
+        }
+    }
 }

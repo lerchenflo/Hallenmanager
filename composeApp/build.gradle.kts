@@ -75,6 +75,8 @@ kotlin {
             //Colorpicker
             implementation(libs.colorpicker.compose)
 
+            //Reordable Column
+            implementation(libs.reorderable)
 
         }
         commonTest.dependencies {

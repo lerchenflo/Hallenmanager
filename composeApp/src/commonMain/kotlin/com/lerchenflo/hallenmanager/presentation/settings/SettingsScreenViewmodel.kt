@@ -75,6 +75,16 @@ class SettingsScreenViewmodel(
                     selectedLayerPopupLayer = action.layer
                 )
             }
+
+            is SettingsScreenAction.OnLayerReorder -> {
+                viewModelScope.launch {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        areaRepository.upsertLayerList(action.layers)
+
+                        //Available layers get updated automatically
+                    }
+                }
+            }
         }
     }
 }

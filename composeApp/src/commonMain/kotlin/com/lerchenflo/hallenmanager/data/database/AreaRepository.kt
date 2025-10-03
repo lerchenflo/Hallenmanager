@@ -29,6 +29,12 @@ class AreaRepository(
         database.areaDao().upsertLayer(layer.toLayerDto())
     }
 
+    suspend fun upsertLayerList(layers: List<Layer>){
+        database.areaDao().upsertLayerList(layers.map {
+            it.toLayerDto()
+        })
+    }
+
     suspend fun getAreaCount(): Int {
         return database.areaDao().getAreaCount()
     }

@@ -10,8 +10,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DragHandle
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -21,20 +26,21 @@ import com.lerchenflo.hallenmanager.domain.Layer
 @Composable
 fun LayeritemUi(
     layer: Layer,
-    onClick : () -> Unit
+    onClick : () -> Unit,
+    modifier: Modifier = Modifier
 ){
     Row(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier
             .clickable{
                 onClick()
             }
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
 
     ){
 
         Text(
-            modifier = Modifier
-                .weight(1f),
+            modifier = Modifier.weight(1f),
             text = layer.name
         )
 
