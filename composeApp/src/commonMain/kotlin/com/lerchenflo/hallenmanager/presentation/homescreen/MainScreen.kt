@@ -513,7 +513,7 @@ fun MainScreen(
                             //Draw items in this area
                             visibleItems.forEach { item ->
                                 if (item.cornerPoints.size > 2) {
-                                    key("${item.id}_${item.title}") {
+                                    key("${item.itemid}_${item.title}") {
                                         ItemPolygon(
                                             item = item,
                                             scale = localScale,

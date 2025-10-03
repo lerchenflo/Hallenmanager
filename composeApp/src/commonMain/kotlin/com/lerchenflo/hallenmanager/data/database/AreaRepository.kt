@@ -1,6 +1,6 @@
 package com.lerchenflo.hallenmanager.data.database
 
-import com.lerchenflo.hallenmanager.data.ItemWithListsDto
+import com.lerchenflo.hallenmanager.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.Layer

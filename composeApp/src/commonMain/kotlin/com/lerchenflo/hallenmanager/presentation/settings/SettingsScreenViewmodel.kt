@@ -60,10 +60,21 @@ class SettingsScreenViewmodel(
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         areaRepository.upsertLayer(action.layer)
+
+                        state = state.copy(
+                            addlayerpopupshown = false,
+                            selectedLayerPopupLayer = null
+                        )
                     }
                 }
             }
 
+            is SettingsScreenAction.OnLayerClick -> {
+                state = state.copy(
+                    addlayerpopupshown = true,
+                    selectedLayerPopupLayer = action.layer
+                )
+            }
         }
     }
 }

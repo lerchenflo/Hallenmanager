@@ -194,13 +194,13 @@ fun CreateItemPopup(
 
                 onAction(MainScreenAction.OnInfoDialogSave(
                     Item(
-                        id = state.iteminfopopupItem?.id ?: 0L,
+                        itemid = state.iteminfopopupItem?.itemid ?: 0L,
                         title = title,
                         description = description,
                         layer = selectedLayer,
                         cornerPoints = state.currentDrawingOffsets,
                         color = color?.value?.toLong(),
-                        areaId = state.iteminfopopupItem?.id ?: state.currentArea?.id ?: 0
+                        areaId = state.iteminfopopupItem?.itemid ?: state.currentArea?.id ?: 0
                     )
                 ))
             }) {

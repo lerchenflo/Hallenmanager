@@ -4,7 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
-import com.lerchenflo.hallenmanager.data.ItemWithListsDto
+import com.lerchenflo.hallenmanager.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.data.LayerDto
 import com.lerchenflo.hallenmanager.util.isFuzzySubsequence
 import com.lerchenflo.hallenmanager.util.levenshteinWithinThreshold
@@ -14,7 +14,7 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 data class Item(
-    val id: Long = 0L,
+    val itemid: Long = 0L,
     val areaId: Long,
     val title: String,
     val description: String,
@@ -123,7 +123,7 @@ data class Item(
 
 fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
     item = ItemDto(
-        id = id,
+        itemid = itemid,
         title = title,
         areaId = areaid,
         description = description,
@@ -133,7 +133,7 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
     ),
     cornerPoints = cornerPoints.map {
         CornerPointDto(
-            itemId = id,
+            itemId = itemid,
             offsetX = it.x,
             offsetY = it.y
         )
@@ -144,7 +144,7 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
 )
 
 fun ItemWithListsDto.toItem(): Item = Item(
-    id = item.id,
+    itemid = item.itemid,
     areaId = item.areaId,
     title = item.title,
     description = item.description,

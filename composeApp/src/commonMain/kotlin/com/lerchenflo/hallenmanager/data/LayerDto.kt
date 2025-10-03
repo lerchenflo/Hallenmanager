@@ -1,6 +1,5 @@
 package com.lerchenflo.hallenmanager.data
 
-import androidx.compose.ui.graphics.Color
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
@@ -8,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Entity
 @Serializable
 data class LayerDto(
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
     val layerid: Long,
     val name: String,
     val sortId: Int,

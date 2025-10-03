@@ -5,10 +5,10 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
 import com.lerchenflo.hallenmanager.data.AreaDto
-import com.lerchenflo.hallenmanager.data.AreaWithItemsDto
+import com.lerchenflo.hallenmanager.data.relations.AreaWithItemsDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
-import com.lerchenflo.hallenmanager.data.ItemWithListsDto
+import com.lerchenflo.hallenmanager.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.data.LayerDto
 import com.lerchenflo.hallenmanager.domain.Item
 import kotlinx.coroutines.flow.Flow

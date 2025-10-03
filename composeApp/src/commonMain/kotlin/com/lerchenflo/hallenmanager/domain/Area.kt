@@ -1,7 +1,7 @@
 package com.lerchenflo.hallenmanager.domain
 
 import com.lerchenflo.hallenmanager.data.AreaDto
-import com.lerchenflo.hallenmanager.data.AreaWithItemsDto
+import com.lerchenflo.hallenmanager.data.relations.AreaWithItemsDto
 import com.lerchenflo.hallenmanager.domain.Item
 
 data class Area(

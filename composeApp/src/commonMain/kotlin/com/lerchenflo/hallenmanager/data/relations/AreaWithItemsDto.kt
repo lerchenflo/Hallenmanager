@@ -1,7 +1,10 @@
-package com.lerchenflo.hallenmanager.data
+package com.lerchenflo.hallenmanager.data.relations
 
 import androidx.room.Embedded
 import androidx.room.Relation
+import com.lerchenflo.hallenmanager.data.AreaDto
+import com.lerchenflo.hallenmanager.data.ItemDto
+import com.lerchenflo.hallenmanager.data.relations.ItemWithListsDto
 import kotlinx.serialization.Serializable
 
 @Serializable
