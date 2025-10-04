@@ -29,15 +29,12 @@ class SettingsScreenViewmodel(
         viewModelScope.launch {
             areaRepository.getAllLayers().collectLatest { layers ->
 
-                val currentIds = state.availableLayers.map { it.layerid to it.sortId }
-                val newIds = layers.map { it.layerid to it.sortId }
-                //Only update if not already changed, onsort the state is automatically updated
-                if (currentIds != newIds){
-                    println("available layers reload")
+                if (state.availableLayers != layers){
                     state = state.copy(
                         availableLayers = layers
                     )
                 }
+
 
 
             }
@@ -95,6 +92,14 @@ class SettingsScreenViewmodel(
                     CoroutineScope(Dispatchers.IO).launch {
                         areaRepository.upsertLayerList(action.layers)
                     }
+                }
+            }
+
+            is SettingsScreenAction.OnLayerVisibilityChange -> {
+                viewModelScope.launch {
+                    areaRepository.upsertLayer(action.layer.copy(
+                        shown = action.visible
+                    ))
                 }
             }
         }

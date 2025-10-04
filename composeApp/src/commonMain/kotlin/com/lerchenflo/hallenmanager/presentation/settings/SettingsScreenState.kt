@@ -15,5 +15,5 @@ sealed interface SettingsScreenAction{
     data object OnCreateLayerDismiss: SettingsScreenAction
     data class OnLayerClick(val layer: Layer): SettingsScreenAction
     data class OnLayerReorder(val layers: List<Layer>) : SettingsScreenAction
-
+    data class OnLayerVisibilityChange(val layer: Layer, val visible: Boolean) : SettingsScreenAction
 }

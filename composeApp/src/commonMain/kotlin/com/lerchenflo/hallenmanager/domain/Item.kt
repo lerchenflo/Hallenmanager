@@ -29,13 +29,13 @@ data class Item(
      *
      */
     fun getPriority(): Int {
-        //If a layer is assigned, it is the layer sortid
-        return if (layers.isNotEmpty()){
-            layers.maxBy { it.sortId }.sortId
-        }else {
-            //Without layers return 0
-            0
-        }
+        return layers.maxOfOrNull { it.sortId } ?: 0
+    }
+
+    fun isVisible(): Boolean {
+        if (layers.any { it.shown }) return true //If any of this items layers is shown
+        if (layers.isEmpty()) return true //If no layer is selected, mark as visible
+        return false
     }
 
     /**
@@ -43,9 +43,10 @@ data class Item(
      *
      */
     fun getAbsoluteColor(): Color {
-        val layercolor = layers.maxByOrNull { layer ->
-            layer.sortId
-        }?.getColor()
+        val layercolor = layers
+            .filter { it.shown }
+            .maxByOrNull { it.sortId }
+            ?.getColor()
 
         //Return itemcolor, else layercolor
         return if (color == null){

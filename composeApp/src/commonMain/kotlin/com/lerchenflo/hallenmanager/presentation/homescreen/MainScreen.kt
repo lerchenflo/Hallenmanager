@@ -381,6 +381,7 @@ fun MainScreen(
                                         maxY >= 0 && minY <= viewportSize.height
                             }
                                 .sortedBy { it.getPriority() }
+                                .filter { it.isVisible() } //Only use visible items
                         }
 
 
@@ -522,7 +523,6 @@ fun MainScreen(
 
                                         )
                                     }
-
                                 }
                             }
                         }
