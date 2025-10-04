@@ -1,6 +1,8 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
+import androidx.collection.IntSet
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntSize
 import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.Layer
@@ -34,7 +36,7 @@ sealed interface MainScreenAction{
     data class OnAreaDialogSave(val area: Area) : MainScreenAction
     data object OnCreateAreaStart: MainScreenAction
     data object OnAreaDialogDismiss : MainScreenAction
-    data class OnZoom(val newzoomlevel: Float) : MainScreenAction
+    data class OnZoom(val scale: Float, val offset: Offset, val viewportsize: IntSize) : MainScreenAction
     data class OnItemClicked(val item: Item) : MainScreenAction
 
     data object OnSettingsClicked : MainScreenAction

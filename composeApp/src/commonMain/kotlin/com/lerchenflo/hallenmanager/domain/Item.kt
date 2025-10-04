@@ -34,7 +34,7 @@ data class Item(
 
     fun isVisible(): Boolean {
         if (layers.any { it.shown }) return true //If any of this items layers is shown
-        if (layers.isEmpty()) return true //If no layer is selected, mark as visible
+        if (layers.isEmpty()) return true //If no layer is selected, mark as visible if it has a color
         return false
     }
 

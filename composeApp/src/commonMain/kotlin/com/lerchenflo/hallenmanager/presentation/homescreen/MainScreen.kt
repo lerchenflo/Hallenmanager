@@ -369,22 +369,6 @@ fun MainScreen(
 
 
 
-                        val visibleItems = remember(state.currentArea.items, localScale, localOffset, viewportSize) {
-                            state.currentArea.items.filter { item ->
-                                val minX = item.cornerPoints.minOf { it.x } * localScale + localOffset.x
-                                val maxX = item.cornerPoints.maxOf { it.x } * localScale + localOffset.x
-                                val minY = item.cornerPoints.minOf { it.y } * localScale + localOffset.y
-                                val maxY = item.cornerPoints.maxOf { it.y } * localScale + localOffset.y
-
-                                // Check if bounding box intersects viewport
-                                maxX >= 0 && minX <= viewportSize.width &&
-                                        maxY >= 0 && minY <= viewportSize.height
-                            }
-                                .sortedBy { it.getPriority() }
-                                .filter { it.isVisible() } //Only use visible items
-                        }
-
-
                         //Canvasbox
                         Box(
                             modifier = Modifier
@@ -409,11 +393,11 @@ fun MainScreen(
                                     }
                                 }
 
-                                .pointerInput(visibleItems) {
+                                .pointerInput(state.currentArea.items) {
                                     detectTapGestures(
                                         onTap = { raw ->
                                             val contentPoint = (raw - localOffset) / localScale
-                                            for (item in visibleItems) { //In viewmodel coroutinescope??
+                                            for (item in state.currentArea.items) { //In viewmodel coroutinescope??
 
                                                 if (isPointInPolygon(contentPoint, item.cornerPoints)) {
                                                     onAction(MainScreenAction.OnItemClicked(item))
@@ -452,9 +436,10 @@ fun MainScreen(
                         ){
 
 
-                            LaunchedEffect(localScale){
+                            LaunchedEffect(localScale, localOffset, viewportSize){
                                 delay(100)
-                                onAction(MainScreenAction.OnZoom(localScale))
+                                println("Onzoom")
+                                onAction(MainScreenAction.OnZoom(localScale, localOffset, viewportSize))
                             }
 
                             Canvas(
@@ -513,7 +498,7 @@ fun MainScreen(
 
 
                             //Draw items in this area
-                            visibleItems.forEach { item ->
+                            state.currentArea.items.forEach { item ->
                                 if (item.cornerPoints.size > 2) {
                                     key("${item.itemid}_${item.title}") {
                                         ItemPolygon(

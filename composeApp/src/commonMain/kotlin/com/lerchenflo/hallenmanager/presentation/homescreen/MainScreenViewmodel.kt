@@ -3,11 +3,14 @@ package com.lerchenflo.hallenmanager.presentation.homescreen
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
+import com.lerchenflo.hallenmanager.domain.Area
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.collections.filter
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainScreenViewmodel(
@@ -38,7 +42,11 @@ class MainScreenViewmodel(
     private val _selectedAreaId = MutableStateFlow(0L)
     private val _searchterm = MutableStateFlow("")
 
+    private var _offset = MutableStateFlow(Offset.Zero)
+    private var _scale = MutableStateFlow(1f)
+    private var _viewportsize = MutableStateFlow(IntSize(1000,1000))
 
+    private var _currentArea = MutableStateFlow<Area?>(null)
 
     init {
         viewModelScope.launch {
@@ -53,9 +61,9 @@ class MainScreenViewmodel(
                     .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
                     .flowOn(Dispatchers.IO)
                     .collectLatest { area ->
-                        state = state.copy(
-                            currentArea = area
-                        )
+
+                        _currentArea.value = area
+                        recalculateVisibleItems()
                     }
             }
 
@@ -242,9 +250,13 @@ class MainScreenViewmodel(
             }
 
             is MainScreenAction.OnZoom -> {
-                println("Zoomlevel: ${action.newzoomlevel}")
 
-                val newzoom = action.newzoomlevel
+                _scale.value = action.scale
+                _offset.value = action.offset
+                _viewportsize.value = action.viewportsize
+
+
+                val newzoom = action.scale
 
                 val newgridspacing = when {
                     newzoom < 0.15f -> {
@@ -274,8 +286,10 @@ class MainScreenViewmodel(
 
 
                 state = state.copy(
-                    gridspacing = newgridspacing
+                    gridspacing = newgridspacing,
                 )
+
+                recalculateVisibleItems()
             }
 
             is MainScreenAction.OnItemClicked -> {
@@ -285,6 +299,30 @@ class MainScreenViewmodel(
                 )
             }
         }
+    }
+
+    private fun recalculateVisibleItems(){
+        val filtereditems = _currentArea.value?.items?.filter { item ->
+            val minX = item.cornerPoints.minOf { it.x } * _scale.value + _offset.value.x
+            val maxX = item.cornerPoints.maxOf { it.x } * _scale.value + _offset.value.x
+            val minY = item.cornerPoints.minOf { it.y } * _scale.value + _offset.value.y
+            val maxY = item.cornerPoints.maxOf { it.y } * _scale.value + _offset.value.y
+
+            // Check if bounding box intersects viewport
+            maxX >= 0 && minX <= _viewportsize.value.width &&
+                    maxY >= 0 && minY <= _viewportsize.value.height
+        }?.sortedBy { it.getPriority() }
+            ?.filter {
+                it.isVisible()
+            } //Only use visible items
+
+        val newarea = _currentArea.value?.copy(
+            items = filtereditems?: emptyList()
+        )
+
+        state = state.copy(
+            currentArea = newarea
+        )
     }
 
 
