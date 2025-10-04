@@ -78,6 +78,7 @@ class AreaRepository(
             layerDtos.map { layerDto ->
                 layerDto.toLayer()
             }
+                .sortedByDescending { it.sortId }
         }
     }
 

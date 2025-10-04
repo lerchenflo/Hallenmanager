@@ -45,13 +45,14 @@ fun CreateItemPopup(
     onAction: (MainScreenAction) -> Unit = {},
     state : MainScreenState = MainScreenState()
 ) {
+    println("Popup for item: ${state.iteminfopopupItem}")
+
     var title by remember { mutableStateOf(state.iteminfopopupItem?.title ?: "") }
     var description by remember { mutableStateOf(state.iteminfopopupItem?.description ?: "") }
 
     var useCustomColor by remember { mutableStateOf(state.iteminfopopupItem?.color != null) }
 
-    var color by remember { mutableStateOf<Color?>(state.iteminfopopupItem?.getColor()) }
-
+    var color by remember { mutableStateOf<Color?>(state.iteminfopopupItem?.getCustomColor()) }
 
     var selectedLayers by remember { mutableStateOf(state.iteminfopopupItem?.layers ?: emptyList<Layer>()) }
     var expanded by remember { mutableStateOf(false) }
@@ -125,6 +126,8 @@ fun CreateItemPopup(
                                                 onCheckedChange = {
                                                     if (!selectedLayers.contains(layer)){
                                                         selectedLayers += layer
+                                                    }else {
+                                                        selectedLayers -= layer
                                                     }
                                                 }
                                             )
@@ -147,7 +150,7 @@ fun CreateItemPopup(
                                     }
                                 )
                             }
-                            //TODO: Add layer popup
+
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -207,7 +210,7 @@ fun CreateItemPopup(
                         description = description,
                         layers = selectedLayers,
                         cornerPoints = state.currentDrawingOffsets,
-                        color = color?.value?.toLong() ?: state.iteminfopopupItem?.color,
+                        color = color?.value?.toLong(),
                         areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: 0
                     )
                 ))

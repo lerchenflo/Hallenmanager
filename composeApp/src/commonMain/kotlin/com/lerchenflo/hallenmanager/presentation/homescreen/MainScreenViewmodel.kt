@@ -153,7 +153,8 @@ class MainScreenViewmodel(
                 state = state.copy(
                     currentDrawingOffsets = cornerpoints,
                     iteminfopopupshown = finished,//Finished drawing
-                    isDrawing = !finished
+                    isDrawing = !finished,
+                    iteminfopopupItem = null,
                 )
             }
 

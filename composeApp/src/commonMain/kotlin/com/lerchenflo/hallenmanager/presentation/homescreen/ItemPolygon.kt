@@ -79,14 +79,14 @@ fun ItemPolygon(
             // Outline - stroke width adjusted for scale
             drawPath(
                 path = path,
-                color = item.getColor(),
+                color = item.getAbsoluteColor(),
                 style = Stroke(width = 4f / scale, cap = StrokeCap.Round)
             )
 
             // Fill
             drawPath(
                 path = path,
-                color = item.getColor().copy(alpha = 0.1f),
+                color = item.getAbsoluteColor().copy(alpha = 0.2f),
                 style = Fill
             )
         }
@@ -101,7 +101,7 @@ fun ItemPolygon(
 
             Text(
                 text = item.title,
-                color = item.getColor(),
+                color = item.getAbsoluteColor(),
                 fontSize = titleFontSp,
                 maxLines = 1
             )
@@ -109,7 +109,7 @@ fun ItemPolygon(
             if (item.description.isNotBlank()) {
                 Text(
                     text = item.description,
-                    color = item.getColor().copy(alpha = 0.8f),
+                    color = item.getAbsoluteColor().copy(alpha = 0.8f),
                     fontSize = descFontSp,
                     maxLines = 1
                 )

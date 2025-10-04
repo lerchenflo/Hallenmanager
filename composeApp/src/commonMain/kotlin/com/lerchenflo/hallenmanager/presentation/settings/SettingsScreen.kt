@@ -99,7 +99,7 @@ private fun SettingsScreen(
         val hapticFeedback = LocalHapticFeedback.current
         val lazyListState = rememberLazyListState()
 
-        val sortedLayers = state.availableLayers.sortedBy { it.sortId }
+        val sortedLayers = state.availableLayers.sortedByDescending { it.sortId }
 
         val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
             val newlist = sortedLayers.toMutableList().apply {
@@ -107,7 +107,7 @@ private fun SettingsScreen(
             }
             // Update sortId for each layer based on new position
             val updatedList = newlist.mapIndexed { index, layer ->
-                layer.copy(sortId = index)
+                layer.copy(sortId = newlist.size - 1 - index)
             }
             onAction(SettingsScreenAction.OnLayerReorder(updatedList))
             hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)

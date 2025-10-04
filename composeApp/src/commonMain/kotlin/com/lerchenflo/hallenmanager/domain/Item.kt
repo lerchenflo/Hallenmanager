@@ -24,12 +24,28 @@ data class Item(
     val cornerPoints: List<Offset>
 ) {
 
+    /**
+     * Returns the max priority this item has (Higher value higher priority)
+     *
+     */
+    fun getPriority(): Int {
+        //If a layer is assigned, it is the layer sortid
+        return if (layers.isNotEmpty()){
+            layers.maxBy { it.sortId }.sortId
+        }else {
+            //Without layers return 0
+            0
+        }
+    }
 
-    fun getColor(): Color {
-        val layercolor = layers.minByOrNull { layer ->
+    /**
+     * Returns the absolute color the item will have, including all layers
+     *
+     */
+    fun getAbsoluteColor(): Color {
+        val layercolor = layers.maxByOrNull { layer ->
             layer.sortId
         }?.getColor()
-        println("Layercolor for item: $layercolor layercount: ${layers.size}")
 
         //Return itemcolor, else layercolor
         return if (color == null){
@@ -37,6 +53,15 @@ data class Item(
         }else {
             Color(color.toULong())
         }
+    }
+
+    /**
+     * Returns the custom color which the user may have picked
+     */
+    fun getCustomColor(): Color? {
+        return if (color != null){
+            Color(color.toULong())
+        } else null
     }
 
     fun matchesSearchQuery(query: String): Boolean {

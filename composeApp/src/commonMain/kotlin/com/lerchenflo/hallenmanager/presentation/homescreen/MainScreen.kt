@@ -380,6 +380,7 @@ fun MainScreen(
                                 maxX >= 0 && minX <= viewportSize.width &&
                                         maxY >= 0 && minY <= viewportSize.height
                             }
+                                .sortedBy { it.getPriority() }
                         }
 
 

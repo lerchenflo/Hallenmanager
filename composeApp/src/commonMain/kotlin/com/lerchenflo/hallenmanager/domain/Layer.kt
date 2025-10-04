@@ -11,7 +11,7 @@ data class Layer(
     val color: Long
 ){
     fun getColor(): Color {
-        println("Layercolor: ${Color(color.toULong())}")
+        //println("Layercolor: ${Color(color.toULong())}")
         return Color(color.toULong())
     }
 }

@@ -28,9 +28,18 @@ class SettingsScreenViewmodel(
     init {
         viewModelScope.launch {
             areaRepository.getAllLayers().collectLatest { layers ->
-                state = state.copy(
-                    availableLayers = layers
-                )
+
+                val currentIds = state.availableLayers.map { it.layerid to it.sortId }
+                val newIds = layers.map { it.layerid to it.sortId }
+                //Only update if not already changed, onsort the state is automatically updated
+                if (currentIds != newIds){
+                    println("available layers reload")
+                    state = state.copy(
+                        availableLayers = layers
+                    )
+                }
+
+
             }
         }
     }
@@ -77,11 +86,14 @@ class SettingsScreenViewmodel(
             }
 
             is SettingsScreenAction.OnLayerReorder -> {
+
+                state = state.copy(
+                    availableLayers = action.layers
+                )
+
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         areaRepository.upsertLayerList(action.layers)
-
-                        //Available layers get updated automatically
                     }
                 }
             }

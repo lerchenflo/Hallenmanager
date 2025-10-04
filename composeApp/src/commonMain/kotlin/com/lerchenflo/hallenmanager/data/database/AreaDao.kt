@@ -62,9 +62,9 @@ interface AreaDao {
             upsertCornerPoints(pointsWithIds)
         }
 
+
+        deleteItemLayerCrossRefsForItem(itemid)
         if (item.layers.isNotEmpty()) {
-            // Delete existing cross-references for this item
-            deleteItemLayerCrossRefsForItem(itemid)
 
             // Insert new cross-references
             val crossRefs = item.layers.map { layer ->
