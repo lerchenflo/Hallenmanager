@@ -9,6 +9,7 @@ import com.lerchenflo.hallenmanager.core.navigation.NavigationAction
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.ObserveAsEvents
 import com.lerchenflo.hallenmanager.core.navigation.Route
+import com.lerchenflo.hallenmanager.core.theme.AppTheme
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenRoot
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenViewmodel
 import com.lerchenflo.hallenmanager.presentation.layerselection.LayerScreenRoot
@@ -20,7 +21,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    AppTheme {
         val navController = rememberNavController()
         val navigator = koinInject<Navigator>()
 

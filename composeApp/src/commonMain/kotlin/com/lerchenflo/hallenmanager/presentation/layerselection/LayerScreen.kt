@@ -58,7 +58,7 @@ private fun LayerScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .safeContentPadding(),
+            ,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -76,6 +76,7 @@ private fun LayerScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .safeContentPadding()
         ){
 
             //Title header

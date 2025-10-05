@@ -1,8 +1,10 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,11 +27,18 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DensitySmall
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.ArrowDropUp
+import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Dataset
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,6 +46,7 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonMenu
 import androidx.compose.material3.FloatingActionButtonMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -73,8 +84,11 @@ import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.custom_paint
+import hallenmanager.composeapp.generated.resources.custom_paint_painting
+import hallenmanager.composeapp.generated.resources.hide_shortaccess_menu
 import hallenmanager.composeapp.generated.resources.layers
 import hallenmanager.composeapp.generated.resources.searchbarhint
+import hallenmanager.composeapp.generated.resources.show_shortaccess_menu
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import org.jetbrains.compose.resources.stringResource
@@ -119,9 +133,7 @@ fun MainScreen(
 
     Scaffold(
         modifier = Modifier
-            .fillMaxSize()
-            .safeContentPadding()
-            .padding(8.dp),
+            .fillMaxSize(),
         floatingActionButton = {
             //Floatingactionbutton for settings
             FloatingActionButtonMenu(
@@ -134,8 +146,8 @@ fun MainScreen(
                         },
                         content = {
                             Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = "Navigate to settings",
+                                imageVector = Icons.Outlined.DensitySmall,
+                                contentDescription = "Show context menu",
                                 modifier = Modifier.size(30.dp)
                             )
                         }
@@ -161,43 +173,46 @@ fun MainScreen(
                         }
                     )
 
-                    Row {
-                        FloatingActionButtonMenuItem(
-                            onClick = {
-                                //TODO: Painten
-                            },
-                            text = {
-                                Text(
-                                    text = stringResource(Res.string.custom_paint)
-                                )
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Draw,
-                                    contentDescription = "Draw custom",
-                                    modifier = Modifier.size(30.dp)
-                                )
+                    FloatingActionButtonMenuItem(
+                        onClick = {
+                            if (state.isDrawing){
+                                onAction(MainScreenAction.OnStopPainting)
+                            }else {
+                                onAction(MainScreenAction.OnStartPainting)
                             }
-                        )
-
-                        if (state.isDrawing){
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            FloatingActionButtonMenuItem(
-                                onClick = {
-                                    onAction(MainScreenAction.OnStopPainting)
-                                },
-                                text = {},
-                                icon = {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Delete,
-                                        contentDescription = "Delete current draw",
-                                        modifier = Modifier.size(30.dp)
-                                    )
-                                }
+                        },
+                        text = {
+                            Text(
+                                text = if (state.isDrawing) stringResource(Res.string.custom_paint_painting) else stringResource(Res.string.custom_paint)
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (state.isDrawing) Icons.Rounded.Close else Icons.Outlined.Draw,
+                                contentDescription = "Draw custom",
+                                modifier = Modifier.size(30.dp)
                             )
                         }
-                    }
+                    )
+
+
+                    FloatingActionButtonMenuItem(
+                        onClick = {
+                            onAction(MainScreenAction.OnShowShortAccessMenuClick(!state.showShortAccessMenu))
+                        },
+                        text = {
+                            Text(
+                                text = if (state.showShortAccessMenu) stringResource(Res.string.hide_shortaccess_menu) else stringResource(Res.string.show_shortaccess_menu)
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (state.showShortAccessMenu) Icons.Rounded.ArrowDropDown else Icons.Rounded.ArrowDropUp,
+                                contentDescription = "Short access menu toggle",
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    )
 
 
                 }
@@ -223,7 +238,8 @@ fun MainScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
+                    .safeContentPadding()
             ){
 
 
@@ -465,23 +481,20 @@ fun MainScreen(
                                     detectTapGestures(
                                         onTap = { raw ->
                                             val contentPoint = (raw - localOffset) / localScale
-                                            for (item in state.currentArea.items) { //In viewmodel coroutinescope??
-
-                                                if (isPointInPolygon(contentPoint, item.cornerPoints)) {
-                                                    onAction(MainScreenAction.OnItemClicked(item))
-                                                    break
-                                                }
-                                            }
+                                            val snapped = snapToGrid(contentPoint, state.gridspacing)
+                                            onAction(MainScreenAction.OnClick(snapped, false))
                                         },
                                         onLongPress = { raw ->
 
                                             val contentPoint = (raw - localOffset) / localScale
 
                                             val snapped = snapToGrid(contentPoint, state.gridspacing)
+                                            onAction(MainScreenAction.OnClick(snapped, true))
 
-                                            onAction(MainScreenAction.OnAddPoint(snapped))
                                         },
                                         onDoubleTap = { raw ->
+
+                                            /*
                                             // Double-tap: zoom in/out focusing at tap point
                                             val target = if (localScale < maxzoomlevel) (localScale * 2f).coerceAtMost(maxzoomlevel) else minzoomlevel
                                             val scaleChange = target / localScale
@@ -490,6 +503,8 @@ fun MainScreen(
                                                 y = raw.y - scaleChange * (raw.y - localOffset.y)
                                             )
                                             localScale = target
+
+                                             */
                                         },
                                     )
                                 }
@@ -520,7 +535,33 @@ fun MainScreen(
                                     val visibleTop: Float,
                                     val visibleRight: Float,
                                     val visibleBottom: Float
-                                )
+                                ) {
+                                    override fun equals(other: Any?): Boolean {
+                                        if (this === other) return true
+                                        if (other == null || this::class != other::class) return false
+
+                                        other as GridLines
+
+                                        if (visibleLeft != other.visibleLeft) return false
+                                        if (visibleTop != other.visibleTop) return false
+                                        if (visibleRight != other.visibleRight) return false
+                                        if (visibleBottom != other.visibleBottom) return false
+                                        if (!xs.contentEquals(other.xs)) return false
+                                        if (!ys.contentEquals(other.ys)) return false
+
+                                        return true
+                                    }
+
+                                    override fun hashCode(): Int {
+                                        var result = visibleLeft.hashCode()
+                                        result = 31 * result + visibleTop.hashCode()
+                                        result = 31 * result + visibleRight.hashCode()
+                                        result = 31 * result + visibleBottom.hashCode()
+                                        result = 31 * result + xs.contentHashCode()
+                                        result = 31 * result + ys.contentHashCode()
+                                        return result
+                                    }
+                                }
 
                                 // compute visible bounds in content-space
                                 val visibleLeft = (-localOffset.x / localScale).coerceAtLeast(0f)
@@ -627,7 +668,39 @@ fun MainScreen(
                         )
                     }
 
+                    if (state.showShortAccessMenu){
 
+                        HorizontalDivider(modifier = Modifier.height(8.dp).padding(16.dp))
+                        LazyRow(
+                            modifier = Modifier
+                                .scrollable(
+                                    rememberScrollState(),
+                                    orientation = Orientation.Horizontal
+                                )
+
+
+                        ) {
+                            items(items = state.currentArea.items){ item ->
+                                Box(
+                                    modifier = Modifier.size(60.dp)
+                                ){
+                                    Column(
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CropPortrait,
+                                            contentDescription = null
+                                        )
+
+                                        Text(
+                                            text = item.title,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
 
 
 
@@ -649,7 +722,7 @@ fun MainScreen(
 
 @Preview(
     showBackground = true,
-    name = "Mainscreen"
+    name = "Mainscreen",
 )
 @Composable
 private fun MainScreenPreview() {

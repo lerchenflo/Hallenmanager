@@ -16,6 +16,10 @@
     <string name="cancel">cancel</string>
     <string name="save">save</string>
     <string name="custom_paint">Custom Paint</string>
+    <string name="custom_paint_painting">Painting...</string>
+    <string name="show_shortaccess_menu">Show access menu</string>
+    <string name="hide_shortaccess_menu">Hide access menu</string>
+
 
 
 

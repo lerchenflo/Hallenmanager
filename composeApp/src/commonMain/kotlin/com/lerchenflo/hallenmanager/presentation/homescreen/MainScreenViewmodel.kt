@@ -11,6 +11,7 @@ import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
 import com.lerchenflo.hallenmanager.domain.Area
+import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenAction.*
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -143,7 +144,7 @@ class MainScreenViewmodel(
 
     fun onAction(action: MainScreenAction) {
         when (action) {
-            is MainScreenAction.OnSearchtermChange -> {
+            is OnSearchtermChange -> {
                 //Searchterm not empty -> User is searching
                 _searchterm.value = action.newsearchTerm
 
@@ -154,7 +155,7 @@ class MainScreenViewmodel(
             }
 
 
-            is MainScreenAction.OnAddPoint -> {
+            is OnAddPoint -> {
                 val cornerpoints = state.currentDrawingOffsets + action.offset
 
                 val finished = cornerpoints.first() == cornerpoints.last() && cornerpoints.size >= 2
@@ -166,14 +167,14 @@ class MainScreenViewmodel(
                 )
             }
 
-            is MainScreenAction.OnStopPainting -> {
+            is OnStopPainting -> {
                 state = state.copy(
                     isDrawing = false,
                     currentDrawingOffsets = emptyList()
                 )
             }
 
-            MainScreenAction.OnInfoDialogDismiss -> {
+            OnInfoDialogDismiss -> {
                 state = state.copy(
                     iteminfopopupshown = false,
                     isDrawing = false,
@@ -181,7 +182,7 @@ class MainScreenViewmodel(
                 )
             }
 
-            is MainScreenAction.OnInfoDialogSave -> {
+            is OnInfoDialogSave -> {
                 state = state.copy(
                     iteminfopopupshown = false,
                     currentDrawingOffsets = emptyList(),
@@ -202,7 +203,7 @@ class MainScreenViewmodel(
 
             }
 
-            is MainScreenAction.OnSelectArea -> {
+            is OnSelectArea -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         val area = areaRepository.getAreaById(action.areaid)
@@ -216,7 +217,7 @@ class MainScreenViewmodel(
                 }
             }
 
-            is MainScreenAction.OnAreaDialogSave -> {
+            is OnAreaDialogSave -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         val currentarea = areaRepository.upsertArea(action.area)
@@ -231,25 +232,25 @@ class MainScreenViewmodel(
                 }
             }
 
-            MainScreenAction.OnCreateAreaStart -> {
+            OnCreateAreaStart -> {
                 state = state.copy(
                     areainfopopupshown = true
                 )
             }
 
-            MainScreenAction.OnAreaDialogDismiss -> {
+            OnAreaDialogDismiss -> {
                 state = state.copy(
                     areainfopopupshown = false
                 )
             }
 
-            MainScreenAction.OnLayersClicked -> {
+            OnLayersClicked -> {
                 viewModelScope.launch {
                     navigator.navigate(Route.Layers)
                 }
             }
 
-            is MainScreenAction.OnZoom -> {
+            is OnZoom -> {
 
                 _scale.value = action.scale
                 _offset.value = action.offset
@@ -293,10 +294,43 @@ class MainScreenViewmodel(
                 recalculateVisibleItems()
             }
 
-            is MainScreenAction.OnItemClicked -> {
+            is OnItemClicked -> {
                 state = state.copy(
                     iteminfopopupshown = true,
                     iteminfopopupItem = action.item
+                )
+            }
+
+            is OnClick -> {
+                if (state.isDrawing){
+                    onAction(OnAddPoint(action.contentpoint))
+                }else{
+                    if (action.longpressed){
+                        //If not drawing and longpress show context menu
+                        //TODO: Show context menu
+                    }else{
+                        //If not drawing and sort press show popup
+                        state.currentArea?.let { area ->
+                            for (item in area.items) {
+                                if (isPointInPolygon(action.contentpoint, item.cornerPoints)) {
+                                    onAction(OnItemClicked(item))
+                                    break
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            OnStartPainting -> {
+                state = state.copy(
+                    isDrawing = true
+                )
+            }
+
+            is OnShowShortAccessMenuClick -> {
+                state = state.copy(
+                    showShortAccessMenu = action.shown
                 )
             }
         }

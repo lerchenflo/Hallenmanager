@@ -13,6 +13,7 @@ data class MainScreenState(
     val searchterm: String = "",
     val gridspacing: Float = 400f,
     val isDrawing: Boolean = false,
+    val showShortAccessMenu : Boolean = false,
     val currentSearchResult: List<SearchItem> = emptyList(),
     val currentDrawingOffsets: List<Offset> = emptyList(),
     val iteminfopopupshown : Boolean = false,
@@ -29,6 +30,7 @@ data class MainScreenState(
 sealed interface MainScreenAction{
     data class OnSearchtermChange(val newsearchTerm: String) : MainScreenAction
     data object OnStopPainting : MainScreenAction
+    data object OnStartPainting : MainScreenAction
     data class OnSelectArea(val areaid: Long) : MainScreenAction
     data class OnAddPoint(val offset: Offset) : MainScreenAction
     data object OnInfoDialogDismiss : MainScreenAction
@@ -39,6 +41,9 @@ sealed interface MainScreenAction{
     data class OnZoom(val scale: Float, val offset: Offset, val viewportsize: IntSize) : MainScreenAction
     data class OnItemClicked(val item: Item) : MainScreenAction
 
+    data class OnClick(val contentpoint: Offset, val longpressed: Boolean) : MainScreenAction
+
+    data class OnShowShortAccessMenuClick(val shown: Boolean) : MainScreenAction
     data object OnLayersClicked : MainScreenAction
 
 }
