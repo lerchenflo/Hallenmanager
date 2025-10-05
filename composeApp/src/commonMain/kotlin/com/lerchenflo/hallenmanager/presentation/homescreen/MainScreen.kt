@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -122,64 +123,45 @@ fun MainScreen(
             .safeContentPadding()
             .padding(8.dp),
         floatingActionButton = {
-            Column {
-
-                //Floatingactionbutton for stop painting
-                if (state.isDrawing){
-                    FloatingActionButton(
-                        onClick = {
-                            onAction(MainScreenAction.OnStopPainting)
+            //Floatingactionbutton for settings
+            FloatingActionButtonMenu(
+                expanded = fabmenuexpanded,
+                button = {
+                    ToggleFloatingActionButton(
+                        checked = fabmenuexpanded,
+                        onCheckedChange = {
+                            fabmenuexpanded = !fabmenuexpanded
                         },
-                    ){
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = "Stop painting",
-                            modifier = Modifier.size(30.dp)
-                        )
-                    }
+                        content = {
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = "Navigate to settings",
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    )
 
-                    Spacer(Modifier.height(16.dp))
-                }
+                },
+                modifier = Modifier,
+                content = {
 
+                    FloatingActionButtonMenuItem(
+                        onClick = {onAction(MainScreenAction.OnLayersClicked)},
+                        text = {
+                            Text(
+                                text = stringResource(Res.string.layers)
+                            )
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Layers,
+                                contentDescription = "Navigate to Layers",
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                    )
 
-                //Floatingactionbutton for settings
-                FloatingActionButtonMenu(
-                    expanded = fabmenuexpanded,
-                    button = {
-                        ToggleFloatingActionButton(
-                            checked = fabmenuexpanded,
-                            onCheckedChange = {
-                                fabmenuexpanded = !fabmenuexpanded
-                            },
-                            content = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Settings,
-                                    contentDescription = "Navigate to settings",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        )
-
-                    },
-                    modifier = Modifier,
-                    content = {
-
-                        FloatingActionButtonMenuItem(
-                            onClick = {onAction(MainScreenAction.OnLayersClicked)},
-                            text = {
-                                Text(
-                                    text = stringResource(Res.string.layers)
-                                )
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Layers,
-                                    contentDescription = "Navigate to Layers",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        )
-
+                    Row {
                         FloatingActionButtonMenuItem(
                             onClick = {
                                 //TODO: Painten
@@ -198,10 +180,28 @@ fun MainScreen(
                             }
                         )
 
+                        if (state.isDrawing){
+                            Spacer(modifier = Modifier.width(8.dp))
 
+                            FloatingActionButtonMenuItem(
+                                onClick = {
+                                    onAction(MainScreenAction.OnStopPainting)
+                                },
+                                text = {},
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = "Delete current draw",
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                }
+                            )
+                        }
                     }
-                )
-            }
+
+
+                }
+            )
         },
         content = {
             if (state.iteminfopopupshown) {
