@@ -1,7 +1,6 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -47,42 +45,33 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.lerchenflo.hallenmanager.core.di.sharedmodule
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.presentation.LegendOverlay
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
 import hallenmanager.composeapp.generated.resources.searchbarhint
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import kotlin.math.min
+import kotlin.math.ceil
+import kotlin.math.floor
 
 @Composable
 fun MainScreenRoot(
@@ -97,7 +86,7 @@ fun MainScreenRoot(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun MainScreen(
     state: MainScreenState,
@@ -216,7 +205,6 @@ fun MainScreen(
                                                 onClick = {
                                                     onAction(MainScreenAction.OnSearchtermChange(""))
                                                     searchbaractive = false
-
                                                 }
                                             ){
                                                 Icon(
@@ -245,46 +233,50 @@ fun MainScreen(
                             expanded = searchbaractive,
                             onExpandedChange = { searchbaractive = it },
                             content = {
-                                // limit the dropdown height so it doesn't occupy the entire screen
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    items(items = state.currentSearchResult) { searchitem ->
-                                        SearchItemUI(
-                                            searchItem = searchitem,
-                                            onClick = {
-                                                //Switch do different area if item is not in current area
-                                                if (state.currentArea.id != searchitem.item.areaId) {
-                                                    onAction(MainScreenAction.OnSelectArea(searchitem.item.areaId))
+
+                                if (state.searchterm.isNotEmpty()){
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        items(items = state.currentSearchResult) { searchitem ->
+                                            SearchItemUI(
+                                                searchItem = searchitem,
+                                                onClick = {
+                                                    //Switch do different area if item is not in current area
+                                                    if (state.currentArea.id != searchitem.item.areaId) {
+                                                        onAction(MainScreenAction.OnSelectArea(searchitem.item.areaId))
+                                                    }
+
+
+                                                    searchbaractive = false
+                                                    focusManager.clearFocus()
+                                                    onAction(MainScreenAction.OnSearchtermChange(""))
+
+
+                                                    val targetScale = 1f
+                                                    localScale = targetScale
+
+                                                    val viewportCenterX = viewportSize.width / 2f
+                                                    val viewportCenterY = viewportSize.height / 2f
+                                                    val itemCenter = searchitem.item.getCenter()
+
+                                                    println("Height: $viewportCenterY Width: $viewportCenterX")
+                                                    localOffset = Offset(
+                                                        x = viewportCenterX - itemCenter.x * localScale,
+                                                        y = viewportCenterY - itemCenter.y * localScale
+                                                    )
+
+
                                                 }
+                                            )
 
-
-                                                searchbaractive = false
-                                                focusManager.clearFocus()
-                                                onAction(MainScreenAction.OnSearchtermChange(""))
-
-
-                                                val targetScale = 1f
-                                                localScale = targetScale
-
-                                                val viewportCenterX = viewportSize.width / 2f
-                                                val viewportCenterY = viewportSize.height / 2f
-                                                val itemCenter = searchitem.item.getCenter()
-
-                                                println("Height: $viewportCenterY Width: $viewportCenterX")
-                                                localOffset = Offset(
-                                                    x = viewportCenterX - itemCenter.x * localScale,
-                                                    y = viewportCenterY - itemCenter.y * localScale
-                                                )
-
-
-                                            }
-                                        )
-
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
                                     }
                                 }
+
+
                             }
                         )
 
@@ -454,37 +446,71 @@ fun MainScreen(
                         ){
 
 
-                            LaunchedEffect(localScale, localOffset, viewportSize){
-                                delay(100)
-                                println("Onzoom")
-                                onAction(MainScreenAction.OnZoom(localScale, localOffset, viewportSize))
+                            LaunchedEffect(localScale, localOffset, viewportSize) {
+                                snapshotFlow { Triple(localScale, localOffset, viewportSize) }
+                                    .debounce(2)
+                                    .collect { (scale, offset, size) ->
+                                        onAction(MainScreenAction.OnZoom(scale, offset, size))
+                                    }
+                            }
+
+                            val gridLines = remember(localScale, localOffset, viewportSize, state.gridspacing) {
+                                data class GridLines(
+                                    val xs: FloatArray,
+                                    val ys: FloatArray,
+                                    val visibleLeft: Float,
+                                    val visibleTop: Float,
+                                    val visibleRight: Float,
+                                    val visibleBottom: Float
+                                )
+
+                                // compute visible bounds in content-space
+                                val visibleLeft = (-localOffset.x / localScale).coerceAtLeast(0f)
+                                val visibleTop = (-localOffset.y / localScale).coerceAtLeast(0f)
+                                val visibleRight = (visibleLeft + (viewportSize.width / localScale))
+                                val visibleBottom = (visibleTop + (viewportSize.height / localScale))
+
+                                // compute start indices and counts (integers) to avoid repeated float math
+                                val startXIndex = floor(visibleLeft / state.gridspacing).toInt().coerceAtLeast(0)
+                                val endXIndex = ceil(visibleRight / state.gridspacing).toInt()
+                                val startYIndex = floor(visibleTop / state.gridspacing).toInt().coerceAtLeast(0)
+                                val endYIndex = ceil(visibleBottom / state.gridspacing).toInt()
+
+                                // create FloatArrays of positions (reused as immutable data)
+                                val xs = FloatArray((endXIndex - startXIndex + 1).coerceAtLeast(0)) { i ->
+                                    (startXIndex + i) * state.gridspacing
+                                }
+                                val ys = FloatArray((endYIndex - startYIndex + 1).coerceAtLeast(0)) { i ->
+                                    (startYIndex + i) * state.gridspacing
+                                }
+
+                                GridLines(xs, ys, visibleLeft, visibleTop, visibleRight, visibleBottom)
                             }
 
                             Canvas(
                                 modifier = Modifier
                                     .size(10000.dp)
-
                             ) {
+                                val (xs, ys, visibleLeft, visibleTop, visibleRight, visibleBottom) = gridLines
 
-                                var x = 0f
-                                while (x <= size.width) {
+                                for (i in xs.indices) {
+                                    val x = xs[i]
                                     drawLine(
                                         color = Color.Gray,
-                                        start = Offset(x, 0f),
-                                        end = Offset(x, size.height),
+                                        start = Offset(x, visibleTop),
+                                        end = Offset(x, visibleBottom),
                                         strokeWidth = 1f / localScale
                                     )
-                                    x += state.gridspacing
                                 }
-                                var y = 0f
-                                while (y <= size.height) {
+
+                                for (i in ys.indices) {
+                                    val y = ys[i]
                                     drawLine(
                                         color = Color.Gray,
-                                        start = Offset(0f, y),
-                                        end = Offset(size.width, y),
+                                        start = Offset(visibleLeft, y),
+                                        end = Offset(visibleRight, y),
                                         strokeWidth = 1f / localScale
                                     )
-                                    y += state.gridspacing
                                 }
 
 

@@ -11,7 +11,7 @@ import kotlin.collections.emptyList
 
 data class MainScreenState(
     val searchterm: String = "",
-    val gridspacing: Float = 100f,
+    val gridspacing: Float = 400f,
     val isDrawing: Boolean = false,
     val currentSearchResult: List<SearchItem> = emptyList(),
     val currentDrawingOffsets: List<Offset> = emptyList(),

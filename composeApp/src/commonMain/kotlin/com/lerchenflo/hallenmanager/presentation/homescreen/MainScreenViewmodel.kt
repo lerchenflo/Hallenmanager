@@ -289,6 +289,7 @@ class MainScreenViewmodel(
                     gridspacing = newgridspacing,
                 )
 
+
                 recalculateVisibleItems()
             }
 
