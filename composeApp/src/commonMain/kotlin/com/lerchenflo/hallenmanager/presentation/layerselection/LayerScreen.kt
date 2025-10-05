@@ -1,4 +1,4 @@
-package com.lerchenflo.hallenmanager.presentation.settings
+package com.lerchenflo.hallenmanager.presentation.layerselection
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
@@ -18,13 +17,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Coronavirus
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.rounded.DragHandle
-import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -39,25 +34,23 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lerchenflo.hallenmanager.presentation.homescreen.CreateItemPopup
-import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenAction
 import hallenmanager.composeapp.generated.resources.Res
-import hallenmanager.composeapp.generated.resources.settings
+import hallenmanager.composeapp.generated.resources.layers
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
-private fun SettingsScreen(
-    state: SettingsScreenState = SettingsScreenState(),
-    onAction: (SettingsScreenAction) -> Unit = {}
+private fun LayerScreen(
+    state: LayerScreenState = LayerScreenState(),
+    onAction: (LayerScreenAction) -> Unit = {}
 ){
 
     if (state.addlayerpopupshown) {
         CreateLayerPopup(
-            onDismiss = {onAction(SettingsScreenAction.OnCreateLayerDismiss)},
-            onSave = {onAction(SettingsScreenAction.OnCreateLayerSave(it))},
+            onDismiss = {onAction(LayerScreenAction.OnCreateLayerDismiss)},
+            onSave = {onAction(LayerScreenAction.OnCreateLayerSave(it))},
             layer = state.selectedLayerPopupLayer,
         )
     }
@@ -69,7 +62,7 @@ private fun SettingsScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    onAction(SettingsScreenAction.OnCreateLayerStart)
+                    onAction(LayerScreenAction.OnCreateLayerStart)
                 },
             ){
                 Icon(
@@ -90,7 +83,7 @@ private fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 IconButton(
-                    onClick = { onAction(SettingsScreenAction.OnNavigateBack) },
+                    onClick = { onAction(LayerScreenAction.OnNavigateBack) },
                     modifier = Modifier
                         .padding(top = 5.dp, start = 5.dp)
                         .statusBarsPadding()
@@ -102,7 +95,7 @@ private fun SettingsScreen(
                 }
 
                 Text(
-                    text = stringResource(Res.string.settings),
+                    text = stringResource(Res.string.layers),
                     modifier = Modifier
                         .weight(1f)
                         .align(alignment = Alignment.CenterVertically)
@@ -129,7 +122,7 @@ private fun SettingsScreen(
                 val updatedList = newlist.mapIndexed { index, layer ->
                     layer.copy(sortId = newlist.size - 1 - index)
                 }
-                onAction(SettingsScreenAction.OnLayerReorder(updatedList))
+                onAction(LayerScreenAction.OnLayerReorder(updatedList))
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
             }
 
@@ -158,11 +151,11 @@ private fun SettingsScreen(
                                 LayeritemUi(
                                     layer = layer,
                                     onClick = {
-                                        onAction(SettingsScreenAction.OnLayerClick(layer))
+                                        onAction(LayerScreenAction.OnLayerClick(layer))
                                     },
                                     modifier = Modifier.weight(1f),
                                     onVisibilityClick = {
-                                        onAction(SettingsScreenAction.OnLayerVisibilityChange(layer, it))
+                                        onAction(LayerScreenAction.OnLayerVisibilityChange(layer, it))
                                     }
                                 )
 
@@ -198,10 +191,10 @@ private fun SettingsScreen(
 
 @Preview(showBackground = true)
 @Composable
-fun SettingsScreenRoot(
-    viewmodel: SettingsScreenViewmodel
+fun LayerScreenRoot(
+    viewmodel: LayerScreenViewmodel
 ){
-    SettingsScreen(
+    LayerScreen(
         state = viewmodel.state,
         onAction = viewmodel::onAction
     )

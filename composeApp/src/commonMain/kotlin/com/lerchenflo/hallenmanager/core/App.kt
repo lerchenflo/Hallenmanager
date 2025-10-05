@@ -11,8 +11,8 @@ import com.lerchenflo.hallenmanager.core.navigation.ObserveAsEvents
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenRoot
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenViewmodel
-import com.lerchenflo.hallenmanager.presentation.settings.SettingsScreenRoot
-import com.lerchenflo.hallenmanager.presentation.settings.SettingsScreenViewmodel
+import com.lerchenflo.hallenmanager.presentation.layerselection.LayerScreenRoot
+import com.lerchenflo.hallenmanager.presentation.layerselection.LayerScreenViewmodel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -41,9 +41,9 @@ fun App() {
                 MainScreenRoot(viewmodel)
             }
 
-            composable<Route.Settings> {
-                val viewmodel = koinViewModel<SettingsScreenViewmodel>()
-                SettingsScreenRoot(viewmodel)
+            composable<Route.Layers> {
+                val viewmodel = koinViewModel<LayerScreenViewmodel>()
+                LayerScreenRoot(viewmodel)
             }
         }
 

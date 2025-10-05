@@ -24,12 +24,17 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Draw
+import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +43,7 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults.InputField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,6 +71,8 @@ import com.lerchenflo.hallenmanager.presentation.LegendOverlay
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
+import hallenmanager.composeapp.generated.resources.custom_paint
+import hallenmanager.composeapp.generated.resources.layers
 import hallenmanager.composeapp.generated.resources.searchbarhint
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -86,7 +94,9 @@ fun MainScreenRoot(
 
 
 
-@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
+@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class,
+    ExperimentalMaterial3ExpressiveApi::class
+)
 @Composable
 fun MainScreen(
     state: MainScreenState,
@@ -104,6 +114,7 @@ fun MainScreen(
 
     var searchbaractive by remember { mutableStateOf(false) }
 
+    var fabmenuexpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -132,17 +143,64 @@ fun MainScreen(
 
 
                 //Floatingactionbutton for settings
-                FloatingActionButton(
-                    onClick = {
-                        onAction(MainScreenAction.OnSettingsClicked)
+                FloatingActionButtonMenu(
+                    expanded = fabmenuexpanded,
+                    button = {
+                        ToggleFloatingActionButton(
+                            checked = fabmenuexpanded,
+                            onCheckedChange = {
+                                fabmenuexpanded = !fabmenuexpanded
+                            },
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Settings,
+                                    contentDescription = "Navigate to settings",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        )
+
                     },
-                ){
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = "Navigate to settings",
-                        modifier = Modifier.size(30.dp)
-                    )
-                }
+                    modifier = Modifier,
+                    content = {
+
+                        FloatingActionButtonMenuItem(
+                            onClick = {onAction(MainScreenAction.OnLayersClicked)},
+                            text = {
+                                Text(
+                                    text = stringResource(Res.string.layers)
+                                )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Layers,
+                                    contentDescription = "Navigate to Layers",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        )
+
+                        FloatingActionButtonMenuItem(
+                            onClick = {
+                                //TODO: Painten
+                            },
+                            text = {
+                                Text(
+                                    text = stringResource(Res.string.custom_paint)
+                                )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Draw,
+                                    contentDescription = "Draw custom",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        )
+
+
+                    }
+                )
             }
         },
         content = {

@@ -1,4 +1,4 @@
-package com.lerchenflo.hallenmanager.presentation.settings
+package com.lerchenflo.hallenmanager.presentation.layerselection
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,22 +6,19 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
-import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
-import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenAction
-import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class SettingsScreenViewmodel(
+class LayerScreenViewmodel(
     private val areaRepository: AreaRepository,
     private val navigator: Navigator
 ): ViewModel() {
 
-    var state by mutableStateOf(SettingsScreenState())
+    var state by mutableStateOf(LayerScreenState())
         private set
 
 
@@ -42,27 +39,27 @@ class SettingsScreenViewmodel(
     }
 
 
-    fun onAction(action: SettingsScreenAction) {
+    fun onAction(action: LayerScreenAction) {
         when (action) {
-            SettingsScreenAction.OnNavigateBack -> {
+            LayerScreenAction.OnNavigateBack -> {
                 viewModelScope.launch {
                     navigator.navigateUp()
                 }
             }
 
-            SettingsScreenAction.OnCreateLayerStart -> {
+            LayerScreenAction.OnCreateLayerStart -> {
                 state = state.copy(
                     addlayerpopupshown = true
                 )
             }
 
-            SettingsScreenAction.OnCreateLayerDismiss -> {
+            LayerScreenAction.OnCreateLayerDismiss -> {
                 state = state.copy(
                     addlayerpopupshown = false
                 )
             }
 
-            is SettingsScreenAction.OnCreateLayerSave -> {
+            is LayerScreenAction.OnCreateLayerSave -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         areaRepository.upsertLayer(action.layer)
@@ -75,14 +72,14 @@ class SettingsScreenViewmodel(
                 }
             }
 
-            is SettingsScreenAction.OnLayerClick -> {
+            is LayerScreenAction.OnLayerClick -> {
                 state = state.copy(
                     addlayerpopupshown = true,
                     selectedLayerPopupLayer = action.layer
                 )
             }
 
-            is SettingsScreenAction.OnLayerReorder -> {
+            is LayerScreenAction.OnLayerReorder -> {
 
                 state = state.copy(
                     availableLayers = action.layers
@@ -95,7 +92,7 @@ class SettingsScreenViewmodel(
                 }
             }
 
-            is SettingsScreenAction.OnLayerVisibilityChange -> {
+            is LayerScreenAction.OnLayerVisibilityChange -> {
                 viewModelScope.launch {
                     areaRepository.upsertLayer(action.layer.copy(
                         shown = action.visible

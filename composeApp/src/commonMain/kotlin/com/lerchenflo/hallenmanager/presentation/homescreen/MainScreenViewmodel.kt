@@ -243,9 +243,9 @@ class MainScreenViewmodel(
                 )
             }
 
-            MainScreenAction.OnSettingsClicked -> {
+            MainScreenAction.OnLayersClicked -> {
                 viewModelScope.launch {
-                    navigator.navigate(Route.Settings)
+                    navigator.navigate(Route.Layers)
                 }
             }
 

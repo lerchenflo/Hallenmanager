@@ -9,5 +9,5 @@ sealed interface Route {
     data object HomeScreen: Route
 
     @Serializable
-    data object Settings: Route
+    data object Layers: Route
 }

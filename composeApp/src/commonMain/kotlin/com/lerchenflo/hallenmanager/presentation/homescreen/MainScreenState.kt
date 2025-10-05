@@ -19,7 +19,7 @@ data class MainScreenState(
     val iteminfopopupItem: Item? = null,
     val areainfopopupshown : Boolean = false,
     val availableAreas : List<AvailableArea> = emptyList(),
-    val currentArea: Area? = null,
+    val currentArea: Area? = Area(name = "testarea", description = "testetestest", items = emptyList()),
     val availableLayers: List<Layer> = emptyList<Layer>(),
 )
 
@@ -39,7 +39,7 @@ sealed interface MainScreenAction{
     data class OnZoom(val scale: Float, val offset: Offset, val viewportsize: IntSize) : MainScreenAction
     data class OnItemClicked(val item: Item) : MainScreenAction
 
-    data object OnSettingsClicked : MainScreenAction
+    data object OnLayersClicked : MainScreenAction
 
 }
 
