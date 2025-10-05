@@ -27,11 +27,13 @@ import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
@@ -207,6 +209,22 @@ fun MainScreen(
                                             imageVector = Icons.Default.Search,
                                             contentDescription = "Search"
                                         )
+                                    },
+                                    trailingIcon = {
+                                        if (state.searchterm.isNotEmpty()){
+                                            IconButton(
+                                                onClick = {
+                                                    onAction(MainScreenAction.OnSearchtermChange(""))
+                                                    searchbaractive = false
+
+                                                }
+                                            ){
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Close,
+                                                    contentDescription = "Clear searchquery"
+                                                )
+                                            }
+                                        }
                                     },
                                     query = state.searchterm,
                                     // open the search suggestions as soon as user types (or clicks)
