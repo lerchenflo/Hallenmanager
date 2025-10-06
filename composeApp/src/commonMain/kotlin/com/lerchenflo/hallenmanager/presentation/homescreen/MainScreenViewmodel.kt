@@ -11,6 +11,7 @@ import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
 import com.lerchenflo.hallenmanager.domain.Area
+import com.lerchenflo.hallenmanager.domain.withCornerPointsAtOrigin
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenAction.*
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
 import kotlinx.coroutines.CoroutineScope
@@ -311,8 +312,12 @@ class MainScreenViewmodel(
                     }else{
                         //If not drawing and sort press show popup
                         state.currentArea?.let { area ->
-                            for (item in area.items) {
+                            for (item in area.items.filter { it.onArea }) {
+                                println(item)
+
                                 if (isPointInPolygon(action.contentpoint, item.cornerPoints)) {
+                                    println("Not clicked")
+
                                     onAction(OnItemClicked(item))
                                     break
                                 }
@@ -332,6 +337,32 @@ class MainScreenViewmodel(
                 state = state.copy(
                     showShortAccessMenu = action.shown
                 )
+            }
+
+            is OnMoveItemToGrid -> {
+                viewModelScope.launch {
+                    areaRepository.upsertItem(action.item
+                        .copy(
+                            onArea = true,
+                            cornerPoints = action.item.cornerPoints.map { point ->
+                                point + action.position
+                            }
+                        ), _selectedAreaId.value)
+                }
+            }
+
+            is OnMoveItemToShortAccess -> {
+                viewModelScope.launch {
+                    //Upsert item but moved to the coordinate startpoint
+                    areaRepository.upsertItem(action.item.withCornerPointsAtOrigin().copy(
+                        onArea = false,
+                    ), _selectedAreaId.value)
+
+                    state = state.copy(
+                        iteminfopopupshown = false,
+                        iteminfopopupItem = null
+                    )
+                }
             }
         }
     }

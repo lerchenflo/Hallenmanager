@@ -46,6 +46,10 @@ sealed interface MainScreenAction{
     data class OnShowShortAccessMenuClick(val shown: Boolean) : MainScreenAction
     data object OnLayersClicked : MainScreenAction
 
+    data class OnMoveItemToGrid(val item: Item, val position: Offset) : MainScreenAction
+    data class OnMoveItemToShortAccess(val item: Item) : MainScreenAction
+
+
 }
 
 

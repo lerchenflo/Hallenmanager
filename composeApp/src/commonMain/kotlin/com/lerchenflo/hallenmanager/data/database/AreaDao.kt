@@ -46,6 +46,9 @@ interface AreaDao {
     @Query("DELETE FROM itemlayercrossref WHERE itemId = :itemId")
     suspend fun deleteItemLayerCrossRefsForItem(itemId: Long)
 
+    @Query("DELETE FROM cornerpointdto WHERE itemId = :itemId")
+    suspend fun deleteCornerPointsForItem(itemId: Long)
+
     @Transaction
     suspend fun upsertItemWithCorners(item: ItemWithListsDto) {
 
@@ -55,6 +58,7 @@ interface AreaDao {
             itemid = item.item.itemid
         }
 
+        deleteCornerPointsForItem(itemid)
         if (item.cornerPoints.isNotEmpty()) {
             val pointsWithIds = item.cornerPoints.map { cp ->
                 cp.copy(itemId = itemid)

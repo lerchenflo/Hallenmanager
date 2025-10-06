@@ -28,6 +28,7 @@ fun ItemPolygon(
     item: Item,
     scale: Float,
     targetSize: DpSize? = null,
+    offset: Offset? = null
 ) {
     // Calculate bounding box in CONTENT coordinates (pixels)
     val minX = item.cornerPoints.minOf { it.x }
@@ -48,7 +49,11 @@ fun ItemPolygon(
         modifier = Modifier
             .then(
                 if (targetSize == null) {
-                    Modifier.offset { IntOffset(minX.toInt(), minY.toInt()) }
+                    if (offset == null){
+                        Modifier.offset { IntOffset(minX.toInt(), minY.toInt()) }
+                    }else {
+                        Modifier.offset { IntOffset(offset.x.toInt(), offset.y.toInt()) }
+                    }
                 } else {
                     Modifier
                 }

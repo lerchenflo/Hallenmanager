@@ -2,8 +2,11 @@ package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
@@ -84,8 +88,10 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.presentation.LegendOverlay
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItemUI
@@ -139,6 +145,11 @@ fun MainScreen(
 
     var fabmenuexpanded by remember { mutableStateOf(false) }
 
+
+    var draggedItem by remember { mutableStateOf<Item?>(null) }
+    var dragPosition by remember { mutableStateOf(Offset.Zero) }
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -146,88 +157,90 @@ fun MainScreen(
         Scaffold(
             modifier = Modifier.weight(1f),
             floatingActionButton = {
-                //Floatingactionbutton for settings
-                FloatingActionButtonMenu(
-                    expanded = fabmenuexpanded,
-                    button = {
-                        ToggleFloatingActionButton(
-                            checked = fabmenuexpanded,
-                            onCheckedChange = {
-                                fabmenuexpanded = !fabmenuexpanded
-                            },
-                            content = {
-                                Icon(
-                                    imageVector = Icons.Outlined.DensitySmall,
-                                    contentDescription = "Show context menu",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        )
-
-                    },
-                    modifier = Modifier,
-                    content = {
-
-                        FloatingActionButtonMenuItem(
-                            onClick = {onAction(MainScreenAction.OnLayersClicked)},
-                            text = {
-                                Text(
-                                    text = stringResource(Res.string.layers)
-                                )
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Layers,
-                                    contentDescription = "Navigate to Layers",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        )
-
-                        FloatingActionButtonMenuItem(
-                            onClick = {
-                                if (state.isDrawing){
-                                    onAction(MainScreenAction.OnStopPainting)
-                                }else {
-                                    onAction(MainScreenAction.OnStartPainting)
+                if (state.currentArea != null){
+                    //Floatingactionbutton for settings
+                    FloatingActionButtonMenu(
+                        expanded = fabmenuexpanded,
+                        button = {
+                            ToggleFloatingActionButton(
+                                checked = fabmenuexpanded,
+                                onCheckedChange = {
+                                    fabmenuexpanded = !fabmenuexpanded
+                                },
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.DensitySmall,
+                                        contentDescription = "Show context menu",
+                                        modifier = Modifier.size(30.dp)
+                                    )
                                 }
-                            },
-                            text = {
-                                Text(
-                                    text = if (state.isDrawing) stringResource(Res.string.custom_paint_painting) else stringResource(Res.string.custom_paint)
-                                )
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (state.isDrawing) Icons.Rounded.Close else Icons.Outlined.Draw,
-                                    contentDescription = "Draw custom",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        )
+                            )
+
+                        },
+                        modifier = Modifier,
+                        content = {
+
+                            FloatingActionButtonMenuItem(
+                                onClick = {onAction(MainScreenAction.OnLayersClicked)},
+                                text = {
+                                    Text(
+                                        text = stringResource(Res.string.layers)
+                                    )
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Layers,
+                                        contentDescription = "Navigate to Layers",
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                }
+                            )
+
+                            FloatingActionButtonMenuItem(
+                                onClick = {
+                                    if (state.isDrawing){
+                                        onAction(MainScreenAction.OnStopPainting)
+                                    }else {
+                                        onAction(MainScreenAction.OnStartPainting)
+                                    }
+                                },
+                                text = {
+                                    Text(
+                                        text = if (state.isDrawing) stringResource(Res.string.custom_paint_painting) else stringResource(Res.string.custom_paint)
+                                    )
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (state.isDrawing) Icons.Rounded.Close else Icons.Outlined.Draw,
+                                        contentDescription = "Draw custom",
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                }
+                            )
 
 
-                        FloatingActionButtonMenuItem(
-                            onClick = {
-                                onAction(MainScreenAction.OnShowShortAccessMenuClick(!state.showShortAccessMenu))
-                            },
-                            text = {
-                                Text(
-                                    text = if (state.showShortAccessMenu) stringResource(Res.string.hide_shortaccess_menu) else stringResource(Res.string.show_shortaccess_menu)
-                                )
-                            },
-                            icon = {
-                                Icon(
-                                    imageVector = if (state.showShortAccessMenu) Icons.Rounded.ArrowDropDown else Icons.Rounded.ArrowDropUp,
-                                    contentDescription = "Short access menu toggle",
-                                    modifier = Modifier.size(30.dp)
-                                )
-                            }
-                        )
+                            FloatingActionButtonMenuItem(
+                                onClick = {
+                                    onAction(MainScreenAction.OnShowShortAccessMenuClick(!state.showShortAccessMenu))
+                                },
+                                text = {
+                                    Text(
+                                        text = if (state.showShortAccessMenu) stringResource(Res.string.hide_shortaccess_menu) else stringResource(Res.string.show_shortaccess_menu)
+                                    )
+                                },
+                                icon = {
+                                    Icon(
+                                        imageVector = if (state.showShortAccessMenu) Icons.Rounded.ArrowDropDown else Icons.Rounded.ArrowDropUp,
+                                        contentDescription = "Short access menu toggle",
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                }
+                            )
 
 
-                    }
-                )
+                        }
+                    )
+                }
             },
             content = {
                 if (state.iteminfopopupshown) {
@@ -491,15 +504,12 @@ fun MainScreen(
                                         detectTapGestures(
                                             onTap = { raw ->
                                                 val contentPoint = (raw - localOffset) / localScale
-                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
-                                                onAction(MainScreenAction.OnClick(snapped, false))
+                                                onAction(MainScreenAction.OnClick(contentPoint, false))
                                             },
                                             onLongPress = { raw ->
 
                                                 val contentPoint = (raw - localOffset) / localScale
-
-                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
-                                                onAction(MainScreenAction.OnClick(snapped, true))
+                                                onAction(MainScreenAction.OnClick(contentPoint, true))
 
                                             },
                                             onDoubleTap = { raw ->
@@ -663,6 +673,15 @@ fun MainScreen(
                                             }
                                         }
                                     }
+
+                                //Dragging preview
+                                if (draggedItem != null) {
+                                    ItemPolygon(
+                                        item = draggedItem!!,
+                                        scale = localScale,
+                                        offset = (localOffset + dragPosition) / localScale
+                                    )
+                                }
                             }
 
 
@@ -715,7 +734,38 @@ fun MainScreen(
                         modifier = Modifier
                             .width(80.dp)            // cell width; adjust as needed
                             .wrapContentHeight()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 4.dp)
+                            .pointerInput(item.itemid) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = { startOffset ->
+                                        draggedItem = item
+                                        dragPosition = startOffset
+                                    },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        dragPosition += dragAmount
+                                    },
+                                    onDragEnd = {
+                                        // Convert screen coordinates to content coordinates
+                                        val contentPoint = (localOffset + dragPosition) / localScale
+                                        val snapped = snapToGrid(contentPoint, state.gridspacing)
+
+                                        // Move item to grid at snapped position
+                                        onAction(MainScreenAction.OnMoveItemToGrid(
+                                            item = item,
+                                            position = snapped
+                                        ))
+
+                                        // Reset drag state
+                                        draggedItem = null
+                                        dragPosition = Offset.Zero
+                                    },
+                                    onDragCancel = {
+                                        draggedItem = null
+                                        dragPosition = Offset.Zero
+                                    }
+                                )
+                            },
                         contentAlignment = Alignment.Center
                     ) {
 

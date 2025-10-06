@@ -7,10 +7,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -61,7 +65,22 @@ fun CreateItemPopup(
 
     AlertDialog(
         title = {
-            Text(text = stringResource(Res.string.iteminfo))
+            Row {
+                Text(text = stringResource(Res.string.iteminfo))
+
+                if (state.iteminfopopupItem != null){
+                    IconButton(
+                        onClick = {onAction(MainScreenAction.OnMoveItemToShortAccess(item = state.iteminfopopupItem))},
+
+                    ){
+                        Icon(
+                            imageVector = Icons.Rounded.Archive,
+                            contentDescription = "Move item to short access"
+                        )
+                    }
+                }
+
+            }
         },
         text = {
             Column {

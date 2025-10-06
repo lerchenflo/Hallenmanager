@@ -146,6 +146,37 @@ data class Item(
         }
         return inside
     }
+
+
+
+
+
+}
+
+/**
+ * Return a new Item with cornerPoints translated so their bounding box's
+ * top-left (minX,minY) is at Offset(0f, 0f).
+ *
+ * This makes the polygon "touch" the X and Y axes (as near as possible)
+ * by shifting all points by (-minX, -minY).
+ */
+fun Item.withCornerPointsAtOrigin(): Item {
+    if (cornerPoints.isEmpty()) return this
+
+    val minX = cornerPoints.minOfOrNull { it.x } ?: 0f
+    val minY = cornerPoints.minOfOrNull { it.y } ?: 0f
+
+    // If already at origin, return unchanged
+    if (minX == 0f && minY == 0f) return this
+
+    val shifted = cornerPoints.map { point ->
+
+        point.x - minX
+        point.y - minY
+        Offset(point.x - minX, point.y - minY)
+    }
+
+    return this.copy(cornerPoints = shifted)
 }
 
 fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
