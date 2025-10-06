@@ -19,6 +19,7 @@ data class Item(
     val description: String,
     val layers: List<Layer>,
     val color: Long?,
+    val onArea: Boolean,
     val lastchanged: String = Clock.System.now().toEpochMilliseconds().toString(),
     val created : String = Clock.System.now().toEpochMilliseconds().toString(),
     val cornerPoints: List<Offset>
@@ -155,7 +156,8 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
         description = description,
         lastChanged = lastchanged,
         created = created,
-        color = color
+        color = color,
+        onArea = onArea
     ),
     cornerPoints = cornerPoints.map {
         CornerPointDto(
@@ -180,6 +182,7 @@ fun ItemWithListsDto.toItem(): Item = Item(
     lastchanged = item.lastChanged,
     created = item.created,
     color = item.color,
+    onArea = item.onArea,
     cornerPoints = cornerPoints.map {
         it.asOffset()
     }

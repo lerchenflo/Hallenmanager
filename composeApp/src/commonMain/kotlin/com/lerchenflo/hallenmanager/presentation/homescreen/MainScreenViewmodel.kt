@@ -344,12 +344,13 @@ class MainScreenViewmodel(
             val maxY = item.cornerPoints.maxOf { it.y } * _scale.value + _offset.value.y
 
             // Check if bounding box intersects viewport
-            maxX >= 0 && minX <= _viewportsize.value.width &&
-                    maxY >= 0 && minY <= _viewportsize.value.height
+            (maxX >= 0 && minX <= _viewportsize.value.width && maxY >= 0 && minY <= _viewportsize.value.height) || !item.onArea //Keep invisible items
         }?.sortedBy { it.getPriority() }
             ?.filter {
-                it.isVisible()
-            } //Only use visible items
+                it.isVisible() || !it.onArea //Keep invisible items
+            }
+
+        println(filtereditems?.filter { !it.onArea }?.size)
 
         val newarea = _currentArea.value?.copy(
             items = filtereditems?: emptyList()

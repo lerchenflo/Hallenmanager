@@ -58,7 +58,7 @@ private fun LayerScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            ,
+        ,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {

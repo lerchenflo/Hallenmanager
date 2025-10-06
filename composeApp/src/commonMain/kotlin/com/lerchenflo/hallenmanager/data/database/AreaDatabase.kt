@@ -1,5 +1,6 @@
 package com.lerchenflo.hallenmanager.data.database
 
+import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
@@ -13,7 +14,10 @@ import com.lerchenflo.hallenmanager.data.relations.ItemLayerCrossRef
 @Database(
     entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class, ItemLayerCrossRef::class],
     exportSchema = true,
-    version = 8
+    version = 9,
+    autoMigrations = [
+        AutoMigration(from = 8, to = 9)
+    ]
 )
 
 

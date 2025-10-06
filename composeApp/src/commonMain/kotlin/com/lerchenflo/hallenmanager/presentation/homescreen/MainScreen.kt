@@ -6,8 +6,10 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -68,6 +71,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
@@ -75,7 +79,11 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.domain.snapToGrid
@@ -131,592 +139,617 @@ fun MainScreen(
 
     var fabmenuexpanded by remember { mutableStateOf(false) }
 
-    Scaffold(
+    Column(
         modifier = Modifier
-            .fillMaxSize(),
-        floatingActionButton = {
-            //Floatingactionbutton for settings
-            FloatingActionButtonMenu(
-                expanded = fabmenuexpanded,
-                button = {
-                    ToggleFloatingActionButton(
-                        checked = fabmenuexpanded,
-                        onCheckedChange = {
-                            fabmenuexpanded = !fabmenuexpanded
-                        },
-                        content = {
-                            Icon(
-                                imageVector = Icons.Outlined.DensitySmall,
-                                contentDescription = "Show context menu",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    )
-
-                },
-                modifier = Modifier,
-                content = {
-
-                    FloatingActionButtonMenuItem(
-                        onClick = {onAction(MainScreenAction.OnLayersClicked)},
-                        text = {
-                            Text(
-                                text = stringResource(Res.string.layers)
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Layers,
-                                contentDescription = "Navigate to Layers",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    )
-
-                    FloatingActionButtonMenuItem(
-                        onClick = {
-                            if (state.isDrawing){
-                                onAction(MainScreenAction.OnStopPainting)
-                            }else {
-                                onAction(MainScreenAction.OnStartPainting)
+            .fillMaxSize()
+    ) {
+        Scaffold(
+            modifier = Modifier.weight(1f),
+            floatingActionButton = {
+                //Floatingactionbutton for settings
+                FloatingActionButtonMenu(
+                    expanded = fabmenuexpanded,
+                    button = {
+                        ToggleFloatingActionButton(
+                            checked = fabmenuexpanded,
+                            onCheckedChange = {
+                                fabmenuexpanded = !fabmenuexpanded
+                            },
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Outlined.DensitySmall,
+                                    contentDescription = "Show context menu",
+                                    modifier = Modifier.size(30.dp)
+                                )
                             }
-                        },
-                        text = {
-                            Text(
-                                text = if (state.isDrawing) stringResource(Res.string.custom_paint_painting) else stringResource(Res.string.custom_paint)
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (state.isDrawing) Icons.Rounded.Close else Icons.Outlined.Draw,
-                                contentDescription = "Draw custom",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    )
+                        )
 
+                    },
+                    modifier = Modifier,
+                    content = {
 
-                    FloatingActionButtonMenuItem(
-                        onClick = {
-                            onAction(MainScreenAction.OnShowShortAccessMenuClick(!state.showShortAccessMenu))
-                        },
-                        text = {
-                            Text(
-                                text = if (state.showShortAccessMenu) stringResource(Res.string.hide_shortaccess_menu) else stringResource(Res.string.show_shortaccess_menu)
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (state.showShortAccessMenu) Icons.Rounded.ArrowDropDown else Icons.Rounded.ArrowDropUp,
-                                contentDescription = "Short access menu toggle",
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    )
-
-
-                }
-            )
-        },
-        content = {
-            if (state.iteminfopopupshown) {
-                CreateItemPopup(
-                    onAction = onAction,
-                    state = state
-                )
-            }
-
-            if (state.areainfopopupshown) {
-                CreateAreaPopup(
-                    onAction = onAction,
-                    state = state
-                )
-            }
-
-
-
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .safeContentPadding()
-            ){
-
-
-                if (state.currentArea != null){ //Allow painting only if an area is selected
-
-
-                    //Titlerow
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        verticalAlignment = if (!searchbaractive) Alignment.CenterVertically else Alignment.Top
-                    ) {
-
-                        //Seach textfield
-
-                        val focusManager = LocalFocusManager.current
-
-                        SearchBar(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(
-                                    bottom = 8.dp,
-                                    end = 8.dp
-                                ),
-                            inputField = {
-                                InputField(
-                                    placeholder = { Text(stringResource(Res.string.searchbarhint)) },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Search,
-                                            contentDescription = "Search"
-                                        )
-                                    },
-                                    trailingIcon = {
-                                        if (state.searchterm.isNotEmpty()){
-                                            IconButton(
-                                                onClick = {
-                                                    onAction(MainScreenAction.OnSearchtermChange(""))
-                                                    searchbaractive = false
-                                                }
-                                            ){
-                                                Icon(
-                                                    imageVector = Icons.Rounded.Close,
-                                                    contentDescription = "Clear searchquery"
-                                                )
-                                            }
-                                        }
-                                    },
-                                    query = state.searchterm,
-                                    // open the search suggestions as soon as user types (or clicks)
-                                    onQueryChange = {
-                                        searchbaractive = true                 // <- IMPORTANT: open on click/typing
-                                        onAction(MainScreenAction.OnSearchtermChange(it))
-                                    },
-                                    onSearch = {
-                                        searchbaractive = false                // hide when user confirms search
-                                        focusManager.clearFocus()
-                                    },
-                                    expanded = searchbaractive,
-                                    // make InputField report expand/collapse events back to our boolean
-                                    onExpandedChange = { searchbaractive = it }
+                        FloatingActionButtonMenuItem(
+                            onClick = {onAction(MainScreenAction.OnLayersClicked)},
+                            text = {
+                                Text(
+                                    text = stringResource(Res.string.layers)
                                 )
                             },
-                            // SearchBar's expanded/onExpandedChange must also be in sync
-                            expanded = searchbaractive,
-                            onExpandedChange = { searchbaractive = it },
-                            content = {
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Layers,
+                                    contentDescription = "Navigate to Layers",
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        )
 
-                                if (state.searchterm.isNotEmpty()){
-                                    LazyColumn(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                    ) {
-                                        items(items = state.currentSearchResult) { searchitem ->
-                                            SearchItemUI(
-                                                searchItem = searchitem,
-                                                onClick = {
-                                                    //Switch do different area if item is not in current area
-                                                    if (state.currentArea.id != searchitem.item.areaId) {
-                                                        onAction(MainScreenAction.OnSelectArea(searchitem.item.areaId))
-                                                    }
-
-
-                                                    searchbaractive = false
-                                                    focusManager.clearFocus()
-                                                    onAction(MainScreenAction.OnSearchtermChange(""))
-
-
-                                                    val targetScale = 1f
-                                                    localScale = targetScale
-
-                                                    val viewportCenterX = viewportSize.width / 2f
-                                                    val viewportCenterY = viewportSize.height / 2f
-                                                    val itemCenter = searchitem.item.getCenter()
-
-                                                    println("Height: $viewportCenterY Width: $viewportCenterX")
-                                                    localOffset = Offset(
-                                                        x = viewportCenterX - itemCenter.x * localScale,
-                                                        y = viewportCenterY - itemCenter.y * localScale
-                                                    )
-
-
-                                                }
-                                            )
-
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                        }
-                                    }
+                        FloatingActionButtonMenuItem(
+                            onClick = {
+                                if (state.isDrawing){
+                                    onAction(MainScreenAction.OnStopPainting)
+                                }else {
+                                    onAction(MainScreenAction.OnStartPainting)
                                 }
-
-
+                            },
+                            text = {
+                                Text(
+                                    text = if (state.isDrawing) stringResource(Res.string.custom_paint_painting) else stringResource(Res.string.custom_paint)
+                                )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (state.isDrawing) Icons.Rounded.Close else Icons.Outlined.Draw,
+                                    contentDescription = "Draw custom",
+                                    modifier = Modifier.size(30.dp)
+                                )
                             }
                         )
 
 
-
-
-
-                        var areadropdownexpanded by remember { mutableStateOf(false) }
-                        Box{
-                            TextButton(
-                                onClick = { areadropdownexpanded = true },
-                            ){
+                        FloatingActionButtonMenuItem(
+                            onClick = {
+                                onAction(MainScreenAction.OnShowShortAccessMenuClick(!state.showShortAccessMenu))
+                            },
+                            text = {
                                 Text(
-                                    text = state.currentArea.name
+                                    text = if (state.showShortAccessMenu) stringResource(Res.string.hide_shortaccess_menu) else stringResource(Res.string.show_shortaccess_menu)
+                                )
+                            },
+                            icon = {
+                                Icon(
+                                    imageVector = if (state.showShortAccessMenu) Icons.Rounded.ArrowDropDown else Icons.Rounded.ArrowDropUp,
+                                    contentDescription = "Short access menu toggle",
+                                    modifier = Modifier.size(30.dp)
                                 )
                             }
+                        )
 
 
-                            DropdownMenu(
-                                expanded = areadropdownexpanded,
-                                onDismissRequest = { areadropdownexpanded = false },
-                            ){
-                                state.availableAreas.forEach { availablearea ->
+                    }
+                )
+            },
+            content = {
+                if (state.iteminfopopupshown) {
+                    CreateItemPopup(
+                        onAction = onAction,
+                        state = state
+                    )
+                }
 
+                if (state.areainfopopupshown) {
+                    CreateAreaPopup(
+                        onAction = onAction,
+                        state = state
+                    )
+                }
+
+
+
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ){
+
+
+                    if (state.currentArea != null){ //Allow painting only if an area is selected
+
+
+                        //Titlerow
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            verticalAlignment = if (!searchbaractive) Alignment.CenterVertically else Alignment.Top
+                        ) {
+
+                            //Seach textfield
+
+                            val focusManager = LocalFocusManager.current
+
+                            SearchBar(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(
+                                        bottom = 8.dp,
+                                        end = 8.dp
+                                    ),
+                                inputField = {
+                                    InputField(
+                                        placeholder = { Text(stringResource(Res.string.searchbarhint)) },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Search,
+                                                contentDescription = "Search"
+                                            )
+                                        },
+                                        trailingIcon = {
+                                            if (state.searchterm.isNotEmpty()){
+                                                IconButton(
+                                                    onClick = {
+                                                        onAction(MainScreenAction.OnSearchtermChange(""))
+                                                        searchbaractive = false
+                                                    }
+                                                ){
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.Close,
+                                                        contentDescription = "Clear searchquery"
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        query = state.searchterm,
+                                        // open the search suggestions as soon as user types (or clicks)
+                                        onQueryChange = {
+                                            searchbaractive = true                 // <- IMPORTANT: open on click/typing
+                                            onAction(MainScreenAction.OnSearchtermChange(it))
+                                        },
+                                        onSearch = {
+                                            searchbaractive = false                // hide when user confirms search
+                                            focusManager.clearFocus()
+                                        },
+                                        expanded = searchbaractive,
+                                        // make InputField report expand/collapse events back to our boolean
+                                        onExpandedChange = { searchbaractive = it }
+                                    )
+                                },
+                                // SearchBar's expanded/onExpandedChange must also be in sync
+                                expanded = searchbaractive,
+                                onExpandedChange = { searchbaractive = it },
+                                content = {
+
+                                    if (state.searchterm.isNotEmpty()){
+                                        LazyColumn(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                        ) {
+                                            items(items = state.currentSearchResult) { searchitem ->
+                                                SearchItemUI(
+                                                    searchItem = searchitem,
+                                                    onClick = {
+                                                        //Switch do different area if item is not in current area
+                                                        if (state.currentArea.id != searchitem.item.areaId) {
+                                                            onAction(MainScreenAction.OnSelectArea(searchitem.item.areaId))
+                                                        }
+
+
+                                                        searchbaractive = false
+                                                        focusManager.clearFocus()
+                                                        onAction(MainScreenAction.OnSearchtermChange(""))
+
+
+                                                        val targetScale = 1f
+                                                        localScale = targetScale
+
+                                                        val viewportCenterX = viewportSize.width / 2f
+                                                        val viewportCenterY = viewportSize.height / 2f
+                                                        val itemCenter = searchitem.item.getCenter()
+
+                                                        println("Height: $viewportCenterY Width: $viewportCenterX")
+                                                        localOffset = Offset(
+                                                            x = viewportCenterX - itemCenter.x * localScale,
+                                                            y = viewportCenterY - itemCenter.y * localScale
+                                                        )
+
+
+                                                    }
+                                                )
+
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                            }
+                                        }
+                                    }
+
+
+                                }
+                            )
+
+
+
+
+
+                            var areadropdownexpanded by remember { mutableStateOf(false) }
+                            Box{
+                                TextButton(
+                                    onClick = { areadropdownexpanded = true },
+                                ){
+                                    Text(
+                                        text = state.currentArea.name
+                                    )
+                                }
+
+
+                                DropdownMenu(
+                                    expanded = areadropdownexpanded,
+                                    onDismissRequest = { areadropdownexpanded = false },
+                                ){
+                                    state.availableAreas.forEach { availablearea ->
+
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.CropPortrait,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
+
+                                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                                    Column {
+                                                        Text(
+                                                            text = availablearea.name,
+                                                            maxLines = 1
+                                                        )
+
+                                                        Text(
+                                                            text = availablearea.description,
+                                                            maxLines = 1,
+                                                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onClick = {
+                                                onAction(MainScreenAction.OnSelectArea(availablearea.id))
+                                                areadropdownexpanded = false
+                                            }
+                                        )
+                                    }
+
+                                    //Add button
                                     DropdownMenuItem(
                                         text = {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Icon(
-                                                    imageVector = Icons.Default.CropPortrait,
+                                                    imageVector = Icons.Default.Add,
                                                     contentDescription = null,
                                                     tint = MaterialTheme.colorScheme.primary
                                                 )
 
                                                 Spacer(modifier = Modifier.width(8.dp))
 
-                                                Column {
-                                                    Text(
-                                                        text = availablearea.name,
-                                                        maxLines = 1
-                                                    )
-
-                                                    Text(
-                                                        text = availablearea.description,
-                                                        maxLines = 1,
-                                                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
-                                                    )
-                                                }
+                                                Text(
+                                                    text = stringResource(Res.string.add_area)
+                                                )
                                             }
                                         },
                                         onClick = {
-                                            onAction(MainScreenAction.OnSelectArea(availablearea.id))
                                             areadropdownexpanded = false
+                                            onAction(MainScreenAction.OnCreateAreaStart)
                                         }
                                     )
+
                                 }
-
-                                //Add button
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Add,
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-
-                                            Spacer(modifier = Modifier.width(8.dp))
-
-                                            Text(
-                                                text = stringResource(Res.string.add_area)
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        areadropdownexpanded = false
-                                        onAction(MainScreenAction.OnCreateAreaStart)
-                                    }
-                                )
-
                             }
                         }
-                    }
 
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .onSizeChanged {
-                                //only update if not searching, else the centering wont work because the height is 0
-                                if (!searchbaractive) viewportSize = it
-                            }
-
-
-                    ){
-
-
-
-                        //Canvasbox
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState())
-                                .horizontalScroll(rememberScrollState())
-                                .clipToBounds()
-                                .pointerInput(Unit) {
-                                    detectTransformGestures { centroid, pan, zoom, rotation ->
-                                        val oldScale = localScale
-                                        val newScale = (oldScale * zoom).coerceIn(minzoomlevel, maxzoomlevel)
-                                        val scaleChange = if (oldScale == 0f) 1f else newScale / oldScale
-
-                                        // Keep the content point under the centroid fixed while zooming, and add pan
-                                        localOffset = Offset(
-                                            x = centroid.x - scaleChange * (centroid.x - localOffset.x) + pan.x,
-                                            y = centroid.y - scaleChange * (centroid.y - localOffset.y) + pan.y
-                                        )
-
-                                        localScale = newScale
-
-                                    }
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .onSizeChanged {
+                                    //only update if not searching, else the centering wont work because the height is 0
+                                    if (!searchbaractive) viewportSize = it
                                 }
 
-                                .pointerInput(state.currentArea.items) {
-                                    detectTapGestures(
-                                        onTap = { raw ->
-                                            val contentPoint = (raw - localOffset) / localScale
-                                            val snapped = snapToGrid(contentPoint, state.gridspacing)
-                                            onAction(MainScreenAction.OnClick(snapped, false))
-                                        },
-                                        onLongPress = { raw ->
-
-                                            val contentPoint = (raw - localOffset) / localScale
-
-                                            val snapped = snapToGrid(contentPoint, state.gridspacing)
-                                            onAction(MainScreenAction.OnClick(snapped, true))
-
-                                        },
-                                        onDoubleTap = { raw ->
-
-                                            /*
-                                            // Double-tap: zoom in/out focusing at tap point
-                                            val target = if (localScale < maxzoomlevel) (localScale * 2f).coerceAtMost(maxzoomlevel) else minzoomlevel
-                                            val scaleChange = target / localScale
-                                            localOffset = Offset(
-                                                x = raw.x - scaleChange * (raw.x - localOffset.x),
-                                                y = raw.y - scaleChange * (raw.y - localOffset.y)
-                                            )
-                                            localScale = target
-
-                                             */
-                                        },
-                                    )
-                                }
-                                .graphicsLayer {
-                                    transformOrigin = TransformOrigin(0f, 0f)
-                                    translationX = localOffset.x
-                                    translationY = localOffset.y
-                                    scaleX = localScale
-                                    scaleY = localScale
-                                }
 
                         ){
 
 
-                            LaunchedEffect(localScale, localOffset, viewportSize) {
-                                snapshotFlow { Triple(localScale, localOffset, viewportSize) }
-                                    .debounce(2)
-                                    .collect { (scale, offset, size) ->
-                                        onAction(MainScreenAction.OnZoom(scale, offset, size))
-                                    }
-                            }
 
-                            val gridLines = remember(localScale, localOffset, viewportSize, state.gridspacing) {
-                                data class GridLines(
-                                    val xs: FloatArray,
-                                    val ys: FloatArray,
-                                    val visibleLeft: Float,
-                                    val visibleTop: Float,
-                                    val visibleRight: Float,
-                                    val visibleBottom: Float
-                                ) {
-                                    override fun equals(other: Any?): Boolean {
-                                        if (this === other) return true
-                                        if (other == null || this::class != other::class) return false
-
-                                        other as GridLines
-
-                                        if (visibleLeft != other.visibleLeft) return false
-                                        if (visibleTop != other.visibleTop) return false
-                                        if (visibleRight != other.visibleRight) return false
-                                        if (visibleBottom != other.visibleBottom) return false
-                                        if (!xs.contentEquals(other.xs)) return false
-                                        if (!ys.contentEquals(other.ys)) return false
-
-                                        return true
-                                    }
-
-                                    override fun hashCode(): Int {
-                                        var result = visibleLeft.hashCode()
-                                        result = 31 * result + visibleTop.hashCode()
-                                        result = 31 * result + visibleRight.hashCode()
-                                        result = 31 * result + visibleBottom.hashCode()
-                                        result = 31 * result + xs.contentHashCode()
-                                        result = 31 * result + ys.contentHashCode()
-                                        return result
-                                    }
-                                }
-
-                                // compute visible bounds in content-space
-                                val visibleLeft = (-localOffset.x / localScale).coerceAtLeast(0f)
-                                val visibleTop = (-localOffset.y / localScale).coerceAtLeast(0f)
-                                val visibleRight = (visibleLeft + (viewportSize.width / localScale))
-                                val visibleBottom = (visibleTop + (viewportSize.height / localScale))
-
-                                // compute start indices and counts (integers) to avoid repeated float math
-                                val startXIndex = floor(visibleLeft / state.gridspacing).toInt().coerceAtLeast(0)
-                                val endXIndex = ceil(visibleRight / state.gridspacing).toInt()
-                                val startYIndex = floor(visibleTop / state.gridspacing).toInt().coerceAtLeast(0)
-                                val endYIndex = ceil(visibleBottom / state.gridspacing).toInt()
-
-                                // create FloatArrays of positions (reused as immutable data)
-                                val xs = FloatArray((endXIndex - startXIndex + 1).coerceAtLeast(0)) { i ->
-                                    (startXIndex + i) * state.gridspacing
-                                }
-                                val ys = FloatArray((endYIndex - startYIndex + 1).coerceAtLeast(0)) { i ->
-                                    (startYIndex + i) * state.gridspacing
-                                }
-
-                                GridLines(xs, ys, visibleLeft, visibleTop, visibleRight, visibleBottom)
-                            }
-
-                            Canvas(
+                            //Canvasbox
+                            Box(
                                 modifier = Modifier
-                                    .size(10000.dp)
-                            ) {
-                                val (xs, ys, visibleLeft, visibleTop, visibleRight, visibleBottom) = gridLines
+                                    .fillMaxSize()
+                                    .verticalScroll(rememberScrollState())
+                                    .horizontalScroll(rememberScrollState())
+                                    .clipToBounds()
+                                    .pointerInput(Unit) {
+                                        detectTransformGestures { centroid, pan, zoom, rotation ->
+                                            val oldScale = localScale
+                                            val newScale = (oldScale * zoom).coerceIn(minzoomlevel, maxzoomlevel)
+                                            val scaleChange = if (oldScale == 0f) 1f else newScale / oldScale
 
-                                for (i in xs.indices) {
-                                    val x = xs[i]
-                                    drawLine(
-                                        color = Color.Gray,
-                                        start = Offset(x, visibleTop),
-                                        end = Offset(x, visibleBottom),
-                                        strokeWidth = 1f / localScale
-                                    )
+                                            // Keep the content point under the centroid fixed while zooming, and add pan
+                                            localOffset = Offset(
+                                                x = centroid.x - scaleChange * (centroid.x - localOffset.x) + pan.x,
+                                                y = centroid.y - scaleChange * (centroid.y - localOffset.y) + pan.y
+                                            )
+
+                                            localScale = newScale
+
+                                        }
+                                    }
+
+                                    .pointerInput(state.currentArea.items) {
+                                        detectTapGestures(
+                                            onTap = { raw ->
+                                                val contentPoint = (raw - localOffset) / localScale
+                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
+                                                onAction(MainScreenAction.OnClick(snapped, false))
+                                            },
+                                            onLongPress = { raw ->
+
+                                                val contentPoint = (raw - localOffset) / localScale
+
+                                                val snapped = snapToGrid(contentPoint, state.gridspacing)
+                                                onAction(MainScreenAction.OnClick(snapped, true))
+
+                                            },
+                                            onDoubleTap = { raw ->
+
+                                                /*
+                                                // Double-tap: zoom in/out focusing at tap point
+                                                val target = if (localScale < maxzoomlevel) (localScale * 2f).coerceAtMost(maxzoomlevel) else minzoomlevel
+                                                val scaleChange = target / localScale
+                                                localOffset = Offset(
+                                                    x = raw.x - scaleChange * (raw.x - localOffset.x),
+                                                    y = raw.y - scaleChange * (raw.y - localOffset.y)
+                                                )
+                                                localScale = target
+
+                                                 */
+                                            },
+                                        )
+                                    }
+                                    .graphicsLayer {
+                                        transformOrigin = TransformOrigin(0f, 0f)
+                                        translationX = localOffset.x
+                                        translationY = localOffset.y
+                                        scaleX = localScale
+                                        scaleY = localScale
+                                    }
+
+                            ){
+
+
+                                LaunchedEffect(localScale, localOffset, viewportSize) {
+                                    snapshotFlow { Triple(localScale, localOffset, viewportSize) }
+                                        .debounce(2)
+                                        .collect { (scale, offset, size) ->
+                                            onAction(MainScreenAction.OnZoom(scale, offset, size))
+                                        }
                                 }
 
-                                for (i in ys.indices) {
-                                    val y = ys[i]
-                                    drawLine(
-                                        color = Color.Gray,
-                                        start = Offset(visibleLeft, y),
-                                        end = Offset(visibleRight, y),
-                                        strokeWidth = 1f / localScale
-                                    )
+                                val gridLines = remember(localScale, localOffset, viewportSize, state.gridspacing) {
+                                    data class GridLines(
+                                        val xs: FloatArray,
+                                        val ys: FloatArray,
+                                        val visibleLeft: Float,
+                                        val visibleTop: Float,
+                                        val visibleRight: Float,
+                                        val visibleBottom: Float
+                                    ) {
+                                        override fun equals(other: Any?): Boolean {
+                                            if (this === other) return true
+                                            if (other == null || this::class != other::class) return false
+
+                                            other as GridLines
+
+                                            if (visibleLeft != other.visibleLeft) return false
+                                            if (visibleTop != other.visibleTop) return false
+                                            if (visibleRight != other.visibleRight) return false
+                                            if (visibleBottom != other.visibleBottom) return false
+                                            if (!xs.contentEquals(other.xs)) return false
+                                            if (!ys.contentEquals(other.ys)) return false
+
+                                            return true
+                                        }
+
+                                        override fun hashCode(): Int {
+                                            var result = visibleLeft.hashCode()
+                                            result = 31 * result + visibleTop.hashCode()
+                                            result = 31 * result + visibleRight.hashCode()
+                                            result = 31 * result + visibleBottom.hashCode()
+                                            result = 31 * result + xs.contentHashCode()
+                                            result = 31 * result + ys.contentHashCode()
+                                            return result
+                                        }
+                                    }
+
+                                    // compute visible bounds in content-space
+                                    val visibleLeft = (-localOffset.x / localScale).coerceAtLeast(0f)
+                                    val visibleTop = (-localOffset.y / localScale).coerceAtLeast(0f)
+                                    val visibleRight = (visibleLeft + (viewportSize.width / localScale))
+                                    val visibleBottom = (visibleTop + (viewportSize.height / localScale))
+
+                                    // compute start indices and counts (integers) to avoid repeated float math
+                                    val startXIndex = floor(visibleLeft / state.gridspacing).toInt().coerceAtLeast(0)
+                                    val endXIndex = ceil(visibleRight / state.gridspacing).toInt()
+                                    val startYIndex = floor(visibleTop / state.gridspacing).toInt().coerceAtLeast(0)
+                                    val endYIndex = ceil(visibleBottom / state.gridspacing).toInt()
+
+                                    // create FloatArrays of positions (reused as immutable data)
+                                    val xs = FloatArray((endXIndex - startXIndex + 1).coerceAtLeast(0)) { i ->
+                                        (startXIndex + i) * state.gridspacing
+                                    }
+                                    val ys = FloatArray((endYIndex - startYIndex + 1).coerceAtLeast(0)) { i ->
+                                        (startYIndex + i) * state.gridspacing
+                                    }
+
+                                    GridLines(xs, ys, visibleLeft, visibleTop, visibleRight, visibleBottom)
                                 }
 
+                                Canvas(
+                                    modifier = Modifier
+                                        .size(10000.dp)
+                                ) {
+                                    val (xs, ys, visibleLeft, visibleTop, visibleRight, visibleBottom) = gridLines
 
-                                //Current drawing lines
-                                val points = state.currentDrawingOffsets
-                                if (points.size >= 2) {
-                                    for (i in 0 until points.lastIndex) {
+                                    for (i in xs.indices) {
+                                        val x = xs[i]
                                         drawLine(
-                                            color = Color.Black,
-                                            start = points[i],
-                                            end = points[i + 1],
-                                            strokeWidth = 20f,
-                                            cap = StrokeCap.Round
+                                            color = Color.Gray,
+                                            start = Offset(x, visibleTop),
+                                            end = Offset(x, visibleBottom),
+                                            strokeWidth = 1f / localScale
                                         )
                                     }
+
+                                    for (i in ys.indices) {
+                                        val y = ys[i]
+                                        drawLine(
+                                            color = Color.Gray,
+                                            start = Offset(visibleLeft, y),
+                                            end = Offset(visibleRight, y),
+                                            strokeWidth = 1f / localScale
+                                        )
+                                    }
+
+
+                                    //Current drawing lines
+                                    val points = state.currentDrawingOffsets
+                                    if (points.size >= 2) {
+                                        for (i in 0 until points.lastIndex) {
+                                            drawLine(
+                                                color = Color.Black,
+                                                start = points[i],
+                                                end = points[i + 1],
+                                                strokeWidth = 20f,
+                                                cap = StrokeCap.Round
+                                            )
+                                        }
+                                    }
+                                    //Current drawing corner points
+                                    drawPoints(
+                                        points,
+                                        color = Color.Red,
+                                        strokeWidth = 30f,
+                                        pointMode = PointMode.Points
+
+                                    )
+
+
+
                                 }
-                                //Current drawing corner points
-                                drawPoints(
-                                    points,
-                                    color = Color.Red,
-                                    strokeWidth = 30f,
-                                    pointMode = PointMode.Points
-
-                                )
 
 
-
+                                //Draw items in this area
+                                state.currentArea.items
+                                    .filter { it.onArea } //Only if they are not in the quick access bar
+                                    .forEach { item ->
+                                        if (item.cornerPoints.size > 2) {
+                                            key("${item.itemid}_${item.title}") {
+                                                ItemPolygon(
+                                                    item = item,
+                                                    scale = localScale,
+                                                )
+                                            }
+                                        }
+                                    }
                             }
 
 
-                            //Draw items in this area
-                            state.currentArea.items.forEach { item ->
-                                if (item.cornerPoints.size > 2) {
-                                    key("${item.itemid}_${item.title}") {
-                                        ItemPolygon(
-                                            item = item,
-                                            scale = localScale,
-                                            offset = localOffset,
 
-                                        )
-                                    }
-                                }
-                            }
+
+                            LegendOverlay(
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .padding(6.dp),
+                                scale = localScale,
+                                gridSpacingInContentPx = state.gridspacing,
+                                metersPerGrid = state.gridspacing / 50
+                            )
                         }
 
 
 
 
-                        LegendOverlay(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(6.dp),
-                            scale = localScale,
-                            gridSpacingInContentPx = state.gridspacing,
-                            metersPerGrid = state.gridspacing / 50
+
+                    }else{
+                        //If no area is selected show add popup
+                        CreateFirstAreaPopup(
+                            onclick = {
+                                onAction(MainScreenAction.OnCreateAreaStart)
+                            }
                         )
                     }
 
-                    if (state.showShortAccessMenu){
 
-                        HorizontalDivider(modifier = Modifier.height(8.dp).padding(16.dp))
-                        LazyRow(
-                            modifier = Modifier
-                                .scrollable(
-                                    rememberScrollState(),
-                                    orientation = Orientation.Horizontal
-                                )
+                }
+            }
+        )
 
+        if (state.showShortAccessMenu && state.currentArea != null) {
+            HorizontalDivider(modifier = Modifier
+                .height(8.dp)
+                .padding(horizontal = 16.dp)
+            )
 
+            val thumbnailDp = 40.dp
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(items = state.currentArea.items.filter { !it.onArea }) { item ->
+                    // cell width controls how text is centered and clipped
+                    Box(
+                        modifier = Modifier
+                            .width(80.dp)            // cell width; adjust as needed
+                            .wrapContentHeight()
+                            .padding(vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            items(items = state.currentArea.items){ item ->
-                                Box(
-                                    modifier = Modifier.size(60.dp)
-                                ){
-                                    Column(
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CropPortrait,
-                                            contentDescription = null
-                                        )
-
-                                        Text(
-                                            text = item.title,
-                                            maxLines = 1
-                                        )
-                                    }
-                                }
+                            // Make sure the ItemPolygon is constrained to the thumbnail dp size
+                            Box(modifier = Modifier.size(thumbnailDp), contentAlignment = Alignment.Center) {
+                                ItemPolygon(
+                                    item = item,
+                                    scale = 1f,
+                                    targetSize = DpSize(40.dp, 40.dp)
+                                )
                             }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = item.title,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
-
-
-
-                }else{
-                    //If no area is selected show add popup
-                    CreateFirstAreaPopup(
-                        onclick = {
-                            onAction(MainScreenAction.OnCreateAreaStart)
-                        }
-                    )
                 }
-
-
             }
         }
-    )
+    }
+
+
 }
 
 

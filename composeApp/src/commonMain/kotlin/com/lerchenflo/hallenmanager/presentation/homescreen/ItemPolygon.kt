@@ -11,12 +11,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import com.lerchenflo.hallenmanager.domain.Item
@@ -25,7 +27,7 @@ import com.lerchenflo.hallenmanager.domain.Item
 fun ItemPolygon(
     item: Item,
     scale: Float,
-    offset: Offset,
+    targetSize: DpSize? = null,
 ) {
     // Calculate bounding box in CONTENT coordinates (pixels)
     val minX = item.cornerPoints.minOf { it.x }
@@ -38,13 +40,19 @@ fun ItemPolygon(
 
     // Convert pixels to dp for Compose
     val density = LocalDensity.current
-    val widthDp = with(density) { width.toDp() }
-    val heightDp = with(density) { height.toDp() }
+    val widthDp = with(density) { targetSize?.width ?: width.toDp() }
+    val heightDp = with(density) { targetSize?.height ?: height.toDp() }
 
     // Position the Box in CONTENT space using pixel offset
     Box(
         modifier = Modifier
-            .offset { IntOffset(minX.toInt(), minY.toInt()) }
+            .then(
+                if (targetSize == null) {
+                    Modifier.offset { IntOffset(minX.toInt(), minY.toInt()) }
+                } else {
+                    Modifier
+                }
+            )
             .size(widthDp, heightDp)
     ) {
         Canvas(
