@@ -65,7 +65,9 @@ fun CreateItemPopup(
 
     AlertDialog(
         title = {
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(text = stringResource(Res.string.iteminfo))
 
                 if (state.iteminfopopupItem != null){

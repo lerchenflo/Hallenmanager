@@ -1,7 +1,9 @@
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -82,6 +84,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -148,6 +151,8 @@ fun MainScreen(
 
     var draggedItem by remember { mutableStateOf<Item?>(null) }
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
+    var itemScreenPosition by remember { mutableStateOf(Offset.Zero) }
+
 
 
     Column(
@@ -276,6 +281,7 @@ fun MainScreen(
                             verticalAlignment = if (!searchbaractive) Alignment.CenterVertically else Alignment.Top
                         ) {
 
+                            println("Searchbar active: $searchbaractive")
                             //Seach textfield
 
                             val focusManager = LocalFocusManager.current
@@ -674,17 +680,17 @@ fun MainScreen(
                                         }
                                     }
 
-                                //Dragging preview
-                                if (draggedItem != null) {
-                                    ItemPolygon(
-                                        item = draggedItem!!,
-                                        scale = localScale,
-                                        offset = (localOffset + dragPosition) / localScale
-                                    )
-                                }
+
+
                             }
 
-
+                            if (draggedItem != null) {
+                                ItemPolygon(
+                                    item = draggedItem!!,
+                                    scale = localScale,
+                                    offset = dragPosition
+                                )
+                            }
 
 
                             LegendOverlay(
@@ -715,83 +721,96 @@ fun MainScreen(
             }
         )
 
+
+
+
+        // Replace the entire LazyRow section with this improved version:
+
         if (state.showShortAccessMenu && state.currentArea != null) {
-            HorizontalDivider(modifier = Modifier
-                .height(8.dp)
-                .padding(horizontal = 16.dp)
-            )
-
-            val thumbnailDp = 40.dp
-            LazyRow(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                items(items = state.currentArea.items.filter { !it.onArea }) { item ->
-                    // cell width controls how text is centered and clipped
-                    Box(
-                        modifier = Modifier
-                            .width(80.dp)            // cell width; adjust as needed
-                            .wrapContentHeight()
-                            .padding(vertical = 4.dp)
-                            .pointerInput(item.itemid) {
-                                detectDragGesturesAfterLongPress(
-                                    onDragStart = { startOffset ->
-                                        draggedItem = item
-                                        dragPosition = startOffset
-                                    },
-                                    onDrag = { change, dragAmount ->
-                                        change.consume()
-                                        dragPosition += dragAmount
-                                    },
-                                    onDragEnd = {
-                                        // Convert screen coordinates to content coordinates
-                                        val contentPoint = (localOffset + dragPosition) / localScale
-                                        val snapped = snapToGrid(contentPoint, state.gridspacing)
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
 
-                                        // Move item to grid at snapped position
-                                        onAction(MainScreenAction.OnMoveItemToGrid(
-                                            item = item,
-                                            position = snapped
-                                        ))
+                val thumbnailDp = 50.dp
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(items = state.currentArea.items.filter { !it.onArea }) { item ->
+                        Box(
+                            modifier = Modifier
+                                .width(80.dp)
+                                .wrapContentHeight()
+                                .onGloballyPositioned { coordinates ->
+                                    val position = coordinates.localToWindow(Offset.Zero)
+                                    itemScreenPosition = position
+                                }
+                                .pointerInput(item.itemid) {
+                                    detectDragGesturesAfterLongPress(
+                                        onDragStart = { startOffset ->
+                                            draggedItem = item
+                                            dragPosition = itemScreenPosition + startOffset
+                                        },
+                                        onDrag = { change, dragAmount ->
+                                            change.consume()
+                                            dragPosition += dragAmount
+                                        },
+                                        onDragEnd = {
+                                            val contentPoint = (dragPosition - localOffset) / localScale
+                                            val snapped = snapToGrid(contentPoint, state.gridspacing)
 
-                                        // Reset drag state
-                                        draggedItem = null
-                                        dragPosition = Offset.Zero
-                                    },
-                                    onDragCancel = {
-                                        draggedItem = null
-                                        dragPosition = Offset.Zero
-                                    }
-                                )
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
+                                            onAction(
+                                                MainScreenAction.OnMoveItemToGrid(
+                                                    item = item,
+                                                    position = snapped
+                                                )
+                                            )
 
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                                            draggedItem = null
+                                            dragPosition = Offset.Zero
+                                        },
+                                        onDragCancel = {
+                                            draggedItem = null
+                                            dragPosition = Offset.Zero
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            // Make sure the ItemPolygon is constrained to the thumbnail dp size
-                            Box(modifier = Modifier.size(thumbnailDp), contentAlignment = Alignment.Center) {
-                                ItemPolygon(
-                                    item = item,
-                                    scale = 1f,
-                                    targetSize = DpSize(40.dp, 40.dp)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Box(
+                                    modifier = Modifier.size(thumbnailDp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    ItemPolygon(
+                                        item = item,
+                                        scale = 1f,
+                                        targetSize = DpSize(thumbnailDp, thumbnailDp),
+                                        showTitle = false
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    text = item.title,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = item.title,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
                         }
                     }
                 }

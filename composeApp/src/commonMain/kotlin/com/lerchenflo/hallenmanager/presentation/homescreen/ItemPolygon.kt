@@ -28,7 +28,8 @@ fun ItemPolygon(
     item: Item,
     scale: Float,
     targetSize: DpSize? = null,
-    offset: Offset? = null
+    offset: Offset? = null,
+    showTitle: Boolean = true
 ) {
     // Calculate bounding box in CONTENT coordinates (pixels)
     val minX = item.cornerPoints.minOf { it.x }
@@ -98,30 +99,33 @@ fun ItemPolygon(
             )
         }
 
-        // Text overlays
-        Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val titleFontSp = (25f / scale).coerceIn(10f, 20f).sp
-            val descFontSp = (17f / scale).coerceIn(8f, 18f).sp
+        if (showTitle){
+            // Text overlays
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val titleFontSp = (25f / scale).coerceIn(10f, 20f).sp
+                val descFontSp = (17f / scale).coerceIn(8f, 18f).sp
 
-            Text(
-                text = item.title,
-                color = item.getAbsoluteColor(),
-                fontSize = titleFontSp,
-                maxLines = 1
-            )
-
-            if (item.description.isNotBlank()) {
                 Text(
-                    text = item.description,
-                    color = item.getAbsoluteColor().copy(alpha = 0.8f),
-                    fontSize = descFontSp,
+                    text = item.title,
+                    color = item.getAbsoluteColor(),
+                    fontSize = titleFontSp,
                     maxLines = 1
                 )
+
+                if (item.description.isNotBlank()) {
+                    Text(
+                        text = item.description,
+                        color = item.getAbsoluteColor().copy(alpha = 0.8f),
+                        fontSize = descFontSp,
+                        maxLines = 1
+                    )
+                }
             }
         }
+
     }
 }
 
