@@ -21,16 +21,21 @@ fun SearchItemUI(
 ) {
     Row(
         modifier = Modifier
+            .fillMaxWidth()
             .clickable{
                 onClick()
             }
-            .fillMaxWidth()
-
+            .padding(8.dp)
             .background(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.primaryContainer
             )
-            .padding(horizontal = 12.dp)
+            .padding(
+                horizontal = 8.dp,
+                vertical = 1.dp
+            )
+
+
 
     ) {
         Column(

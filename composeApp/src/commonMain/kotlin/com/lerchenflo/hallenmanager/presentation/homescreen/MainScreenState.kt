@@ -10,38 +10,57 @@ import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
 import kotlin.collections.emptyList
 
 data class MainScreenState(
-    val searchterm: String = "",
-    val gridspacing: Float = 400f,
-    val isDrawing: Boolean = false,
-    val showShortAccessMenu : Boolean = false,
-    val currentSearchResult: List<SearchItem> = emptyList(),
-    val currentDrawingOffsets: List<Offset> = emptyList(),
-    val iteminfopopupshown : Boolean = false,
-    val iteminfopopupItem: Item? = null,
-    val areainfopopupshown : Boolean = false,
-    val availableAreas : List<AvailableArea> = emptyList(),
-    val currentArea: Area? = Area(name = "testarea", description = "testetestest", items = emptyList()),
-    val availableLayers: List<Layer> = emptyList<Layer>(),
+
+    //Searching
+    val searchterm: String = "", //Current searchterm in the searchbar
+    val currentSearchResult: List<SearchItem> = emptyList(), //List of results for the search with the current searchterm
+
+    //Current drawing
+    val isDrawing: Boolean = false, //Is the user currently drawing a new item
+    val currentDrawingOffsets: List<Offset> = emptyList(),  //List of points for the current drawing
+    val gridspacing: Float = 400f,  //Current spacing of the canvas grid
+
+    //Infopopup item
+    val iteminfopopupshown : Boolean = false, //Is the info popup for an item shown
+    val iteminfopopupItem: Item? = null, //Item which the popup is shown for
+
+    //Infopopup area
+    val areainfopopupshown : Boolean = false, //Is the area info popup for the current area shown
+    val currentArea: Area? = null, //Area which is currently selected
+
+    //Available items
+    val availableAreas : List<AvailableArea> = emptyList(), //List of areas which are in the db
+    val availableLayers: List<Layer> = emptyList<Layer>(), //List of all layers which are currently in the db
+
+    //Quick access menu
+    val showShortAccessMenu : Boolean = false,  //Is the bottom short access menu shown
+    //TODO: List of available items in short access menu
+
 )
 
 
 
 
 sealed interface MainScreenAction{
+
     data class OnSearchtermChange(val newsearchTerm: String) : MainScreenAction
-    data object OnStopPainting : MainScreenAction
+    data class OnZoom(val scale: Float, val offset: Offset, val viewportsize: IntSize) : MainScreenAction
+    data class OnClick(val contentpoint: Offset, val longpressed: Boolean) : MainScreenAction
+
+
     data object OnStartPainting : MainScreenAction
-    data class OnSelectArea(val areaid: Long) : MainScreenAction
     data class OnAddPoint(val offset: Offset) : MainScreenAction
+    data object OnStopPainting : MainScreenAction
+
+    data class OnSelectArea(val areaid: Long) : MainScreenAction
+
     data object OnInfoDialogDismiss : MainScreenAction
     data class OnInfoDialogSave(val item: Item) : MainScreenAction
     data class OnAreaDialogSave(val area: Area) : MainScreenAction
-    data object OnCreateAreaStart: MainScreenAction
     data object OnAreaDialogDismiss : MainScreenAction
-    data class OnZoom(val scale: Float, val offset: Offset, val viewportsize: IntSize) : MainScreenAction
-    data class OnItemClicked(val item: Item) : MainScreenAction
 
-    data class OnClick(val contentpoint: Offset, val longpressed: Boolean) : MainScreenAction
+    data object OnCreateAreaStart: MainScreenAction
+    data class OnItemClicked(val item: Item) : MainScreenAction
 
     data class OnShowShortAccessMenuClick(val shown: Boolean) : MainScreenAction
     data object OnLayersClicked : MainScreenAction
@@ -53,9 +72,9 @@ sealed interface MainScreenAction{
 }
 
 
-
 data class AvailableArea(
     val id: Long,
     val name: String,
     val description: String
 )
+

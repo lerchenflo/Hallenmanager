@@ -233,7 +233,8 @@ fun CreateItemPopup(
                         cornerPoints = state.currentDrawingOffsets,
                         color = color?.value?.toLong(),
                         areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: 0,
-                        onArea = true
+                        onArea = true,
+                        template = false
                     )
                 ))
             }) {

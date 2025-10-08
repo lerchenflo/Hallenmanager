@@ -14,9 +14,11 @@ import com.lerchenflo.hallenmanager.data.relations.ItemLayerCrossRef
 @Database(
     entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class, ItemLayerCrossRef::class],
     exportSchema = true,
-    version = 9,
+    version = 10,
     autoMigrations = [
-        AutoMigration(from = 8, to = 9)
+        AutoMigration(from = 8, to = 9),
+        AutoMigration(from = 9, to = 10)
+
     ]
 )
 

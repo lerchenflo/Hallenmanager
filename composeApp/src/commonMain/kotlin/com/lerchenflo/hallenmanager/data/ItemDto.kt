@@ -20,5 +20,8 @@ data class ItemDto(
     //Is this item on its area or is it in the short access menu
     //Migration
     @ColumnInfo(name = "onArea", defaultValue = "0")
-    val onArea: Boolean
+    val onArea: Boolean,
+
+    @ColumnInfo(name = "template", defaultValue = "0")
+    val template: Boolean
 )
