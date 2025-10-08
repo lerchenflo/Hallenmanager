@@ -49,7 +49,7 @@ fun CreateItemPopup(
     onAction: (MainScreenAction) -> Unit = {},
     state : MainScreenState = MainScreenState()
 ) {
-    println("Popup for item: ${state.iteminfopopupItem}")
+    //println("Popup for item: ${state.iteminfopopupItem}")
 
     var title by remember { mutableStateOf(state.iteminfopopupItem?.title ?: "") }
     var description by remember { mutableStateOf(state.iteminfopopupItem?.description ?: "") }

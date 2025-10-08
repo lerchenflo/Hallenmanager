@@ -313,10 +313,10 @@ class MainScreenViewmodel(
                         //If not drawing and sort press show popup
                         state.currentArea?.let { area ->
                             for (item in area.items.filter { it.onArea }) {
-                                println(item)
+                                //println(item)
 
                                 if (isPointInPolygon(action.contentpoint, item.cornerPoints)) {
-                                    println("Not clicked")
+                                    //println("Not clicked")
 
                                     onAction(OnItemClicked(item))
                                     break
@@ -381,7 +381,7 @@ class MainScreenViewmodel(
                 it.isVisible() || !it.onArea //Keep invisible items
             }
 
-        println(filtereditems?.filter { !it.onArea }?.size)
+        //println(filtereditems?.filter { !it.onArea }?.size)
 
         val newarea = _currentArea.value?.copy(
             items = filtereditems?: emptyList()

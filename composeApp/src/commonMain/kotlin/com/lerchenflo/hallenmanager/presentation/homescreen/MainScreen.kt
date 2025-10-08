@@ -278,10 +278,9 @@ fun MainScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth(),
-                            verticalAlignment = if (!searchbaractive) Alignment.CenterVertically else Alignment.Top
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
 
-                            println("Searchbar active: $searchbaractive")
                             //Seach textfield
 
                             val focusManager = LocalFocusManager.current
@@ -364,7 +363,7 @@ fun MainScreen(
                                                         val viewportCenterY = viewportSize.height / 2f
                                                         val itemCenter = searchitem.item.getCenter()
 
-                                                        println("Height: $viewportCenterY Width: $viewportCenterX")
+                                                        //println("Height: $viewportCenterY Width: $viewportCenterX")
                                                         localOffset = Offset(
                                                             x = viewportCenterX - itemCenter.x * localScale,
                                                             y = viewportCenterY - itemCenter.y * localScale
@@ -388,7 +387,7 @@ fun MainScreen(
 
 
                             var areadropdownexpanded by remember { mutableStateOf(false) }
-                            Box{
+                            Box {
                                 TextButton(
                                     onClick = { areadropdownexpanded = true },
                                 ){
@@ -681,15 +680,30 @@ fun MainScreen(
                                     }
 
 
-
+                                //If placed here preview is in correct size but moving is corrupted
                             }
 
+                            //if placed here the preview is not in correct size while zooming but follows the pointer correctly
                             if (draggedItem != null) {
-                                ItemPolygon(
-                                    item = draggedItem!!,
-                                    scale = localScale,
-                                    offset = dragPosition
-                                )
+                                // Convert screen position to content position for preview
+                                val contentOffset = (dragPosition - localOffset) / localScale
+
+                                Box(
+                                    modifier = Modifier
+                                        .graphicsLayer {
+                                            transformOrigin = TransformOrigin(0f, 0f)
+                                            translationX = localOffset.x
+                                            translationY = localOffset.y
+                                            scaleX = localScale
+                                            scaleY = localScale
+                                        }
+                                ) {
+                                    ItemPolygon(
+                                        item = draggedItem!!,
+                                        scale = localScale,
+                                        offset = contentOffset
+                                    )
+                                }
                             }
 
 
