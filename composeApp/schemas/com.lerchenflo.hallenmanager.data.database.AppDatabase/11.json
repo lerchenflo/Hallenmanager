@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 1,
-    "identityHash": "2a10d2e9314daf7b427ca360cfed4260",
+    "version": 11,
+    "identityHash": "b0977fb2e4b5e27ba3d15d1d7a0a5c1d",
     "entities": [
       {
         "tableName": "areas",
@@ -36,7 +36,7 @@
       },
       {
         "tableName": "ItemDto",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `areaId` INTEGER NOT NULL, `description` TEXT NOT NULL, `lastChanged` TEXT NOT NULL, `created` TEXT NOT NULL, `color` INTEGER, `onArea` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `areaId` INTEGER NOT NULL, `description` TEXT NOT NULL, `lastChanged` TEXT NOT NULL, `created` TEXT NOT NULL, `color` INTEGER, `onArea` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "itemid",
@@ -83,7 +83,8 @@
             "fieldPath": "onArea",
             "columnName": "onArea",
             "affinity": "INTEGER",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "0"
           }
         ],
         "primaryKey": {
@@ -210,7 +211,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2a10d2e9314daf7b427ca360cfed4260')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b0977fb2e4b5e27ba3d15d1d7a0a5c1d')"
     ]
   }
 }

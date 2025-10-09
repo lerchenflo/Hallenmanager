@@ -230,11 +230,10 @@ fun CreateItemPopup(
                         title = title,
                         description = description,
                         layers = selectedLayers,
-                        cornerPoints = state.currentDrawingOffsets,
+                        cornerPoints = if (state.currentDrawingOffsets.isEmpty() && state.iteminfopopupItem != null) state.iteminfopopupItem.cornerPoints else state.currentDrawingOffsets,
                         color = color?.value?.toLong(),
                         areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: 0,
                         onArea = true,
-                        template = false
                     )
                 ))
             }) {

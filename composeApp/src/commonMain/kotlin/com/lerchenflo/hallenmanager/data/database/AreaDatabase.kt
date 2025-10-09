@@ -3,8 +3,10 @@ package com.lerchenflo.hallenmanager.data.database
 import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
+import androidx.room.migration.AutoMigrationSpec
 import com.lerchenflo.hallenmanager.data.AreaDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
 import com.lerchenflo.hallenmanager.data.ItemDto
@@ -14,12 +16,8 @@ import com.lerchenflo.hallenmanager.data.relations.ItemLayerCrossRef
 @Database(
     entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class, ItemLayerCrossRef::class],
     exportSchema = true,
-    version = 10,
-    autoMigrations = [
-        AutoMigration(from = 8, to = 9),
-        AutoMigration(from = 9, to = 10)
+    version = 1,
 
-    ]
 )
 
 
@@ -31,6 +29,8 @@ abstract class AppDatabase: RoomDatabase() {
     companion object {
         const val DB_NAME = "database.db"
     }
+
+
 }
 
 

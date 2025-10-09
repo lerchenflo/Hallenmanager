@@ -47,6 +47,14 @@ class AreaRepository(
         }
     }
 
+    fun getShortAccessItemsFlow(): Flow<List<Item>> {
+        return database.areaDao().getShortAccessItems().map { items ->
+            items.map {
+                it.toItem()
+            }
+        }
+    }
+
     fun getAreaByIdFlow(areaid: Long = 0L) : Flow<Area?> {
         return database.areaDao().getAreaByIdFlow(areaid).map {
             it?.toArea()

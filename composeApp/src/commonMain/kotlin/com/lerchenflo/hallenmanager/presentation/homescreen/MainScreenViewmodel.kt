@@ -11,6 +11,7 @@ import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.data.database.AreaRepository
 import com.lerchenflo.hallenmanager.domain.Area
+import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.domain.withCornerPointsAtOrigin
 import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenAction.*
 import com.lerchenflo.hallenmanager.presentation.homescreen.search.SearchItem
@@ -63,7 +64,6 @@ class MainScreenViewmodel(
                     .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
                     .flowOn(Dispatchers.IO)
                     .collectLatest { area ->
-
                         _currentArea.value = area
                         recalculateVisibleItems()
                     }
@@ -127,6 +127,15 @@ class MainScreenViewmodel(
                         )
                     }
             }
+
+            viewModelScope.launch {
+                areaRepository.getShortAccessItemsFlow()
+                    .collectLatest {
+                        state = state.copy(
+                            shortAccessItems = it
+                        )
+                    }
+            }
         }
     }
 
@@ -157,7 +166,9 @@ class MainScreenViewmodel(
 
 
             is OnAddPoint -> {
-                val cornerpoints = state.currentDrawingOffsets + action.offset
+                val newpoint = snapToGrid(action.offset, state.gridspacing)
+
+                val cornerpoints = state.currentDrawingOffsets + newpoint
 
                 val finished = cornerpoints.first() == cornerpoints.last() && cornerpoints.size >= 2
                 state = state.copy(
@@ -195,13 +206,8 @@ class MainScreenViewmodel(
                         CoroutineScope(Dispatchers.IO).launch {
                             areaRepository.upsertItem(action.item, area.id)
                         }
-                    } else {
-                        throw IllegalStateException("Items can not be upserted, no Area is selected!")
                     }
-
                 }
-
-
             }
 
             is OnSelectArea -> {
@@ -369,16 +375,21 @@ class MainScreenViewmodel(
 
     private fun recalculateVisibleItems(){
         val filtereditems = _currentArea.value?.items?.filter { item ->
+
+            if (item.cornerPoints.isEmpty()) {
+                return@filter false
+            }
+
             val minX = item.cornerPoints.minOf { it.x } * _scale.value + _offset.value.x
             val maxX = item.cornerPoints.maxOf { it.x } * _scale.value + _offset.value.x
             val minY = item.cornerPoints.minOf { it.y } * _scale.value + _offset.value.y
             val maxY = item.cornerPoints.maxOf { it.y } * _scale.value + _offset.value.y
 
             // Check if bounding box intersects viewport
-            (maxX >= 0 && minX <= _viewportsize.value.width && maxY >= 0 && minY <= _viewportsize.value.height) || !item.onArea //Keep invisible items
+            maxX >= 0 && minX <= _viewportsize.value.width && maxY >= 0 && minY <= _viewportsize.value.height
         }?.sortedBy { it.getPriority() }
             ?.filter {
-                it.isVisible() || !it.onArea //Keep invisible items
+                it.isVisible()
             }
 
         //println(filtereditems?.filter { !it.onArea }?.size)

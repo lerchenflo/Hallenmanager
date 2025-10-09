@@ -51,26 +51,27 @@ interface AreaDao {
 
     @Transaction
     suspend fun upsertItemWithCorners(item: ItemWithListsDto) {
+        // Upsert the item first
+        val returnedId = upsertItem(item.item)
 
-        var itemid = upsertItem(item.item)
+        // Determine the actual item ID:
+        // - If item.item.itemid is 0 (new item), use the returned ID
+        // - Otherwise (existing item), use item.item.itemid
+        val itemid = if (item.item.itemid == 0L) returnedId else item.item.itemid
 
-        if (itemid == -1L){
-            itemid = item.item.itemid
-        }
-
+        // Delete and re-insert corner points
         deleteCornerPointsForItem(itemid)
         if (item.cornerPoints.isNotEmpty()) {
+            //println("ITEM upsert: Cornerpoints ${item.cornerPoints}")
             val pointsWithIds = item.cornerPoints.map { cp ->
                 cp.copy(itemId = itemid)
             }
             upsertCornerPoints(pointsWithIds)
         }
 
-
+        // Delete and re-insert layer cross-references
         deleteItemLayerCrossRefsForItem(itemid)
         if (item.layers.isNotEmpty()) {
-
-            // Insert new cross-references
             val crossRefs = item.layers.map { layer ->
                 ItemLayerCrossRef(
                     itemid = itemid,
@@ -87,6 +88,10 @@ interface AreaDao {
     @Transaction
     @Query("SELECT * FROM areas")
     fun getAreas(): Flow<List<AreaWithItemsDto>>
+
+    @Transaction
+    @Query("SELECT * FROM itemdto WHERE onArea = FALSE")
+    fun getShortAccessItems() : Flow<List<ItemWithListsDto>>
 
     @Transaction
     @Query("SELECT * FROM areas WHERE id = :areaid")

@@ -672,7 +672,6 @@ fun MainScreen(
 
                                 //Draw items in this area
                                 state.currentArea.items
-                                    .filter { it.onArea } //Only if they are not in the quick access bar
                                     .forEach { item ->
                                         if (item.cornerPoints.size > 2) {
                                             key("${item.itemid}_${item.title}") {
@@ -762,7 +761,7 @@ fun MainScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(items = state.currentArea.items.filter { !it.onArea }) { item ->
+                    items(items = state.shortAccessItems) { item ->
                         Box(
                             modifier = Modifier
                                 .width(80.dp)

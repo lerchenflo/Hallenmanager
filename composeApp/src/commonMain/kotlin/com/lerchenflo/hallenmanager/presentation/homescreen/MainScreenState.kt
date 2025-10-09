@@ -31,6 +31,7 @@ data class MainScreenState(
     //Available items
     val availableAreas : List<AvailableArea> = emptyList(), //List of areas which are in the db
     val availableLayers: List<Layer> = emptyList<Layer>(), //List of all layers which are currently in the db
+    val shortAccessItems: List<Item> = emptyList<Item>(),
 
     //Quick access menu
     val showShortAccessMenu : Boolean = false,  //Is the bottom short access menu shown
