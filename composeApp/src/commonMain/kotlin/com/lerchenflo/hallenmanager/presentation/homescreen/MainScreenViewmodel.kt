@@ -51,92 +51,98 @@ class MainScreenViewmodel(
 
     private var _currentArea = MutableStateFlow<Area?>(null)
 
+    val initialLoadFinished = MutableStateFlow(false)
+
     init {
-        viewModelScope.launch {
-
-            //Load first area from db
-            loadDefaultArea()
-
-
+        CoroutineScope(Dispatchers.Default).launch {
             viewModelScope.launch {
-                _selectedAreaId
-                    .filter { it > 0L }
-                    .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
-                    .flowOn(Dispatchers.IO)
-                    .collectLatest { area ->
-                        _currentArea.value = area
-                        recalculateVisibleItems()
-                    }
-            }
 
-            viewModelScope.launch {
-                areaRepository.getAllLayers()
-                    .flowOn(Dispatchers.IO)
-                    .collectLatest { layers ->
-                    state = state.copy(
-                        availableLayers = layers
-                    )
+                //Load first area from db
+                loadDefaultArea()
+
+
+                viewModelScope.launch {
+                    _selectedAreaId
+                        .filter { it > 0L }
+                        .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
+                        .flowOn(Dispatchers.IO)
+                        .collectLatest { area ->
+                            _currentArea.value = area
+                            recalculateVisibleItems()
+                        }
                 }
-            }
 
-            //Available areas dropdown
-            viewModelScope.launch {
-                areaRepository.getAreas()
-                    .map { areas ->
-                        areas.map {
-                            AvailableArea(
-                                id = it.id,
-                                name = it.name,
-                                description = it.description
+                viewModelScope.launch {
+                    areaRepository.getAllLayers()
+                        .flowOn(Dispatchers.IO)
+                        .collectLatest { layers ->
+                            state = state.copy(
+                                availableLayers = layers
                             )
                         }
-                    }
-                    .flowOn(Dispatchers.Default)
-                    .distinctUntilChanged()
-                    .collectLatest { availableareas ->
-                        state = state.copy(
-                            availableAreas = availableareas
-                        )
-                    }
-            }
+                }
 
-            //Item search
-            viewModelScope.launch {
-                areaRepository.getAllItems()
-                    .combine(_searchterm.asStateFlow()) { items, searchTerm ->
-                        if (searchTerm.isBlank()) {
-                            emptyList()
-                        } else {
-                            val query = searchTerm.trim().lowercase()
-                            items.filter { item ->
-                                item.matchesSearchQuery(query)
-                            }
-                        }
-                    }
-                    .flowOn(Dispatchers.Default)
-                    .collect { searchResults ->
-                        state = state.copy(
-                            currentSearchResult = searchResults.map {
-                                SearchItem(
-                                    item = it,
-                                    areaname = state.availableAreas.find { area ->
-                                        area.id == it.areaId
-                                    }?.name ?: "" //Should not happen
+                //Available areas dropdown
+                viewModelScope.launch {
+                    areaRepository.getAreas()
+                        .map { areas ->
+                            areas.map {
+                                AvailableArea(
+                                    id = it.id,
+                                    name = it.name,
+                                    description = it.description
                                 )
                             }
-                        )
-                    }
-            }
+                        }
+                        .flowOn(Dispatchers.Default)
+                        .distinctUntilChanged()
+                        .collectLatest { availableareas ->
+                            state = state.copy(
+                                availableAreas = availableareas
+                            )
+                        }
+                }
 
-            viewModelScope.launch {
-                areaRepository.getShortAccessItemsFlow()
-                    .collectLatest {
-                        state = state.copy(
-                            shortAccessItems = it
-                        )
-                    }
+                //Item search
+                viewModelScope.launch {
+                    areaRepository.getAllItems()
+                        .combine(_searchterm.asStateFlow()) { items, searchTerm ->
+                            if (searchTerm.isBlank()) {
+                                emptyList()
+                            } else {
+                                val query = searchTerm.trim().lowercase()
+                                items.filter { item ->
+                                    item.matchesSearchQuery(query)
+                                }
+                            }
+                        }
+                        .flowOn(Dispatchers.Default)
+                        .collect { searchResults ->
+                            state = state.copy(
+                                currentSearchResult = searchResults.map {
+                                    SearchItem(
+                                        item = it,
+                                        areaname = state.availableAreas.find { area ->
+                                            area.id == it.areaId
+                                        }?.name ?: "" //Should not happen
+                                    )
+                                }
+                            )
+                        }
+                }
+
+                viewModelScope.launch {
+                    areaRepository.getShortAccessItemsFlow()
+                        .collectLatest {
+                            state = state.copy(
+                                shortAccessItems = it
+                            )
+                        }
+                }
             }
         }
+
+
     }
 
     private fun loadDefaultArea(){
@@ -148,6 +154,8 @@ class MainScreenViewmodel(
             )
 
             _selectedAreaId.value = defaultarea?.id ?: 0L
+
+            initialLoadFinished.value = true
         }
     }
 

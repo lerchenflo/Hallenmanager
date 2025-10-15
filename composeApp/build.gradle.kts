@@ -32,6 +32,10 @@ kotlin {
     }
     
     jvm()
+
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
     
     sourceSets {
         androidMain.dependencies {
@@ -135,6 +139,12 @@ compose.desktop {
 
 room{
     schemaDirectory("$projectDir/schemas")
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+    }
 }
 
 dependencies{

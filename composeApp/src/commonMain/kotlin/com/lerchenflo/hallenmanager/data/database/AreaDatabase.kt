@@ -6,6 +6,7 @@ import androidx.room.Database
 import androidx.room.DeleteColumn
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
+import androidx.room.TypeConverters
 import androidx.room.migration.AutoMigrationSpec
 import com.lerchenflo.hallenmanager.data.AreaDto
 import com.lerchenflo.hallenmanager.data.CornerPointDto
@@ -16,12 +17,13 @@ import com.lerchenflo.hallenmanager.data.relations.ItemLayerCrossRef
 @Database(
     entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class, ItemLayerCrossRef::class],
     exportSchema = true,
-    version = 1,
+    version = 2,
 
 )
 
 
 @ConstructedBy(AppDatabaseConstructor::class)
+@TypeConverters(Converters::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun areaDao(): AreaDao
 

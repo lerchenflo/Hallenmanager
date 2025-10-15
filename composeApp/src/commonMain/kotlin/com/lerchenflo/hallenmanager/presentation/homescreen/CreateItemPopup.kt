@@ -34,6 +34,7 @@ import com.lerchenflo.hallenmanager.domain.Layer
 import com.lerchenflo.hallenmanager.presentation.ColorPicker
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_item_titletext
+import hallenmanager.composeapp.generated.resources.cancel
 import hallenmanager.composeapp.generated.resources.desc
 import hallenmanager.composeapp.generated.resources.done
 import hallenmanager.composeapp.generated.resources.iteminfo
@@ -43,6 +44,7 @@ import hallenmanager.composeapp.generated.resources.use_custom_color
 import hallenmanager.composeapp.generated.resources.use_layer_color
 import org.jetbrains.compose.resources.stringResource
 import kotlin.collections.emptyList
+import kotlin.time.Clock
 
 @Composable
 fun CreateItemPopup(
@@ -234,17 +236,20 @@ fun CreateItemPopup(
                         color = color?.value?.toLong(),
                         areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: 0,
                         onArea = true,
+                        createdAt = Clock.System.now(),
+                        lastchangedAt = Clock.System.now(),
+                        lastchangedBy = "",
                     )
                 ))
             }) {
-                Text("OK")
+                Text(stringResource(Res.string.done))
             }
         },
         dismissButton = {
             TextButton(onClick = {
                 onAction(MainScreenAction.OnInfoDialogDismiss)
             }) {
-                Text("Cancel")
+                Text(stringResource(Res.string.cancel))
             }
         },
         onDismissRequest = {

@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +51,7 @@ import androidx.compose.material.icons.rounded.ArrowDropUp
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Dataset
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -61,6 +63,7 @@ import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
@@ -97,6 +100,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lerchenflo.hallenmanager.domain.Item
 import com.lerchenflo.hallenmanager.domain.snapToGrid
 import com.lerchenflo.hallenmanager.presentation.LegendOverlay
@@ -120,11 +124,23 @@ import kotlin.math.floor
 fun MainScreenRoot(
     viewmodel: MainScreenViewmodel,
 ){
+    val loadfinished = viewmodel.initialLoadFinished.collectAsStateWithLifecycle()
 
-    MainScreen(
-        state = viewmodel.state,
-        onAction = viewmodel::onAction
-    )
+    if (loadfinished.value){
+        MainScreen(
+            state = viewmodel.state,
+            onAction = viewmodel::onAction
+        )
+    } else {
+        Box(
+            contentAlignment = Alignment.Center
+        ){
+            CircularProgressIndicator()
+        }
+    }
+
+
+
 }
 
 
@@ -651,7 +667,7 @@ fun MainScreen(
                                                 color = Color.Black,
                                                 start = points[i],
                                                 end = points[i + 1],
-                                                strokeWidth = 20f,
+                                                strokeWidth = 20f / localScale,
                                                 cap = StrokeCap.Round
                                             )
                                         }
@@ -660,7 +676,7 @@ fun MainScreen(
                                     drawPoints(
                                         points,
                                         color = Color.Red,
-                                        strokeWidth = 30f,
+                                        strokeWidth = 30f / localScale,
                                         pointMode = PointMode.Points
 
                                     )

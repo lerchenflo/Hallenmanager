@@ -2,16 +2,16 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "2a10d2e9314daf7b427ca360cfed4260",
+    "identityHash": "c29f2bfed05cdaaff2306f08f1cee074",
     "entities": [
       {
         "tableName": "areas",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `description` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `lastchangedAt` INTEGER NOT NULL, `lastchangedBy` TEXT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -25,6 +25,24 @@
             "columnName": "description",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastchangedAt",
+            "columnName": "lastchangedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastchangedBy",
+            "columnName": "lastchangedBy",
+            "affinity": "TEXT",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -36,12 +54,12 @@
       },
       {
         "tableName": "ItemDto",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `areaId` INTEGER NOT NULL, `description` TEXT NOT NULL, `lastChanged` TEXT NOT NULL, `created` TEXT NOT NULL, `color` INTEGER, `onArea` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemid` TEXT PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `areaId` INTEGER NOT NULL, `description` TEXT NOT NULL, `lastChangedAt` TEXT NOT NULL, `createdAt` TEXT NOT NULL, `color` INTEGER, `onArea` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "itemid",
             "columnName": "itemid",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -63,14 +81,14 @@
             "notNull": true
           },
           {
-            "fieldPath": "lastChanged",
-            "columnName": "lastChanged",
+            "fieldPath": "lastChangedAt",
+            "columnName": "lastChangedAt",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "created",
-            "columnName": "created",
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -131,12 +149,12 @@
       },
       {
         "tableName": "LayerDto",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`layerid` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `sortId` INTEGER NOT NULL, `shown` INTEGER NOT NULL, `color` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`layerid` TEXT PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `sortId` INTEGER NOT NULL, `shown` INTEGER NOT NULL, `color` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "layerid",
             "columnName": "layerid",
-            "affinity": "INTEGER",
+            "affinity": "TEXT",
             "notNull": true
           },
           {
@@ -210,7 +228,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2a10d2e9314daf7b427ca360cfed4260')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c29f2bfed05cdaaff2306f08f1cee074')"
     ]
   }
 }

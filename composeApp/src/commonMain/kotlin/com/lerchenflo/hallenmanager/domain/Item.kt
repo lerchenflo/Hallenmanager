@@ -10,6 +10,7 @@ import com.lerchenflo.hallenmanager.util.levenshteinWithinThreshold
 import com.lerchenflo.hallenmanager.util.normalizeForSearch
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 data class Item(
@@ -22,8 +23,9 @@ data class Item(
 
     val onArea: Boolean,
 
-    val lastchanged: String = Clock.System.now().toEpochMilliseconds().toString(),
-    val created : String = Clock.System.now().toEpochMilliseconds().toString(),
+    var createdAt: Instant,
+    var lastchangedAt: Instant,
+    var lastchangedBy: String,
     val cornerPoints: List<Offset>
 ) {
 
@@ -187,10 +189,11 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
         title = title,
         areaId = areaid,
         description = description,
-        lastChanged = lastchanged,
-        created = created,
+        lastchangedAt = lastchangedAt,
+        createdAt = createdAt,
         color = color,
         onArea = onArea,
+        lastchangedBy = lastchangedBy,
     ),
     cornerPoints = cornerPoints.map {
         CornerPointDto(
@@ -212,11 +215,12 @@ fun ItemWithListsDto.toItem(): Item = Item(
     layers = layers.map {
         it.toLayer()
     },
-    lastchanged = item.lastChanged,
-    created = item.created,
+    lastchangedAt = item.lastchangedAt,
+    createdAt = item.createdAt,
     color = item.color,
     onArea = item.onArea,
     cornerPoints = cornerPoints.map {
         it.asOffset()
-    }
+    },
+    lastchangedBy = item.lastchangedBy
 )

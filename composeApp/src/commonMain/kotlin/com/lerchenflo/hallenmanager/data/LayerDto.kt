@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class LayerDto(
     @PrimaryKey(autoGenerate = true)
-    val layerid: Long,
+    val layerid: Long = 0L,
     val name: String,
     val sortId: Int,
     val shown: Boolean,

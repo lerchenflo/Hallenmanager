@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package com.lerchenflo.hallenmanager.presentation.homescreen
 
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,8 @@ import hallenmanager.composeapp.generated.resources.desc
 import hallenmanager.composeapp.generated.resources.name
 import hallenmanager.composeapp.generated.resources.save
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
 @Composable
 fun CreateAreaPopup(
@@ -75,7 +79,10 @@ fun CreateAreaPopup(
                     Area(
                         name = title,
                         description = description,
-                        items = emptyList()
+                        items = emptyList(),
+                        createdAt = Clock.System.now(),
+                        lastchangedAt = Clock.System.now(),
+                        lastchangedBy = "",
                     )
                 ))
             }) {
