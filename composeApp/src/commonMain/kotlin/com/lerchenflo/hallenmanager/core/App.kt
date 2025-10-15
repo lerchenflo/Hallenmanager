@@ -1,6 +1,5 @@
 package com.lerchenflo.hallenmanager.core
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -10,10 +9,10 @@ import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.ObserveAsEvents
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.core.theme.AppTheme
-import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenRoot
-import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenViewmodel
-import com.lerchenflo.hallenmanager.presentation.layerselection.LayerScreenRoot
-import com.lerchenflo.hallenmanager.presentation.layerselection.LayerScreenViewmodel
+import com.lerchenflo.hallenmanager.mainscreen.presentation.MainScreenRoot
+import com.lerchenflo.hallenmanager.mainscreen.presentation.MainScreenViewmodel
+import com.lerchenflo.hallenmanager.layerselection.presentation.LayerScreenRoot
+import com.lerchenflo.hallenmanager.layerselection.presentation.LayerScreenViewmodel
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel

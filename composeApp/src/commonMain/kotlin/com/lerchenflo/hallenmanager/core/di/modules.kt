@@ -2,10 +2,10 @@ package com.lerchenflo.hallenmanager.core.di
 
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
-import com.lerchenflo.hallenmanager.data.database.AppDatabase
-import com.lerchenflo.hallenmanager.data.database.AreaRepository
-import com.lerchenflo.hallenmanager.presentation.homescreen.MainScreenViewmodel
-import com.lerchenflo.hallenmanager.presentation.layerselection.LayerScreenViewmodel
+import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.database.AreaRepository
+import com.lerchenflo.hallenmanager.mainscreen.presentation.MainScreenViewmodel
+import com.lerchenflo.hallenmanager.layerselection.presentation.LayerScreenViewmodel
 import io.ktor.client.HttpClient
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
