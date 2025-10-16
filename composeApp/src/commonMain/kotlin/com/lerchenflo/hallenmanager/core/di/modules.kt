@@ -4,6 +4,7 @@ import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
 import com.lerchenflo.hallenmanager.datasource.database.AreaRepository
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkUtils
 import com.lerchenflo.hallenmanager.mainscreen.presentation.MainScreenViewmodel
 import com.lerchenflo.hallenmanager.layerselection.presentation.LayerScreenViewmodel
 import io.ktor.client.HttpClient
@@ -23,7 +24,7 @@ val sharedmodule = module {
     single <HttpClient> { createHttpClient(get()) }
 
 
-
+    singleOf(::NetworkUtils)
     singleOf(::AreaRepository)
 
     single<Navigator> {

@@ -8,7 +8,6 @@ class Converters {
     @ExperimentalTime
     @TypeConverter
     fun fromInstant(value: Instant): String {
-        println("Converter: ${value.toString()}")
         return value.toString()
     }
 
