@@ -391,6 +391,20 @@ class MainScreenViewmodel(
                         )
                     )
                 }
+
+                onAction(OnCreateConnectionStop)
+            }
+
+            OnCreateConnectionStart -> {
+                state = state.copy(
+                    connectionpopupshown = true
+                )
+            }
+
+            OnCreateConnectionStop -> {
+                state = state.copy(
+                    connectionpopupshown = false
+                )
             }
         }
     }

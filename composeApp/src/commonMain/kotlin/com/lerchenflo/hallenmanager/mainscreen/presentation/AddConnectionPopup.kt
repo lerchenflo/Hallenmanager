@@ -111,13 +111,13 @@ fun AddConnectionPopup(
         },
         dismissButton = {
             TextButton(onClick = {
-                onAction(MainScreenAction.OnAreaDialogDismiss)
+                onAction(MainScreenAction.OnCreateConnectionStop)
             }) {
                 Text(stringResource(Res.string.cancel))
             }
         },
         onDismissRequest = {
-            onAction(MainScreenAction.OnAreaDialogDismiss)
+            onAction(MainScreenAction.OnCreateConnectionStop)
         }
 
     )

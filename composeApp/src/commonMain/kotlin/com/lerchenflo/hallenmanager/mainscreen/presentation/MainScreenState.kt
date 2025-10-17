@@ -23,6 +23,8 @@ data class MainScreenState(
     val iteminfopopupshown : Boolean = false, //Is the info popup for an item shown
     val iteminfopopupItem: Item? = null, //Item which the popup is shown for
 
+    val connectionpopupshown: Boolean = false,
+
     //Infopopup area
     val areainfopopupshown : Boolean = false, //Is the area info popup for the current area shown
     val currentArea: Area? = null, //Area which is currently selected
@@ -57,6 +59,9 @@ sealed interface MainScreenAction{
     data class OnInfoDialogSave(val item: Item) : MainScreenAction
     data class OnAreaDialogSave(val area: Area) : MainScreenAction
     data object OnAreaDialogDismiss : MainScreenAction
+
+    data object OnCreateConnectionStart: MainScreenAction
+    data object OnCreateConnectionStop: MainScreenAction
 
     data object OnCreateAreaStart: MainScreenAction
     data class OnItemClicked(val item: Item) : MainScreenAction

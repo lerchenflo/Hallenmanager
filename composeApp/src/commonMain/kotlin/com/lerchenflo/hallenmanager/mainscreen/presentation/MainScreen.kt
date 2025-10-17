@@ -258,6 +258,13 @@ fun MainScreen(
                     )
                 }
 
+                if (state.connectionpopupshown){
+                    AddConnectionPopup(
+                        onAction = onAction,
+                        state = state
+                    )
+                }
+
 
 
 
@@ -731,8 +738,11 @@ fun MainScreen(
                     }else{
                         //If no area is selected show add popup
                         CreateFirstAreaPopup(
-                            onclick = {
+                            onareaclick = {
                                 onAction(MainScreenAction.OnCreateAreaStart)
+                            },
+                            onremoteclick = {
+                                onAction(MainScreenAction.OnCreateConnectionStart)
                             }
                         )
                     }
@@ -743,10 +753,7 @@ fun MainScreen(
         )
 
 
-
-
-        // Replace the entire LazyRow section with this improved version:
-
+        //Short access menu
         if (state.showShortAccessMenu && state.currentArea != null) {
             Column(
                 modifier = Modifier
