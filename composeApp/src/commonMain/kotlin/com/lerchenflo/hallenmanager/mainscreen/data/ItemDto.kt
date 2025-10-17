@@ -21,4 +21,7 @@ data class ItemDto(
     //Is this item on its area or is it in the short access menu
     val onArea: Boolean,
 
+    //Serverurl if this item is synced with a server
+    var serverId: Long?
+
 )

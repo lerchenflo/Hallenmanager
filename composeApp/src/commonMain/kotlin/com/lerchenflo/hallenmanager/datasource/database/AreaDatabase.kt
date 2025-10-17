@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
@@ -12,9 +13,17 @@ import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemLayerCrossRef
 
 @Database(
-    entities = [AreaDto::class, ItemDto::class, CornerPointDto::class, LayerDto::class, ItemLayerCrossRef::class],
+    entities = [
+        AreaDto::class, //Saved area
+        ItemDto::class, //Saved item
+        CornerPointDto::class, //Saved cornerpoints for item
+        LayerDto::class, //Saved layers
+        ItemLayerCrossRef::class, //Cross reference between item and layer (m to n)
+        NetworkConnection::class //Saved connections to servers + Username
+               ],
+
     exportSchema = true,
-    version = 2,
+    version = 3,
 
 )
 

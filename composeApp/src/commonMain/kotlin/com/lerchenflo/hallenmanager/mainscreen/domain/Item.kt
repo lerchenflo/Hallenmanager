@@ -22,12 +22,11 @@ data class Item(
     val description: String,
     val layers: List<Layer>,
     val color: Long?,
-
     val onArea: Boolean,
-
     var createdAt: Instant,
     var lastchangedAt: Instant,
     var lastchangedBy: String,
+    var serverId: Long?,
     val cornerPoints: List<Offset>
 ) {
 
@@ -196,6 +195,7 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
         color = color,
         onArea = onArea,
         lastchangedBy = lastchangedBy,
+        serverId = serverId,
     ),
     cornerPoints = cornerPoints.map {
         CornerPointDto(
@@ -224,5 +224,6 @@ fun ItemWithListsDto.toItem(): Item = Item(
     cornerPoints = cornerPoints.map {
         it.asOffset()
     },
-    lastchangedBy = item.lastchangedBy
+    lastchangedBy = item.lastchangedBy,
+    serverId = item.serverId
 )

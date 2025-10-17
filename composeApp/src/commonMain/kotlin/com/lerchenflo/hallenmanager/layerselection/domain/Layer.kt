@@ -8,7 +8,9 @@ data class Layer(
     val name: String,
     val sortId: Int,
     val shown: Boolean,
-    val color: Long
+    val color: Long,
+    var serverId: Long?
+
 ){
     fun getColor(): Color {
         //println("Layercolor: ${Color(color.toULong())}")
@@ -22,7 +24,8 @@ fun Layer.toLayerDto(): LayerDto = LayerDto(
     name = name,
     sortId = sortId,
     shown = shown,
-    color = color
+    color = color,
+    serverId = serverId
 )
 
 fun LayerDto.toLayer(): Layer = Layer(
@@ -30,5 +33,6 @@ fun LayerDto.toLayer(): Layer = Layer(
     name = name,
     sortId = sortId,
     shown = shown,
-    color = color
+    color = color,
+    serverId = serverId
 )

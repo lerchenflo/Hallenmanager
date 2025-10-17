@@ -9,10 +9,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
-import com.lerchenflo.hallenmanager.datasource.database.AreaRepository
+import com.lerchenflo.hallenmanager.core.navigation.Route.*
+import com.lerchenflo.hallenmanager.datasource.AreaRepository
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.util.snapToGrid
 import com.lerchenflo.hallenmanager.mainscreen.domain.withCornerPointsAtOrigin
+import com.lerchenflo.hallenmanager.mainscreen.presentation.MainScreenAction.*
 import com.lerchenflo.hallenmanager.mainscreen.presentation.search.SearchItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,7 +91,8 @@ class MainScreenViewmodel(
                                 AvailableArea(
                                     id = it.id,
                                     name = it.name,
-                                    description = it.description
+                                    description = it.description,
+                                    isSynced = it.isRemoteArea()
                                 )
                             }
                         }
@@ -160,7 +164,7 @@ class MainScreenViewmodel(
 
     fun onAction(action: MainScreenAction) {
         when (action) {
-            is MainScreenAction.OnSearchtermChange -> {
+            is OnSearchtermChange -> {
                 //Searchterm not empty -> User is searching
                 _searchterm.value = action.newsearchTerm
 
@@ -171,7 +175,7 @@ class MainScreenViewmodel(
             }
 
 
-            is MainScreenAction.OnAddPoint -> {
+            is OnAddPoint -> {
                 val newpoint = snapToGrid(action.offset, state.gridspacing)
 
                 val cornerpoints = state.currentDrawingOffsets + newpoint
@@ -185,14 +189,14 @@ class MainScreenViewmodel(
                 )
             }
 
-            is MainScreenAction.OnStopPainting -> {
+            is OnStopPainting -> {
                 state = state.copy(
                     isDrawing = false,
                     currentDrawingOffsets = emptyList()
                 )
             }
 
-            MainScreenAction.OnInfoDialogDismiss -> {
+            OnInfoDialogDismiss -> {
                 state = state.copy(
                     iteminfopopupshown = false,
                     isDrawing = false,
@@ -200,7 +204,7 @@ class MainScreenViewmodel(
                 )
             }
 
-            is MainScreenAction.OnInfoDialogSave -> {
+            is OnInfoDialogSave -> {
                 state = state.copy(
                     iteminfopopupshown = false,
                     currentDrawingOffsets = emptyList(),
@@ -216,7 +220,7 @@ class MainScreenViewmodel(
                 }
             }
 
-            is MainScreenAction.OnSelectArea -> {
+            is OnSelectArea -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         val area = areaRepository.getAreaById(action.areaid)
@@ -230,7 +234,7 @@ class MainScreenViewmodel(
                 }
             }
 
-            is MainScreenAction.OnAreaDialogSave -> {
+            is OnAreaDialogSave -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
                         val currentarea = areaRepository.upsertArea(action.area)
@@ -245,25 +249,25 @@ class MainScreenViewmodel(
                 }
             }
 
-            MainScreenAction.OnCreateAreaStart -> {
+            OnCreateAreaStart -> {
                 state = state.copy(
                     areainfopopupshown = true
                 )
             }
 
-            MainScreenAction.OnAreaDialogDismiss -> {
+            OnAreaDialogDismiss -> {
                 state = state.copy(
                     areainfopopupshown = false
                 )
             }
 
-            MainScreenAction.OnLayersClicked -> {
+            OnLayersClicked -> {
                 viewModelScope.launch {
-                    navigator.navigate(Route.Layers)
+                    navigator.navigate(Layers(_selectedAreaId.value))
                 }
             }
 
-            is MainScreenAction.OnZoom -> {
+            is OnZoom -> {
 
                 _scale.value = action.scale
                 _offset.value = action.offset
@@ -307,16 +311,16 @@ class MainScreenViewmodel(
                 recalculateVisibleItems()
             }
 
-            is MainScreenAction.OnItemClicked -> {
+            is OnItemClicked -> {
                 state = state.copy(
                     iteminfopopupshown = true,
                     iteminfopopupItem = action.item
                 )
             }
 
-            is MainScreenAction.OnClick -> {
+            is OnClick -> {
                 if (state.isDrawing){
-                    onAction(MainScreenAction.OnAddPoint(action.contentpoint))
+                    onAction(OnAddPoint(action.contentpoint))
                 }else{
                     if (action.longpressed){
                         //If not drawing and longpress show context menu
@@ -330,7 +334,7 @@ class MainScreenViewmodel(
                                 if (isPointInPolygon(action.contentpoint, item.cornerPoints)) {
                                     //println("Not clicked")
 
-                                    onAction(MainScreenAction.OnItemClicked(item))
+                                    onAction(OnItemClicked(item))
                                     break
                                 }
                             }
@@ -339,19 +343,19 @@ class MainScreenViewmodel(
                 }
             }
 
-            MainScreenAction.OnStartPainting -> {
+            OnStartPainting -> {
                 state = state.copy(
                     isDrawing = true
                 )
             }
 
-            is MainScreenAction.OnShowShortAccessMenuClick -> {
+            is OnShowShortAccessMenuClick -> {
                 state = state.copy(
                     showShortAccessMenu = action.shown
                 )
             }
 
-            is MainScreenAction.OnMoveItemToGrid -> {
+            is OnMoveItemToGrid -> {
                 viewModelScope.launch {
                     areaRepository.upsertItem(action.item
                         .copy(
@@ -363,7 +367,7 @@ class MainScreenViewmodel(
                 }
             }
 
-            is MainScreenAction.OnMoveItemToShortAccess -> {
+            is OnMoveItemToShortAccess -> {
                 viewModelScope.launch {
                     //Upsert item but moved to the coordinate startpoint
                     areaRepository.upsertItem(action.item.withCornerPointsAtOrigin().copy(
@@ -373,6 +377,18 @@ class MainScreenViewmodel(
                     state = state.copy(
                         iteminfopopupshown = false,
                         iteminfopopupItem = null
+                    )
+                }
+            }
+
+            is CreateConnection -> {
+                CoroutineScope(Dispatchers.IO).launch {
+                    areaRepository.upsertConnection(
+                        connection = NetworkConnection(
+                            userName = action.userName,
+                            serverUrl = action.serverurl,
+                            alias = action.alias
+                        )
                     )
                 }
             }

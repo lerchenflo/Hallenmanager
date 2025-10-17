@@ -252,7 +252,7 @@ fun MainScreen(
                 }
 
                 if (state.areainfopopupshown) {
-                    CreateAreaPopup(
+                    CreateOfflineAreaPopup(
                         onAction = onAction,
                         state = state
                     )

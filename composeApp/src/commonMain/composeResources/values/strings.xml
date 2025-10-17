@@ -21,6 +21,13 @@
     <string name="hide_shortaccess_menu">Hide access menu</string>
 
 
+    <string name="add_connection_title">Add server</string>
+    <string name="add_connection_subtext">Add a new server to sync areas</string>
+    <string name="serverurl">Serverurl</string>
+    <string name="serverurl_placeholder">http://192.168.0.10:8080</string>
+    <string name="connection_username">Your name</string>
+    <string name="connection_alias">Alias for this connection</string>
+
 
 
 

@@ -34,7 +34,6 @@ data class MainScreenState(
 
     //Quick access menu
     val showShortAccessMenu : Boolean = false,  //Is the bottom short access menu shown
-    //TODO: List of available items in short access menu
 
 )
 
@@ -69,12 +68,14 @@ sealed interface MainScreenAction{
     data class OnMoveItemToShortAccess(val item: Item) : MainScreenAction
 
 
+    data class CreateConnection(val serverurl: String, val userName: String, val alias: String): MainScreenAction
 }
 
 
 data class AvailableArea(
     val id: Long,
     val name: String,
-    val description: String
+    val description: String,
+    val isSynced: Boolean
 )
 

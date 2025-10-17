@@ -239,6 +239,7 @@ fun CreateItemPopup(
                         createdAt = Clock.System.now(),
                         lastchangedAt = Clock.System.now(),
                         lastchangedBy = "",
+                        serverId = state.currentArea?.serverId
                     )
                 ))
             }) {

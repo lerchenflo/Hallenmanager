@@ -12,5 +12,6 @@ data class LayerDto(
     val name: String,
     val sortId: Int,
     val shown: Boolean,
-    val color: Long
+    val color: Long,
+    var serverId: Long?
 )

@@ -14,8 +14,12 @@ data class Area(
     var createdAt: Instant,
     var lastchangedAt: Instant,
     var lastchangedBy: String,
+    var serverId: Long?,
     var items: List<Item>
 ) {
+    fun isRemoteArea() : Boolean {
+        return serverId != null
+    }
 }
 
 
@@ -26,7 +30,8 @@ fun Area.toAreaDto(): AreaWithItemsDto = AreaWithItemsDto(
         createdAt = createdAt,
         id = id,
         lastchangedAt = lastchangedAt,
-        lastchangedBy = lastchangedBy
+        lastchangedBy = lastchangedBy,
+        serverId = serverId
     ),
     items = items.map {
         it.toItemDto(areaid = id)
@@ -40,6 +45,7 @@ fun AreaWithItemsDto.toArea(): Area = Area(
     createdAt = area.createdAt,
     lastchangedAt = area.lastchangedAt,
     lastchangedBy = area.lastchangedBy,
+    serverId = area.serverId,
     items = items.map {
         it.toItem()
     }

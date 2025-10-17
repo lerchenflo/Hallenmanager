@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
@@ -31,6 +32,10 @@ interface AreaDao {
     @Transaction
     @Upsert
     suspend fun upsertLayer(layer: LayerDto): Long
+
+    @Transaction
+    @Upsert
+    suspend fun upsertConnection(connection: NetworkConnection)
 
     @Transaction
     @Upsert

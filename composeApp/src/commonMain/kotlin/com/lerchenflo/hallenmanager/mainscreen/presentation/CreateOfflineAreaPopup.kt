@@ -31,7 +31,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @Composable
-fun CreateAreaPopup(
+fun CreateOfflineAreaPopup(
     onAction: (MainScreenAction) -> Unit = {},
     state : MainScreenState = MainScreenState()
 ) {
@@ -83,6 +83,7 @@ fun CreateAreaPopup(
                         createdAt = Clock.System.now(),
                         lastchangedAt = Clock.System.now(),
                         lastchangedBy = "",
+                        serverId = null,
                     )
                 ))
             }) {

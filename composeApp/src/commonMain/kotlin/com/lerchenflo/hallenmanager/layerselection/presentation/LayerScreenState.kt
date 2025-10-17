@@ -6,6 +6,7 @@ data class LayerScreenState(
     val availableLayers: List<Layer> = emptyList<Layer>(),
     val addlayerpopupshown: Boolean = false,
     val selectedLayerPopupLayer: Layer? = null,
+    val selectedAreaId: Long = 0L
 )
 
 sealed interface LayerScreenAction{
@@ -16,4 +17,6 @@ sealed interface LayerScreenAction{
     data class OnLayerClick(val layer: Layer): LayerScreenAction
     data class OnLayerReorder(val layers: List<Layer>) : LayerScreenAction
     data class OnLayerVisibilityChange(val layer: Layer, val visible: Boolean) : LayerScreenAction
+
+    data class OnSelectArea(val areaid: Long) : LayerScreenAction
 }

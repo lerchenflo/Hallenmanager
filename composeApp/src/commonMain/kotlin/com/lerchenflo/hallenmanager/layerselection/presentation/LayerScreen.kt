@@ -49,9 +49,10 @@ private fun LayerScreen(
 
     if (state.addlayerpopupshown) {
         CreateLayerPopup(
-            onDismiss = {onAction(LayerScreenAction.OnCreateLayerDismiss)},
-            onSave = {onAction(LayerScreenAction.OnCreateLayerSave(it))},
+            onDismiss = { onAction(LayerScreenAction.OnCreateLayerDismiss) },
+            onSave = { onAction(LayerScreenAction.OnCreateLayerSave(it)) },
             layer = state.selectedLayerPopupLayer,
+            selectedAreaId = state.selectedAreaId,
         )
     }
 

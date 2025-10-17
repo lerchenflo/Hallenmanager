@@ -1,15 +1,17 @@
-package com.lerchenflo.hallenmanager.datasource.database
+package com.lerchenflo.hallenmanager.datasource
 
+import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
+import com.lerchenflo.hallenmanager.layerselection.domain.Layer
+import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
+import com.lerchenflo.hallenmanager.layerselection.domain.toLayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.mainscreen.domain.Item
-import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
 import com.lerchenflo.hallenmanager.mainscreen.domain.toAreaDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.toItem
 import com.lerchenflo.hallenmanager.mainscreen.domain.toItemDto
-import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
-import com.lerchenflo.hallenmanager.layerselection.domain.toLayerDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -17,7 +19,7 @@ class AreaRepository(
     private val database: AppDatabase
 ) {
 
-    suspend fun upsertArea(area: Area) : Area{
+    suspend fun upsertArea(area: Area) : Area {
         return  database.areaDao().upsertAreaWithItems(area.toAreaDto()).toArea()
     }
 
@@ -27,6 +29,10 @@ class AreaRepository(
 
     suspend fun upsertLayer(layer: Layer) {
         database.areaDao().upsertLayer(layer.toLayerDto())
+    }
+
+    suspend fun upsertConnection(connection: NetworkConnection) {
+        database.areaDao().upsertConnection(connection)
     }
 
     suspend fun upsertLayerList(layers: List<Layer>){
@@ -69,7 +75,7 @@ class AreaRepository(
         return database.areaDao().getFirstArea()?.toArea()
     }
 
-    fun getAllItems(): Flow<List<Item>>{
+    fun getAllItems(): Flow<List<Item>> {
         return database.areaDao().getAllItems().map { items ->
             items.map { itemdto ->
                 itemdto.toItem()
@@ -81,7 +87,7 @@ class AreaRepository(
         return database.areaDao().getItemsForAreaFlow(areaid)
     }
 
-    fun getAllLayers(): Flow<List<Layer>>{
+    fun getAllLayers(): Flow<List<Layer>> {
         return database.areaDao().getAllLayers().map { layerDtos ->
             layerDtos.map { layerDto ->
                 layerDto.toLayer()

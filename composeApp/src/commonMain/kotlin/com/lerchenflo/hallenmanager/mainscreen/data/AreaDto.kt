@@ -18,4 +18,6 @@ class AreaDto(
     var createdAt: Instant,
     var lastchangedAt: Instant,
     var lastchangedBy: String,
+    var serverId: Long?
+
 )

@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
-import com.lerchenflo.hallenmanager.datasource.database.AreaRepository
+import com.lerchenflo.hallenmanager.datasource.AreaRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -98,6 +98,12 @@ class LayerScreenViewmodel(
                         shown = action.visible
                     ))
                 }
+            }
+
+            is LayerScreenAction.OnSelectArea -> {
+                state = state.copy(
+                    selectedAreaId = action.areaid
+                )
             }
         }
     }

@@ -29,7 +29,8 @@ import org.jetbrains.compose.resources.stringResource
 fun CreateLayerPopup(
     onDismiss: () -> Unit = {},
     onSave: (Layer) -> Unit = {},
-    layer: Layer? = null
+    layer: Layer? = null,
+    selectedAreaId: Long
 ) {
     var title by remember { mutableStateOf(layer?.name ?: "") }
 
@@ -83,7 +84,8 @@ fun CreateLayerPopup(
                     name = title,
                     sortId = 0,
                     shown = true,
-                    color = color.value.toLong()
+                    color = color.value.toLong(),
+                    serverId = selectedAreaId
                 ))
             }) {
                 Text("OK")
