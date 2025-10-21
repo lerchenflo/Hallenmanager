@@ -13,11 +13,12 @@ import kotlin.time.Instant
 class AreaDto(
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L,
+    var serverId: String?,
     var name: String,
     var description: String,
     var createdAt: Instant,
     var lastchangedAt: Instant,
     var lastchangedBy: String,
-    var serverId: Long?
+    var networkConnectionId: Long?
 
 )

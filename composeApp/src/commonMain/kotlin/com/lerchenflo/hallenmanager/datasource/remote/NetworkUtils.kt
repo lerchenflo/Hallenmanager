@@ -1,5 +1,6 @@
 package com.lerchenflo.hallenmanager.datasource.remote
 
+import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
@@ -15,6 +16,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.parameters
 import io.ktor.util.network.UnresolvedAddressException
+import kotlinx.serialization.json.Json
 
 
 sealed class NetworkResult<out T> {
@@ -23,7 +25,8 @@ sealed class NetworkResult<out T> {
 }
 
 class NetworkUtils(
-    val httpClient: HttpClient
+    val httpClient: HttpClient,
+    val database: AppDatabase
 ) {
     private suspend fun networkRequest(
         serverURL: String,
@@ -108,8 +111,56 @@ class NetworkUtils(
 
 
 
-    suspend fun upsertArea(area: Area) {
 
+    data class AreaRequest(
+        val areaid: String?,
+        val name: String,
+        val description: String,
+    )
+
+    suspend fun upsertArea(area: Area) : Area? {
+        if (area.isRemoteArea()){
+            val remoteserver = database.areaDao().getNetworkConnectionById(area.networkConnectionId!!)
+
+            val requesturl = remoteserver.serverUrl + "/areas"
+
+            val request = networkRequest(
+                serverURL = requesturl,
+                requestMethod = HttpMethod.Post,
+                requestParams = mapOf(
+                    "username" to remoteserver.userName
+                ),
+                body = AreaRequest(
+                    areaid = area.serverId,
+                    name = area.name,
+                    description = area.description
+                )
+            )
+
+            return when (request) {
+                is NetworkResult.Error<*> -> {
+                    println("Area upsert network error")
+                    null
+                }
+                is NetworkResult.Success<*> -> {
+                    val responseText = request.data.toString()
+                    try {
+                        val returned = Json.decodeFromString<Area>(responseText)
+
+                        area.copy(
+                            serverId = returned.serverId ?: area.serverId,
+                            name = returned.name,
+                            description = returned.description
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        println("Failed to parse area response: $responseText")
+                        null
+                    }
+                }
+            }
+        }
+        return area
     }
 
 

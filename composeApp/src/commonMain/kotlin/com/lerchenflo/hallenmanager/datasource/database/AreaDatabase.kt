@@ -23,7 +23,7 @@ import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemLayerCrossRef
                ],
 
     exportSchema = true,
-    version = 3,
+    version = 5
 
 )
 

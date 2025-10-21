@@ -2,6 +2,7 @@ package com.lerchenflo.hallenmanager.datasource
 
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkUtils
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
 import com.lerchenflo.hallenmanager.layerselection.domain.toLayerDto
@@ -16,11 +17,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class AreaRepository(
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val networkUtils: NetworkUtils
 ) {
 
     suspend fun upsertArea(area: Area) : Area {
-        return  database.areaDao().upsertAreaWithItems(area.toAreaDto()).toArea()
+        val newarea = networkUtils.upsertArea(area = area)
+        return database.areaDao().upsertAreaWithItems(newarea!!.toAreaDto()).toArea()
     }
 
     suspend fun upsertItem(item: Item, areaid: Long) {

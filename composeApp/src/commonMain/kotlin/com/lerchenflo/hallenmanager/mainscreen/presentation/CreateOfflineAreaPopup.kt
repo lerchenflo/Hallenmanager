@@ -83,6 +83,7 @@ fun CreateOfflineAreaPopup(
                         createdAt = Clock.System.now(),
                         lastchangedAt = Clock.System.now(),
                         lastchangedBy = "",
+                        networkConnectionId = null,
                         serverId = null,
                     )
                 ))

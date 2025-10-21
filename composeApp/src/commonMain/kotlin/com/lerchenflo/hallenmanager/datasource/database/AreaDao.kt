@@ -157,4 +157,8 @@ interface AreaDao {
             upsertLayer(it)
         }
     }
+
+    @Transaction
+    @Query("SELECT * FROM NetworkConnection WHERE id = :connectionid")
+    suspend fun getNetworkConnectionById(connectionid: Long) : NetworkConnection
 }

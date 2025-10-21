@@ -9,16 +9,17 @@ import kotlin.time.Instant
 
 data class Area(
     var id: Long = 0L,
+    var serverId: String?,
     var name: String,
     var description: String,
     var createdAt: Instant,
     var lastchangedAt: Instant,
     var lastchangedBy: String,
-    var serverId: Long?,
+    var networkConnectionId: Long?,
     var items: List<Item>
 ) {
     fun isRemoteArea() : Boolean {
-        return serverId != null
+        return networkConnectionId != null
     }
 }
 
@@ -31,7 +32,8 @@ fun Area.toAreaDto(): AreaWithItemsDto = AreaWithItemsDto(
         id = id,
         lastchangedAt = lastchangedAt,
         lastchangedBy = lastchangedBy,
-        serverId = serverId
+        networkConnectionId = networkConnectionId,
+        serverId = serverId,
     ),
     items = items.map {
         it.toItemDto(areaid = id)
@@ -45,6 +47,7 @@ fun AreaWithItemsDto.toArea(): Area = Area(
     createdAt = area.createdAt,
     lastchangedAt = area.lastchangedAt,
     lastchangedBy = area.lastchangedBy,
+    networkConnectionId = area.networkConnectionId,
     serverId = area.serverId,
     items = items.map {
         it.toItem()
