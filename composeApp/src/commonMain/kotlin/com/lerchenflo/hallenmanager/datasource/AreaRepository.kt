@@ -96,4 +96,8 @@ class AreaRepository(
         }
     }
 
+    suspend fun getAllNetworkConnections(): List<NetworkConnection> {
+        return database.areaDao().getAllNetworkConnections()
+    }
+
 }

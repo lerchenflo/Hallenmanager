@@ -126,6 +126,9 @@ interface AreaDao {
     @Query("SELECT * FROM LayerDto")
     fun getAllLayers(): Flow<List<LayerDto>>
 
+    @Query("SELECT * FROM NetworkConnection")
+    suspend fun getAllNetworkConnections(): List<NetworkConnection>
+
 
     @Transaction
     suspend fun upsertAreaWithItems(areaWithItems: AreaWithItemsDto) : AreaWithItemsDto {

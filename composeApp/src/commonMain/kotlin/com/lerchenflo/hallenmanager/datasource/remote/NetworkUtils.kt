@@ -25,11 +25,11 @@ sealed class NetworkResult<out T> {
 class NetworkUtils(
     val httpClient: HttpClient
 ) {
-    suspend inline fun <reified T> networkRequest(
+    private suspend fun networkRequest(
         serverURL: String,
         requestMethod: HttpMethod = HttpMethod.Get,
         requestParams: Map<String, String>? = null,
-        body: T? = null
+        body: Any? = null
     ): NetworkResult<String> {
 
         try {
@@ -81,9 +81,38 @@ class NetworkUtils(
     }
 
 
+    /**
+     * Test if a backend is running on the selected server url
+     * @param baseserverURL The base server url, for example http://192.168.0.100:8080
+     */
+    suspend fun testServer(baseserverURL: String): Boolean {
+
+        var requesturl = baseserverURL.removeSuffix("/")
+        requesturl += "/test"
+
+        val request = networkRequest(
+            serverURL = requesturl,
+            requestMethod = HttpMethod.Get,
+        )
+
+        return when (request) {
+            is NetworkResult.Error<*> -> {
+                false
+            }
+
+            is NetworkResult.Success<*> -> {
+                request.data.toString() == "server found"
+            }
+        }
+    }
+
+
+
     suspend fun upsertArea(area: Area) {
 
     }
+
+
 
 
 }
