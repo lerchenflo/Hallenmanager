@@ -94,6 +94,10 @@ interface AreaDao {
     fun getAreas(): Flow<List<AreaWithItemsDto>>
 
     @Transaction
+    @Query("SELECT * FROM areas")
+    suspend fun getAllAreas(): List<AreaWithItemsDto>
+
+    @Transaction
     @Query("SELECT * FROM itemdto WHERE onArea = FALSE")
     fun getShortAccessItems() : Flow<List<ItemWithListsDto>>
 

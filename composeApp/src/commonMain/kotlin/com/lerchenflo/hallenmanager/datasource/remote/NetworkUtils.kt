@@ -2,6 +2,8 @@ package com.lerchenflo.hallenmanager.datasource.remote
 
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
+import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
+import com.lerchenflo.hallenmanager.mainscreen.domain.toAreaDto
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -17,12 +19,8 @@ import io.ktor.http.contentType
 import io.ktor.http.parameters
 import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.serialization.json.Json
+import kotlin.time.Instant
 
-
-sealed class NetworkResult<out T> {
-    data class Success<T>(val data: T) : NetworkResult<T>()
-    data class Error<E>(val error: E) : NetworkResult<E>()
-}
 
 class NetworkUtils(
     val httpClient: HttpClient,
@@ -163,6 +161,58 @@ class NetworkUtils(
         return area
     }
 
+
+    data class IdTimeStamp(
+        val id: String,
+        val timeStamp: Instant
+    )
+
+    suspend fun areaSync(){
+
+        database.areaDao().getAllNetworkConnections().forEach { networkConnection ->
+
+            //Get all timestamps for areas which are from this network connection
+            val localtimestamps = database.areaDao().getAllAreas()
+                .mapNotNull { entity ->
+                    val area = entity.toArea()
+                    if (area.isRemoteArea() && area.serverId != null && area.networkConnectionId == networkConnection.id) {
+                        IdTimeStamp(
+                            id = area.serverId!!,
+                            timeStamp = area.lastchangedAt
+                        )
+                    } else null
+                }
+
+
+            val response = networkRequest(
+                serverURL = networkConnection.serverUrl + "/areas/sync",
+                requestMethod = HttpMethod.Post,
+                requestParams = mapOf("username" to networkConnection.userName),
+                body = localtimestamps
+            )
+
+            response
+                .onSuccess { responseData ->
+                    try {
+                        val syncedAreas = Json.decodeFromString<List<Area>>(responseData)
+                        syncedAreas.forEach { area ->
+                            // Update or insert the areas in the database
+                            database.areaDao().upsertAreaEntity(area.toAreaDto().area)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        println("Failed to parse sync response: $responseData")
+                    }
+                }
+                .onError { errorMessage ->
+                    println("Area sync network error for ${networkConnection.serverUrl}: $errorMessage")
+                }
+
+
+
+        }
+
+    }
 
 
 
