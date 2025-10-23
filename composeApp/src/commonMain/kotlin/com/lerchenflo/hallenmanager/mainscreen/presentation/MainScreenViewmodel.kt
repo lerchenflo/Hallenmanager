@@ -44,7 +44,7 @@ class MainScreenViewmodel(
         private set
 
 
-    private val _selectedAreaId = MutableStateFlow(0L)
+    private val _selectedAreaId = MutableStateFlow("")
     private val _searchterm = MutableStateFlow("")
 
     private var _offset = MutableStateFlow(Offset.Zero)
@@ -65,7 +65,7 @@ class MainScreenViewmodel(
 
                 viewModelScope.launch {
                     _selectedAreaId
-                        .filter { it > 0L }
+                        .filter { it != "" }
                         .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
                         .flowOn(Dispatchers.IO)
                         .collectLatest { area ->
@@ -156,7 +156,7 @@ class MainScreenViewmodel(
                 currentArea = defaultarea
             )
 
-            _selectedAreaId.value = defaultarea?.id ?: 0L
+            _selectedAreaId.value = defaultarea?.id ?: ""
 
             initialLoadFinished.value = true
         }

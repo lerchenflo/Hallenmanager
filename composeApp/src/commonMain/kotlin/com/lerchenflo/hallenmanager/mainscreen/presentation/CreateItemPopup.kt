@@ -228,19 +228,17 @@ fun CreateItemPopup(
 
                 onAction(MainScreenAction.OnInfoDialogSave(
                     Item(
-                        itemid = state.iteminfopopupItem?.itemid ?: 0L,
+                        itemid = state.iteminfopopupItem?.itemid ?: "",
                         title = title,
                         description = description,
                         layers = selectedLayers,
                         cornerPoints = if (state.currentDrawingOffsets.isEmpty() && state.iteminfopopupItem != null) state.iteminfopopupItem.cornerPoints else state.currentDrawingOffsets,
                         color = color?.value?.toLong(),
-                        areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: 0,
+                        areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: "",
                         onArea = true,
                         createdAt = Clock.System.now(),
                         lastchangedAt = Clock.System.now(),
-                        lastchangedBy = "",
-                        serverId = state.currentArea?.networkConnectionId
-                    )
+                        lastchangedBy = "")
                 ))
             }) {
                 Text(stringResource(Res.string.done))

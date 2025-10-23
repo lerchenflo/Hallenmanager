@@ -16,8 +16,8 @@ import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 data class Item(
-    val itemid: Long = 0L,
-    val areaId: Long,
+    val itemid: String = "",
+    val areaId: String,
     val title: String,
     val description: String,
     val layers: List<Layer>,
@@ -26,7 +26,6 @@ data class Item(
     var createdAt: Instant,
     var lastchangedAt: Instant,
     var lastchangedBy: String,
-    var serverId: Long?,
     val cornerPoints: List<Offset>
 ) {
 
@@ -184,7 +183,7 @@ fun Item.withCornerPointsAtOrigin(): Item {
     return this.copy(cornerPoints = shifted)
 }
 
-fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
+fun Item.toItemDto(areaid: String): ItemWithListsDto = ItemWithListsDto(
     item = ItemDto(
         itemid = itemid,
         title = title,
@@ -195,7 +194,6 @@ fun Item.toItemDto(areaid: Long): ItemWithListsDto = ItemWithListsDto(
         color = color,
         onArea = onArea,
         lastchangedBy = lastchangedBy,
-        serverId = serverId,
     ),
     cornerPoints = cornerPoints.map {
         CornerPointDto(
@@ -225,5 +223,4 @@ fun ItemWithListsDto.toItem(): Item = Item(
         it.asOffset()
     },
     lastchangedBy = item.lastchangedBy,
-    serverId = item.serverId
 )

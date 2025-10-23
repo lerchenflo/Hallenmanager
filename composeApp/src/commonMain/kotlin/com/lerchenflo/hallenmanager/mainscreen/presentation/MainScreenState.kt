@@ -53,7 +53,7 @@ sealed interface MainScreenAction{
     data class OnAddPoint(val offset: Offset) : MainScreenAction
     data object OnStopPainting : MainScreenAction
 
-    data class OnSelectArea(val areaid: Long) : MainScreenAction
+    data class OnSelectArea(val areaid: String) : MainScreenAction
 
     data object OnInfoDialogDismiss : MainScreenAction
     data class OnInfoDialogSave(val item: Item) : MainScreenAction
@@ -78,7 +78,7 @@ sealed interface MainScreenAction{
 
 
 data class AvailableArea(
-    val id: Long,
+    val id: String,
     val name: String,
     val description: String,
     val isSynced: Boolean

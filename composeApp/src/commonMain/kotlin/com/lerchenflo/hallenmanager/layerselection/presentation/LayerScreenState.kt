@@ -1,12 +1,23 @@
 package com.lerchenflo.hallenmanager.layerselection.presentation
 
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
+import com.lerchenflo.hallenmanager.mainscreen.domain.Area
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 data class LayerScreenState(
     val availableLayers: List<Layer> = emptyList<Layer>(),
     val addlayerpopupshown: Boolean = false,
     val selectedLayerPopupLayer: Layer? = null,
-    val selectedAreaId: Long = 0L
+    val selectedArea: Area = Area(
+        name = "",
+        description = "",
+        createdAt = Clock.System.now(),
+        lastchangedAt = Clock.System.now(),
+        lastchangedBy = "",
+        networkConnectionId = null,
+        items = emptyList()
+    )
 )
 
 sealed interface LayerScreenAction{
@@ -18,5 +29,5 @@ sealed interface LayerScreenAction{
     data class OnLayerReorder(val layers: List<Layer>) : LayerScreenAction
     data class OnLayerVisibilityChange(val layer: Layer, val visible: Boolean) : LayerScreenAction
 
-    data class OnSelectArea(val areaid: Long) : LayerScreenAction
+    data class OnSelectArea(val areaid: String) : LayerScreenAction
 }

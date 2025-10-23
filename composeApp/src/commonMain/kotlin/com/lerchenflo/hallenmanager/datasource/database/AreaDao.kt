@@ -1,8 +1,10 @@
 package com.lerchenflo.hallenmanager.datasource.database
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
@@ -10,81 +12,31 @@ import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.AreaWithItemsDto
-import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemWithListsDto
+import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AreaDao {
 
     @Transaction
-    @Upsert
-    suspend fun upsertAreaEntity(area: AreaDto): Long
-
-    @Transaction
-    @Upsert
-    suspend fun upsertItems(items: List<ItemDto>): List<Long>
-
-    @Transaction
-    @Upsert
-    suspend fun upsertItem(item: ItemDto): Long
-
-    @Transaction
-    @Upsert
-    suspend fun upsertLayer(layer: LayerDto): Long
-
-    @Transaction
-    @Upsert
-    suspend fun upsertConnection(connection: NetworkConnection)
-
-    @Transaction
-    @Upsert
-    suspend fun upsertCornerPoints(points: List<CornerPointDto>): List<Long>
-
-    @Upsert
-    suspend fun upsertItemLayerCrossRef(crossRef: ItemLayerCrossRef)
-
-    @Upsert
-    suspend fun upsertItemLayerCrossRefs(crossRefs: List<ItemLayerCrossRef>)
-
-    @Query("DELETE FROM itemlayercrossref WHERE itemId = :itemId")
-    suspend fun deleteItemLayerCrossRefsForItem(itemId: Long)
-
-    @Query("DELETE FROM cornerpointdto WHERE itemId = :itemId")
-    suspend fun deleteCornerPointsForItem(itemId: Long)
-
-    @Transaction
-    suspend fun upsertItemWithCorners(item: ItemWithListsDto) {
-        // Upsert the item first
-        val returnedId = upsertItem(item.item)
-
-        // Determine the actual item ID:
-        // - If item.item.itemid is 0 (new item), use the returned ID
-        // - Otherwise (existing item), use item.item.itemid
-        val itemid = if (item.item.itemid == 0L) returnedId else item.item.itemid
-
-        // Delete and re-insert corner points
-        deleteCornerPointsForItem(itemid)
-        if (item.cornerPoints.isNotEmpty()) {
-            //println("ITEM upsert: Cornerpoints ${item.cornerPoints}")
-            val pointsWithIds = item.cornerPoints.map { cp ->
-                cp.copy(itemId = itemid)
-            }
-            upsertCornerPoints(pointsWithIds)
+    suspend fun upsertAreaDto(area: AreaDto): AreaDto {
+        val existing = getAreaById(area.id)
+        if (existing != null) {
+            updateAreaDto(area)
+        } else {
+            insertAreaDto(area)
         }
-
-        // Delete and re-insert layer cross-references
-        deleteItemLayerCrossRefsForItem(itemid)
-        if (item.layers.isNotEmpty()) {
-            val crossRefs = item.layers.map { layer ->
-                ItemLayerCrossRef(
-                    itemid = itemid,
-                    layerid = layer.layerid
-                )
-            }
-            upsertItemLayerCrossRefs(crossRefs)
-        }
+        val returnedarea = getAreaDtoById(area.id)!!
+        println("Area upsert: ${returnedarea.toArea()}")
+        return returnedarea
     }
+
+    @Update
+    suspend fun updateAreaDto(area: AreaDto)
+    @Insert
+    suspend fun insertAreaDto(area: AreaDto)
+
 
     @Query("SELECT COUNT(*) FROM areas")
     suspend fun getAreaCount(): Int
@@ -98,16 +50,15 @@ interface AreaDao {
     suspend fun getAllAreas(): List<AreaWithItemsDto>
 
     @Transaction
-    @Query("SELECT * FROM itemdto WHERE onArea = FALSE")
-    fun getShortAccessItems() : Flow<List<ItemWithListsDto>>
+    @Query("SELECT * FROM areas WHERE id = :areaid")
+    fun getAreaByIdFlow(areaid: String) : Flow<AreaWithItemsDto?>
 
     @Transaction
     @Query("SELECT * FROM areas WHERE id = :areaid")
-    fun getAreaByIdFlow(areaid: Long) : Flow<AreaWithItemsDto?>
+    suspend fun getAreaById(areaid: String) : AreaWithItemsDto?
 
-    @Transaction
     @Query("SELECT * FROM areas WHERE id = :areaid")
-    suspend fun getAreaById(areaid: Long) : AreaWithItemsDto?
+    suspend fun getAreaDtoById(areaid: String) : AreaDto?
 
     @Transaction
     @Query("SELECT * FROM areas WHERE name = :areaname")
@@ -118,26 +69,109 @@ interface AreaDao {
     suspend fun getFirstArea(): AreaWithItemsDto?
 
 
+
+
+
+
+    @Transaction
+    suspend fun upsertItem(item: ItemDto): ItemDto {
+        val existing = getItemById(item.itemid)
+        if (existing != null) {
+            updateItem(item)
+        } else {
+            insertItem(item)
+        }
+        return getItemById(item.itemid)!!
+    }
+
+    @Query("SELECT * FROM itemdto WHERE itemid = :itemId")
+    suspend fun getItemById(itemId: String): ItemDto?
+    @Update
+    suspend fun updateItem(item: ItemDto)
+    @Insert
+    suspend fun insertItem(item: ItemDto)
+
+    @Transaction
+    @Upsert
+    suspend fun upsertItems(items: List<ItemDto>)
+
+
+
+
+
+    @Transaction
+    @Query("SELECT * FROM itemdto WHERE onArea = FALSE")
+    fun getShortAccessItems() : Flow<List<ItemWithListsDto>>
+
     @Transaction
     @Query("SELECT * FROM itemdto WHERE areaId = :areaId")
-    fun getItemsForAreaFlow(areaId: Long): Flow<List<ItemWithListsDto>>
+    fun getItemsForAreaFlow(areaId: String): Flow<List<ItemWithListsDto>>
 
     @Transaction
     @Query("SELECT * FROM itemdto")
     fun getAllItems(): Flow<List<ItemWithListsDto>>
 
+    @Query("SELECT * FROM itemdto WHERE itemid = :itemId")
+    suspend fun getItemWithListsById(itemId: String): ItemWithListsDto?
+
+
+
+
+
+    @Transaction
+    @Upsert
+    suspend fun upsertLayer(layer: LayerDto)
+
     @Transaction
     @Query("SELECT * FROM LayerDto")
     fun getAllLayers(): Flow<List<LayerDto>>
 
+    @Transaction
+    suspend fun upsertLayerList(layers: List<LayerDto>) {
+        layers.forEach {
+            upsertLayer(it)
+        }
+    }
+
+
+
+
+
+
+    @Transaction
+    @Upsert
+    suspend fun upsertConnection(connection: NetworkConnection)
+
     @Query("SELECT * FROM NetworkConnection")
     suspend fun getAllNetworkConnections(): List<NetworkConnection>
+
+    @Transaction
+    @Query("SELECT * FROM NetworkConnection WHERE id = :connectionid")
+    suspend fun getNetworkConnectionById(connectionid: Long) : NetworkConnection
+
+
+
+
+
+    @Transaction
+    @Upsert
+    suspend fun upsertCornerPoints(points: List<CornerPointDto>): List<Long>
+
+    @Query("DELETE FROM cornerpointdto WHERE itemId = :itemId")
+    suspend fun deleteCornerPointsForItem(itemId: String)
+
+
+
+
+
+
+
 
 
     @Transaction
     suspend fun upsertAreaWithItems(areaWithItems: AreaWithItemsDto) : AreaWithItemsDto {
         // upsert area
-        val areaid = upsertAreaEntity(areaWithItems.area)
+        val area = upsertAreaDto(areaWithItems.area)
 
         // flatten items and their corner points
         val items = mutableListOf<ItemDto>()
@@ -148,21 +182,36 @@ interface AreaDao {
             cornerPoints += itemWithCorners.cornerPoints
         }
 
-        if (items.isNotEmpty()) upsertItems(items)
+        items.forEach { itemDto ->
+            upsertItem(itemDto)
+        }
         if (cornerPoints.isNotEmpty()) upsertCornerPoints(cornerPoints)
 
-        return getAreaById(areaid)!!
+        return getAreaById(area.id)!!
     }
 
-
     @Transaction
-    suspend fun upsertLayerList(layers: List<LayerDto>) {
-        layers.forEach {
-            upsertLayer(it)
+    suspend fun upsertItemWithCorners(item: ItemWithListsDto) : ItemWithListsDto {
+        // Upsert the item first
+        val updatedItem = upsertItem(item.item)
+
+
+        val itemid = if (item.item.itemid == "") updatedItem.itemid else item.item.itemid
+
+        // Delete and re-insert corner points
+        deleteCornerPointsForItem(itemid)
+        if (item.cornerPoints.isNotEmpty()) {
+            //println("ITEM upsert: Cornerpoints ${item.cornerPoints}")
+            val pointsWithIds = item.cornerPoints.map { cp ->
+                cp.copy(itemId = itemid)
+            }
+            upsertCornerPoints(pointsWithIds)
         }
+
+        return getItemWithListsById(updatedItem.itemid)!!
     }
 
-    @Transaction
-    @Query("SELECT * FROM NetworkConnection WHERE id = :connectionid")
-    suspend fun getNetworkConnectionById(connectionid: Long) : NetworkConnection
+
+
+
 }

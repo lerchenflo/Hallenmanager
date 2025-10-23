@@ -11,9 +11,8 @@ import kotlin.time.Instant
 @Serializable
 @Entity(tableName = "areas")
 class AreaDto(
-    @PrimaryKey(autoGenerate = true)
-    var id: Long = 0L,
-    var serverId: String?,
+    @PrimaryKey(autoGenerate = false)
+    var id: String = "",
     var name: String,
     var description: String,
     var createdAt: Instant,

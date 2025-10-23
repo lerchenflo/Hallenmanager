@@ -1,9 +1,13 @@
 package com.lerchenflo.hallenmanager.datasource.remote
 
+import androidx.compose.ui.geometry.Offset
+import com.lerchenflo.hallenmanager.datasource.AreaRepository
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
+import com.lerchenflo.hallenmanager.mainscreen.domain.Item
 import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
 import com.lerchenflo.hallenmanager.mainscreen.domain.toAreaDto
+import com.lerchenflo.hallenmanager.mainscreen.domain.toItemDto
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestTimeoutException
@@ -24,7 +28,6 @@ import kotlin.time.Instant
 
 class NetworkUtils(
     val httpClient: HttpClient,
-    val database: AppDatabase
 ) {
     private suspend fun networkRequest(
         serverURL: String,
@@ -116,20 +119,19 @@ class NetworkUtils(
         val description: String,
     )
 
-    suspend fun upsertArea(area: Area) : Area? {
+    suspend fun upsertArea(area: Area, remoteServer: NetworkConnection) : Area {
         if (area.isRemoteArea()){
-            val remoteserver = database.areaDao().getNetworkConnectionById(area.networkConnectionId!!)
 
-            val requesturl = remoteserver.serverUrl + "/areas"
+            val requesturl = remoteServer.serverUrl + "/areas"
 
             val request = networkRequest(
                 serverURL = requesturl,
                 requestMethod = HttpMethod.Post,
                 requestParams = mapOf(
-                    "username" to remoteserver.userName
+                    "username" to remoteServer.userName
                 ),
                 body = AreaRequest(
-                    areaid = area.serverId,
+                    areaid = area.id,
                     name = area.name,
                     description = area.description
                 )
@@ -138,7 +140,7 @@ class NetworkUtils(
             return when (request) {
                 is NetworkResult.Error<*> -> {
                     println("Area upsert network error")
-                    null
+                    area
                 }
                 is NetworkResult.Success<*> -> {
                     val responseText = request.data.toString()
@@ -146,14 +148,14 @@ class NetworkUtils(
                         val returned = Json.decodeFromString<Area>(responseText)
 
                         area.copy(
-                            serverId = returned.serverId ?: area.serverId,
+                            id = returned.id,
                             name = returned.name,
                             description = returned.description
                         )
                     } catch (e: Exception) {
                         e.printStackTrace()
                         println("Failed to parse area response: $responseText")
-                        null
+                        area
                     }
                 }
             }
@@ -167,17 +169,18 @@ class NetworkUtils(
         val timeStamp: Instant
     )
 
+    /*
     suspend fun areaSync(){
 
-        database.areaDao().getAllNetworkConnections().forEach { networkConnection ->
+        areaRepository.getAllNetworkConnections().forEach { networkConnection ->
 
             //Get all timestamps for areas which are from this network connection
-            val localtimestamps = database.areaDao().getAllAreas()
-                .mapNotNull { entity ->
-                    val area = entity.toArea()
-                    if (area.isRemoteArea() && area.serverId != null && area.networkConnectionId == networkConnection.id) {
+            val localtimestamps = areaRepository.getAllAreas()
+                .mapNotNull { area ->
+
+                    if (area.isRemoteArea() && area.networkConnectionId == networkConnection.id) {
                         IdTimeStamp(
-                            id = area.serverId!!,
+                            id = area.id,
                             timeStamp = area.lastchangedAt
                         )
                     } else null
@@ -197,7 +200,7 @@ class NetworkUtils(
                         val syncedAreas = Json.decodeFromString<List<Area>>(responseData)
                         syncedAreas.forEach { area ->
                             // Update or insert the areas in the database
-                            database.areaDao().upsertAreaEntity(area.toAreaDto().area)
+                            areaRepository.upsertArea(area)
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -214,6 +217,72 @@ class NetworkUtils(
 
     }
 
+     */
+
+    data class ItemRequest(
+        val itemid: String,
+        val areaId: String,
+        val title: String,
+        val description: String,
+        val color: Long?,
+        val layers: List<String>,
+        val onArea: Boolean,
+        var createdAt: Instant,
+        var lastchangedAt: Instant,
+        var lastchangedBy: String,
+        val cornerPoints: List<Offset>
+    )
+
+
+    suspend fun upsertItem(item: Item, remoteServer: NetworkConnection) : Item {
+        val requesturl = remoteServer.serverUrl + "/items"
+
+        val itemdto = item.toItemDto(item.areaId)
+
+        val request = networkRequest(
+            serverURL = requesturl,
+            requestMethod = HttpMethod.Post,
+            requestParams = mapOf(
+                "username" to remoteServer.userName
+            ),
+            body = ItemRequest(
+                itemid = item.itemid,
+                areaId = item.areaId,
+                title = item.title,
+                description = item.description,
+                color = item.color,
+                layers = itemdto.layers,
+                onArea = item.onArea,
+                createdAt = item.createdAt,
+                lastchangedAt = item.lastchangedAt,
+                lastchangedBy = item.lastchangedBy,
+                cornerPoints = item.cornerPoints
+            )
+        )
+
+        return when (request) {
+            is NetworkResult.Error<*> -> {
+                println("Item upsert network error")
+                item
+            }
+            is NetworkResult.Success<*> -> {
+                val responseText = request.data.toString()
+                try {
+                    val returned = Json.decodeFromString<Item>(responseText)
+
+                    area.copy(
+                        id = returned.id,
+                        name = returned.name,
+                        description = returned.description
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    println("Failed to parse area response: $responseText")
+                    item
+                }
+            }
+        }
+    }
 
 
 }

@@ -10,7 +10,6 @@ import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
-import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemLayerCrossRef
 
 @Database(
     entities = [
@@ -18,12 +17,11 @@ import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemLayerCrossRef
         ItemDto::class, //Saved item
         CornerPointDto::class, //Saved cornerpoints for item
         LayerDto::class, //Saved layers
-        ItemLayerCrossRef::class, //Cross reference between item and layer (m to n)
         NetworkConnection::class //Saved connections to servers + Username
                ],
 
     exportSchema = true,
-    version = 5
+    version = 6
 
 )
 

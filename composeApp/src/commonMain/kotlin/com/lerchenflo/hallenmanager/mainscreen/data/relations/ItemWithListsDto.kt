@@ -21,7 +21,6 @@ data class ItemWithListsDto(
     @Relation(
         parentColumn = "itemid",
         entityColumn = "layerid",
-        associateBy = Junction(ItemLayerCrossRef::class)
     )
     val layers: List<LayerDto>
 )

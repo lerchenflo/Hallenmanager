@@ -30,7 +30,7 @@ fun CreateLayerPopup(
     onDismiss: () -> Unit = {},
     onSave: (Layer) -> Unit = {},
     layer: Layer? = null,
-    selectedAreaId: Long
+    networkConnectionId: Long? = null
 ) {
     var title by remember { mutableStateOf(layer?.name ?: "") }
 
@@ -80,12 +80,12 @@ fun CreateLayerPopup(
         confirmButton = {
             TextButton(onClick = {
                 onSave(Layer(
-                    layerid = layer?.layerid ?: 0L,
+                    layerid = layer?.layerid ?: "",
                     name = title,
                     sortId = 0,
                     shown = true,
                     color = color.value.toLong(),
-                    serverId = selectedAreaId
+                    serverId = networkConnectionId
                 ))
             }) {
                 Text("OK")

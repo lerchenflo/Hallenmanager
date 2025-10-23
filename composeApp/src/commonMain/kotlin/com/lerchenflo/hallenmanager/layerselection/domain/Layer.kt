@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 
 data class Layer(
-    val layerid: Long,
+    val layerid: String,
     val name: String,
     val sortId: Int,
     val shown: Boolean,

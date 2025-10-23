@@ -101,9 +101,15 @@ class LayerScreenViewmodel(
             }
 
             is LayerScreenAction.OnSelectArea -> {
-                state = state.copy(
-                    selectedAreaId = action.areaid
-                )
+                viewModelScope.launch {
+                    val area = areaRepository.getAreaById(action.areaid)
+
+                    state = state.copy(
+                        selectedArea = area!!
+                    )
+                }
+
+
             }
         }
     }

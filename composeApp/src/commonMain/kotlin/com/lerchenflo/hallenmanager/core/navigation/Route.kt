@@ -9,5 +9,5 @@ sealed interface Route {
     data object HomeScreen: Route
 
     @Serializable
-    data class Layers(val selectedAreaId: Long): Route
+    data class Layers(val selectedAreaId: String): Route
 }

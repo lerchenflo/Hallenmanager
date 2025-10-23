@@ -8,10 +8,10 @@ import kotlin.time.Instant
 @Entity()
 @Serializable
 data class ItemDto(
-    @PrimaryKey(autoGenerate = true)
-    val itemid: Long = 0L,
+    @PrimaryKey(autoGenerate = false)
+    val itemid: String = "",
     val title: String,
-    val areaId: Long,
+    val areaId: String,
     val description: String,
     var createdAt: Instant,
     var lastchangedAt: Instant,
@@ -20,8 +20,5 @@ data class ItemDto(
 
     //Is this item on its area or is it in the short access menu
     val onArea: Boolean,
-
-    //Serverurl if this item is synced with a server
-    var serverId: Long?
 
 )

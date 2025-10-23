@@ -8,8 +8,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 data class Area(
-    var id: Long = 0L,
-    var serverId: String?,
+    var id: String = "",
     var name: String,
     var description: String,
     var createdAt: Instant,
@@ -33,11 +32,32 @@ fun Area.toAreaDto(): AreaWithItemsDto = AreaWithItemsDto(
         lastchangedAt = lastchangedAt,
         lastchangedBy = lastchangedBy,
         networkConnectionId = networkConnectionId,
-        serverId = serverId,
     ),
     items = items.map {
         it.toItemDto(areaid = id)
     }
+)
+
+fun Area.toAreaWithoutItemsDto(): AreaDto = AreaDto(
+    name = name,
+    description = description,
+    createdAt = createdAt,
+    id = id,
+    lastchangedAt = lastchangedAt,
+    lastchangedBy = lastchangedBy,
+    networkConnectionId = networkConnectionId,
+)
+
+
+fun AreaDto.toArea() : Area = Area(
+    id = id,
+    name = name,
+    description = description,
+    createdAt = createdAt,
+    lastchangedAt = lastchangedAt,
+    lastchangedBy = lastchangedBy,
+    networkConnectionId = networkConnectionId,
+    items = emptyList()
 )
 
 fun AreaWithItemsDto.toArea(): Area = Area(
@@ -48,7 +68,6 @@ fun AreaWithItemsDto.toArea(): Area = Area(
     lastchangedAt = area.lastchangedAt,
     lastchangedBy = area.lastchangedBy,
     networkConnectionId = area.networkConnectionId,
-    serverId = area.serverId,
     items = items.map {
         it.toItem()
     }

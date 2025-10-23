@@ -52,7 +52,7 @@ private fun LayerScreen(
             onDismiss = { onAction(LayerScreenAction.OnCreateLayerDismiss) },
             onSave = { onAction(LayerScreenAction.OnCreateLayerSave(it)) },
             layer = state.selectedLayerPopupLayer,
-            selectedAreaId = state.selectedAreaId,
+            networkConnectionId = state.selectedArea.networkConnectionId
         )
     }
 
