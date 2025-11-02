@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CropPortrait
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.DensitySmall
@@ -85,6 +86,7 @@ import com.lerchenflo.hallenmanager.mainscreen.presentation.search.SearchItemUI
 import com.lerchenflo.hallenmanager.sharedUi.LegendOverlay
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
+import hallenmanager.composeapp.generated.resources.add_connection_title
 import hallenmanager.composeapp.generated.resources.add_remote_area
 import hallenmanager.composeapp.generated.resources.custom_paint
 import hallenmanager.composeapp.generated.resources.custom_paint_painting
@@ -254,8 +256,15 @@ fun MainScreen(
                     )
                 }
 
-                if (state.areainfopopupshown) {
+                if (state.offlineareacreatepopupshown) {
                     CreateOfflineAreaPopup(
+                        onAction = onAction,
+                        state = state
+                    )
+                }
+
+                if (state.remoteeareacreatepopupshown){
+                    CreateRemoteAreaPopup(
                         onAction = onAction,
                         state = state
                     )
@@ -476,11 +485,11 @@ fun MainScreen(
                                         },
                                         onClick = {
                                             areadropdownexpanded = false
-                                            onAction(MainScreenAction.OnCreateAreaStart)
+                                            onAction(MainScreenAction.OnCreateAreaStart(remote = false))
                                         }
                                     )
 
-
+                                    //Create remote area
                                     DropdownMenuItem(
                                         text = {
                                             Row(
@@ -496,6 +505,31 @@ fun MainScreen(
 
                                                 Text(
                                                     text = stringResource(Res.string.add_remote_area)
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            areadropdownexpanded = false
+                                            onAction(MainScreenAction.OnCreateAreaStart(remote = true))
+                                        }
+                                    )
+
+                                    //Add new connection
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Link,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+
+                                                Spacer(modifier = Modifier.width(8.dp))
+
+                                                Text(
+                                                    text = stringResource(Res.string.add_connection_title)
                                                 )
                                             }
                                         },
@@ -767,7 +801,7 @@ fun MainScreen(
                         //If no area is selected show add popup
                         CreateFirstAreaPopup(
                             onareaclick = {
-                                onAction(MainScreenAction.OnCreateAreaStart)
+                                onAction(MainScreenAction.OnCreateAreaStart(false))
                             },
                             onremoteclick = {
                                 onAction(MainScreenAction.OnCreateConnectionStart)

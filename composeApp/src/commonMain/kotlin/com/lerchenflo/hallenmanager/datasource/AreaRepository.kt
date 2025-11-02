@@ -28,27 +28,30 @@ class AreaRepository(
     /**
      * Upsert an area to the local db and the remote server if synced
      */
-    suspend fun upsertArea(area: Area) : Area {
+    suspend fun upsertArea(area: Area): Area {
 
-        lateinit var returnedarea : Area
 
         if (area.isRemoteArea()) {
-            val updatedArea = networkUtils.upsertArea(area = area, getNetworkConnectionById(area.networkConnectionId!!))
-
-            returnedarea = upsertAreaToDB(updatedArea)
+            val remoteareaId = networkUtils.upsertArea(area = area, getNetworkConnectionById(area.networkConnectionId!!))
+            return if (remoteareaId != null){
+                upsertAreaToDB(area.copy(
+                    id = remoteareaId
+                ))
+            }else {
+                throw Exception("No network connection")
+            }
         } else {
             val fixedArea = area.copy(id = Clock.System.now().toEpochMilliseconds().toString())
-
-            returnedarea = upsertAreaToDB(fixedArea)
+            return upsertAreaToDB(fixedArea)
         }
-
-        return returnedarea
     }
 
     private suspend fun upsertAreaToDB(area: Area) : Area {
         val upsertedArea = database.areaDao().upsertAreaWithItems(areaWithItems = area.toAreaWithItemsDto())
         return upsertedArea.toArea()
     }
+
+
 
 
     suspend fun upsertItem(item: Item, areaid: String) : Item {
@@ -164,6 +167,10 @@ class AreaRepository(
 
     suspend fun getAllNetworkConnections(): List<NetworkConnection> {
         return database.areaDao().getAllNetworkConnections()
+    }
+
+    fun getAllNetworkConnectionsFlow(): Flow<List<NetworkConnection>> {
+        return database.areaDao().getAllNetworkConnectionsFlow()
     }
 
     suspend fun getNetworkConnectionById(id: Long) : NetworkConnection{

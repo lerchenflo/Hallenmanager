@@ -18,6 +18,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
@@ -40,10 +41,20 @@ class NetworkUtils(
     ): NetworkResult<String> {
 
         try {
+            val urlWithParams = if (requestParams != null && requestParams.isNotEmpty()) {
+                val queryString = requestParams.entries.joinToString("&") { (key, value) ->
+                    "$key=$value"
+                }
+                "$serverURL?$queryString"
+            } else {
+                serverURL
+            }
+
+
             val response: HttpResponse = httpClient.request {
 
                 //Set serverurl
-                url(serverURL)
+                url(urlWithParams)
 
                 //Set requesturl
                 method = requestMethod
@@ -51,13 +62,6 @@ class NetworkUtils(
                 //Timeout for the request
                 timeout {
                     this.requestTimeoutMillis = 5_000L
-                }
-
-                //Append the request params
-                parameters {
-                    requestParams?.forEach { requestParam ->
-                        append(requestParam.key, requestParam.value)
-                    }
                 }
 
 
@@ -76,8 +80,6 @@ class NetworkUtils(
         } catch (e: UnresolvedAddressException) {
             return NetworkResult.Error("Serveraddress not found")
         } catch (e: HttpRequestTimeoutException) {
-            return NetworkResult.Error("Request timed out")
-        } catch (e: SocketTimeoutException) {
             return NetworkResult.Error("Request timed out")
         } catch (e: SocketTimeoutException) {
             return NetworkResult.Error("Request timed out")
@@ -117,7 +119,7 @@ class NetworkUtils(
 
     @Serializable
     data class AreaRequest(
-        val areaid: String?,
+        val areaid: String,
         val name: String,
         val description: String,
     )
@@ -132,7 +134,10 @@ class NetworkUtils(
         var lastchangedBy: String,
     )
 
-    suspend fun upsertArea(area: Area, remoteServer: NetworkConnection) : Area {
+    /**
+     * Upserts an area to the selected networkconnection and returns the areaid
+     */
+    suspend fun upsertArea(area: Area, remoteServer: NetworkConnection) : String? {
         if (area.isRemoteArea()){
 
             val requesturl = remoteServer.serverUrl + "/areas"
@@ -153,27 +158,23 @@ class NetworkUtils(
             return when (request) {
                 is NetworkResult.Error<*> -> {
                     println("Area upsert network error")
-                    area
+                    null
                 }
                 is NetworkResult.Success<*> -> {
                     val responseText = request.data.toString()
                     try {
-                        val returned = Json.decodeFromString<Area>(responseText)
+                        val returned = Json.decodeFromString<AreaResponse>(responseText)
 
-                        area.copy(
-                            id = returned.id,
-                            name = returned.name,
-                            description = returned.description
-                        )
+                        returned.id
                     } catch (e: Exception) {
                         e.printStackTrace()
                         println("Failed to parse area response: $responseText")
-                        area
+                        null
                     }
                 }
             }
         }
-        return area
+        return null
     }
 
     @Serializable

@@ -11,7 +11,7 @@
     <string name="connect_to_server">Connect to a server!</string>
 
     <string name="add_area">Create area</string>
-    <string name="add_remote_area">Add remote area</string>
+    <string name="add_remote_area">Create remote area</string>
 
     <string name="layers">Layers</string>
     <string name="done">Done</string>
@@ -32,6 +32,7 @@
     <string name="connection_username">Your name</string>
     <string name="connection_alias">Alias for this connection</string>
 
+    <string name="connection_selection">Select remote server</string>
 
 
 

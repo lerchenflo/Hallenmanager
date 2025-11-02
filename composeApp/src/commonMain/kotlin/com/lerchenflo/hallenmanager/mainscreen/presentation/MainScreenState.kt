@@ -2,6 +2,7 @@ package com.lerchenflo.hallenmanager.mainscreen.presentation
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
+import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.mainscreen.domain.Item
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
@@ -26,13 +27,17 @@ data class MainScreenState(
     val connectionpopupshown: Boolean = false,
 
     //Infopopup area
-    val areainfopopupshown : Boolean = false, //Is the area info popup for the current area shown
+    val offlineareacreatepopupshown : Boolean = false, //Is the area info popup for the current area shown
     val currentArea: Area? = null, //Area which is currently selected
+
+    val remoteeareacreatepopupshown : Boolean = false,
+
 
     //Available items
     val availableAreas : List<AvailableArea> = emptyList(), //List of areas which are in the db
     val availableLayers: List<Layer> = emptyList<Layer>(), //List of all layers which are currently in the db
     val shortAccessItems: List<Item> = emptyList<Item>(),
+    val availableConnections: List<NetworkConnection> = emptyList(),
 
     //Quick access menu
     val showShortAccessMenu : Boolean = false,  //Is the bottom short access menu shown
@@ -63,7 +68,7 @@ sealed interface MainScreenAction{
     data object OnCreateConnectionStart: MainScreenAction
     data object OnCreateConnectionStop: MainScreenAction
 
-    data object OnCreateAreaStart: MainScreenAction
+    data class OnCreateAreaStart(val remote: Boolean): MainScreenAction
     data class OnItemClicked(val item: Item) : MainScreenAction
 
     data class OnShowShortAccessMenuClick(val shown: Boolean) : MainScreenAction

@@ -173,6 +173,9 @@ interface AreaDao {
     @Query("SELECT * FROM NetworkConnection")
     suspend fun getAllNetworkConnections(): List<NetworkConnection>
 
+    @Query("SELECT * FROM NetworkConnection")
+    fun getAllNetworkConnectionsFlow(): Flow<List<NetworkConnection>>
+
     @Transaction
     @Query("SELECT * FROM NetworkConnection WHERE id = :connectionid")
     suspend fun getNetworkConnectionById(connectionid: Long) : NetworkConnection

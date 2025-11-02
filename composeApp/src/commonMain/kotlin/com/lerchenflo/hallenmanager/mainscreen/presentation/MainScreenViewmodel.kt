@@ -53,7 +53,7 @@ class MainScreenViewmodel(
 
     private var _currentArea = MutableStateFlow<Area?>(null)
 
-    val initialLoadFinished = MutableStateFlow(false)
+    var initialLoadFinished = MutableStateFlow(false)
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -145,6 +145,15 @@ class MainScreenViewmodel(
                         .collectLatest {
                             state = state.copy(
                                 shortAccessItems = it
+                            )
+                        }
+                }
+
+                viewModelScope.launch {
+                    areaRepository.getAllNetworkConnectionsFlow()
+                        .collectLatest {
+                            state = state.copy(
+                                availableConnections = it
                             )
                         }
                 }
@@ -248,7 +257,8 @@ class MainScreenViewmodel(
 
                         state = state.copy(
                             currentArea = currentarea,
-                            areainfopopupshown = false
+                            offlineareacreatepopupshown = false,
+                            remoteeareacreatepopupshown = false
                         )
 
                         _selectedAreaId.value = currentarea.id
@@ -256,15 +266,23 @@ class MainScreenViewmodel(
                 }
             }
 
-            OnCreateAreaStart -> {
-                state = state.copy(
-                    areainfopopupshown = true
-                )
+            is OnCreateAreaStart -> {
+                state = if (action.remote){
+                    state.copy(
+                        remoteeareacreatepopupshown = true
+                    )
+                } else {
+                    state.copy(
+                        offlineareacreatepopupshown = true
+                    )
+                }
+
             }
 
             OnAreaDialogDismiss -> {
                 state = state.copy(
-                    areainfopopupshown = false
+                    offlineareacreatepopupshown = false,
+                    remoteeareacreatepopupshown = false
                 )
             }
 
@@ -399,9 +417,15 @@ class MainScreenViewmodel(
                     )
 
                     areaRepository.syncNetworkElements()
+
+                    if (areaRepository.getAreaCount() != 0){
+                        initialLoadFinished.value = true
+                    }
                 }
 
                 onAction(OnCreateConnectionStop)
+
+
             }
 
             OnCreateConnectionStart -> {
