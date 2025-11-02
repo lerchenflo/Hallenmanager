@@ -11,6 +11,8 @@
     <string name="connect_to_server">Connect to a server!</string>
 
     <string name="add_area">Create area</string>
+    <string name="add_remote_area">Add remote area</string>
+
     <string name="layers">Layers</string>
     <string name="done">Done</string>
     <string name="use_custom_color">Use custom color</string>

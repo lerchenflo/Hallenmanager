@@ -21,13 +21,12 @@ import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
                ],
 
     exportSchema = true,
-    version = 6
+    version = 9
 
 )
 
 
 @ConstructedBy(AppDatabaseConstructor::class)
-@TypeConverters(Converters::class)
 abstract class AppDatabase: RoomDatabase() {
     abstract fun areaDao(): AreaDao
 

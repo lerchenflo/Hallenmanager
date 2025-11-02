@@ -13,8 +13,8 @@ data class ItemDto(
     val title: String,
     val areaId: String,
     val description: String,
-    var createdAt: Instant,
-    var lastchangedAt: Instant,
+    var createdAt: String,
+    var lastchangedAt: String,
     var lastchangedBy: String,
     val color: Long?,
 

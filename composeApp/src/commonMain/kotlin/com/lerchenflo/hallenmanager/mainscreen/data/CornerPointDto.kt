@@ -8,8 +8,8 @@ import kotlinx.serialization.Serializable
 @Entity()
 @Serializable
 data class CornerPointDto(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0L,
+    @PrimaryKey(autoGenerate = false)
+    val id: String = "",
     val itemId: String,
     val offsetX: Float,
     val offsetY: Float

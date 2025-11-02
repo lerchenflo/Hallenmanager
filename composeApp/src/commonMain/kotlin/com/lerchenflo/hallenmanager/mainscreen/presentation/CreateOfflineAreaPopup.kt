@@ -80,8 +80,8 @@ fun CreateOfflineAreaPopup(
                         name = title,
                         description = description,
                         items = emptyList(),
-                        createdAt = Clock.System.now(),
-                        lastchangedAt = Clock.System.now(),
+                        createdAt = Clock.System.now().toEpochMilliseconds().toString(),
+                        lastchangedAt = Clock.System.now().toEpochMilliseconds().toString(),
                         lastchangedBy = "",
                         networkConnectionId = null,
                     )

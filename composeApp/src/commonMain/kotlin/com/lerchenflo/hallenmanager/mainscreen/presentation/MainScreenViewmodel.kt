@@ -56,6 +56,12 @@ class MainScreenViewmodel(
     val initialLoadFinished = MutableStateFlow(false)
 
     init {
+        CoroutineScope(Dispatchers.IO).launch {
+            areaRepository.syncNetworkElements()
+        }
+
+
+
         CoroutineScope(Dispatchers.Default).launch {
             viewModelScope.launch {
 
@@ -392,7 +398,7 @@ class MainScreenViewmodel(
                         )
                     )
 
-                    //TODO: sync areas
+                    areaRepository.syncNetworkElements()
                 }
 
                 onAction(OnCreateConnectionStop)
@@ -434,7 +440,7 @@ class MainScreenViewmodel(
         //println(filtereditems?.filter { !it.onArea }?.size)
 
         val newarea = _currentArea.value?.copy(
-            items = filtereditems?: emptyList()
+            items = filtereditems ?: emptyList()
         )
 
         state = state.copy(

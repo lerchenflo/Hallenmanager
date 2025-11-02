@@ -1,12 +1,13 @@
 package com.lerchenflo.hallenmanager.datasource.remote
 
-import androidx.compose.ui.geometry.Offset
-import com.lerchenflo.hallenmanager.datasource.AreaRepository
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.layerselection.domain.Layer
+import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
+import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
+import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
+import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.mainscreen.domain.Item
-import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
-import com.lerchenflo.hallenmanager.mainscreen.domain.toAreaDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.toItemDto
 import io.ktor.client.HttpClient
 import io.ktor.client.network.sockets.SocketTimeoutException
@@ -22,12 +23,14 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.parameters
 import io.ktor.util.network.UnresolvedAddressException
+import kotlinx.coroutines.delay
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlin.time.Instant
 
 
 class NetworkUtils(
     val httpClient: HttpClient,
+    val database: AppDatabase
 ) {
     private suspend fun networkRequest(
         serverURL: String,
@@ -112,11 +115,21 @@ class NetworkUtils(
 
 
 
-
+    @Serializable
     data class AreaRequest(
         val areaid: String?,
         val name: String,
         val description: String,
+    )
+
+    @Serializable
+    data class AreaResponse(
+        val id: String,
+        val name: String,
+        val description: String,
+        val createdAt: String,
+        var lastchangedAt: String,
+        var lastchangedBy: String,
     )
 
     suspend fun upsertArea(area: Area, remoteServer: NetworkConnection) : Area {
@@ -163,21 +176,20 @@ class NetworkUtils(
         return area
     }
 
-
+    @Serializable
     data class IdTimeStamp(
         val id: String,
-        val timeStamp: Instant
+        val timeStamp: String
     )
 
-    /*
-    suspend fun areaSync(){
 
-        areaRepository.getAllNetworkConnections().forEach { networkConnection ->
+    suspend fun areaSync(networkConnections: List<NetworkConnection>, localAreas: List<Area>): List<AreaDto> {
+        val allNewAreas = mutableListOf<AreaDto>()
 
-            //Get all timestamps for areas which are from this network connection
-            val localtimestamps = areaRepository.getAllAreas()
+        networkConnections.forEach { networkConnection ->
+            // Get all timestamps for areas which are from this network connection
+            val localtimestamps = localAreas
                 .mapNotNull { area ->
-
                     if (area.isRemoteArea() && area.networkConnectionId == networkConnection.id) {
                         IdTimeStamp(
                             id = area.id,
@@ -186,7 +198,6 @@ class NetworkUtils(
                     } else null
                 }
 
-
             val response = networkRequest(
                 serverURL = networkConnection.serverUrl + "/areas/sync",
                 requestMethod = HttpMethod.Post,
@@ -194,31 +205,39 @@ class NetworkUtils(
                 body = localtimestamps
             )
 
-            response
-                .onSuccess { responseData ->
+            when (response) {
+                is NetworkResult.Error<*> -> {
+                    println("sync error")
+                }
+                is NetworkResult.Success<*> -> {
                     try {
-                        val syncedAreas = Json.decodeFromString<List<Area>>(responseData)
-                        syncedAreas.forEach { area ->
-                            // Update or insert the areas in the database
-                            areaRepository.upsertArea(area)
+                        val newareas = Json.decodeFromString<List<AreaResponse>>(response.data.toString())
+
+                        newareas.forEach { areaResponse ->
+                            allNewAreas.add(AreaDto(
+                                id = areaResponse.id,
+                                name = areaResponse.name,
+                                description = areaResponse.description,
+                                createdAt = areaResponse.createdAt,
+                                lastchangedAt = areaResponse.lastchangedAt,
+                                lastchangedBy = areaResponse.lastchangedBy,
+                                networkConnectionId = networkConnection.id
+                            ))
                         }
+
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        println("Failed to parse sync response: $responseData")
+                        println("Failed to parse sync response: ${response.data.toString()}")
                     }
                 }
-                .onError { errorMessage ->
-                    println("Area sync network error for ${networkConnection.serverUrl}: $errorMessage")
-                }
-
-
-
+            }
         }
 
+        return allNewAreas
     }
 
-     */
 
+    @Serializable
     data class ItemRequest(
         val itemid: String,
         val areaId: String,
@@ -227,10 +246,10 @@ class NetworkUtils(
         val color: Long?,
         val layers: List<String>,
         val onArea: Boolean,
-        var createdAt: Instant,
-        var lastchangedAt: Instant,
+        var createdAt: String,
+        var lastchangedAt: String,
         var lastchangedBy: String,
-        val cornerPoints: List<Offset>
+        val cornerPoints: List<CornerPointDto>
     )
 
 
@@ -251,12 +270,14 @@ class NetworkUtils(
                 title = item.title,
                 description = item.description,
                 color = item.color,
-                layers = itemdto.layers,
+                layers = itemdto.layers.map {
+                    it.layerid
+                },
                 onArea = item.onArea,
                 createdAt = item.createdAt,
                 lastchangedAt = item.lastchangedAt,
                 lastchangedBy = item.lastchangedBy,
-                cornerPoints = item.cornerPoints
+                cornerPoints = itemdto.cornerPoints
             )
         )
 
@@ -268,13 +289,26 @@ class NetworkUtils(
             is NetworkResult.Success<*> -> {
                 val responseText = request.data.toString()
                 try {
-                    val returned = Json.decodeFromString<Item>(responseText)
+                    val response = Json.decodeFromString<ItemRequest>(responseText)
 
-                    area.copy(
-                        id = returned.id,
-                        name = returned.name,
-                        description = returned.description
+                    Item(
+                        itemid = response.itemid,
+                        areaId = response.areaId,
+                        title = response.title,
+                        description = response.description,
+                        layers = database.areaDao().getLayersById(response.layers).mapNotNull {
+                            it?.toLayer()
+                        },
+                        color = response.color,
+                        onArea = response.onArea,
+                        createdAt = response.createdAt,
+                        lastchangedAt = response.lastchangedAt,
+                        lastchangedBy = response.lastchangedBy,
+                        cornerPoints = response.cornerPoints.map {
+                            it.asOffset()
+                        }
                     )
+
                 } catch (e: Exception) {
                     e.printStackTrace()
                     println("Failed to parse area response: $responseText")
@@ -282,6 +316,11 @@ class NetworkUtils(
                 }
             }
         }
+    }
+
+    suspend fun upsertLayer(layer: Layer) : Layer{
+        //TODO network
+        return layer
     }
 
 

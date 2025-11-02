@@ -5,14 +5,13 @@ package com.lerchenflo.hallenmanager.mainscreen.domain
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.AreaWithItemsDto
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 data class Area(
     var id: String = "",
     var name: String,
     var description: String,
-    var createdAt: Instant,
-    var lastchangedAt: Instant,
+    var createdAt: String,
+    var lastchangedAt: String,
     var lastchangedBy: String,
     var networkConnectionId: Long?,
     var items: List<Item>
@@ -23,7 +22,7 @@ data class Area(
 }
 
 
-fun Area.toAreaDto(): AreaWithItemsDto = AreaWithItemsDto(
+fun Area.toAreaWithItemsDto(): AreaWithItemsDto = AreaWithItemsDto(
     area = AreaDto(
         name = name,
         description = description,
@@ -38,27 +37,6 @@ fun Area.toAreaDto(): AreaWithItemsDto = AreaWithItemsDto(
     }
 )
 
-fun Area.toAreaWithoutItemsDto(): AreaDto = AreaDto(
-    name = name,
-    description = description,
-    createdAt = createdAt,
-    id = id,
-    lastchangedAt = lastchangedAt,
-    lastchangedBy = lastchangedBy,
-    networkConnectionId = networkConnectionId,
-)
-
-
-fun AreaDto.toArea() : Area = Area(
-    id = id,
-    name = name,
-    description = description,
-    createdAt = createdAt,
-    lastchangedAt = lastchangedAt,
-    lastchangedBy = lastchangedBy,
-    networkConnectionId = networkConnectionId,
-    items = emptyList()
-)
 
 fun AreaWithItemsDto.toArea(): Area = Area(
     id = area.id,

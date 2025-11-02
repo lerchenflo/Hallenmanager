@@ -17,7 +17,6 @@ data class ItemWithListsDto(
     )
     val cornerPoints: List<CornerPointDto>,
 
-
     @Relation(
         parentColumn = "itemid",
         entityColumn = "layerid",

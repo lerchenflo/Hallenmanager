@@ -23,8 +23,8 @@ data class Item(
     val layers: List<Layer>,
     val color: Long?,
     val onArea: Boolean,
-    var createdAt: Instant,
-    var lastchangedAt: Instant,
+    var createdAt: String,
+    var lastchangedAt: String,
     var lastchangedBy: String,
     val cornerPoints: List<Offset>
 ) {
@@ -151,10 +151,6 @@ data class Item(
         return inside
     }
 
-
-
-
-
 }
 
 /**
@@ -182,6 +178,7 @@ fun Item.withCornerPointsAtOrigin(): Item {
 
     return this.copy(cornerPoints = shifted)
 }
+
 
 fun Item.toItemDto(areaid: String): ItemWithListsDto = ItemWithListsDto(
     item = ItemDto(

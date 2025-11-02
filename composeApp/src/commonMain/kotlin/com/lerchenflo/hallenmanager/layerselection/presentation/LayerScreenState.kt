@@ -12,8 +12,8 @@ data class LayerScreenState(
     val selectedArea: Area = Area(
         name = "",
         description = "",
-        createdAt = Clock.System.now(),
-        lastchangedAt = Clock.System.now(),
+        createdAt = Clock.System.now().toEpochMilliseconds().toString(),
+        lastchangedAt = Clock.System.now().toEpochMilliseconds().toString(),
         lastchangedBy = "",
         networkConnectionId = null,
         items = emptyList()

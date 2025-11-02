@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.lerchenflo.hallenmanager.mainscreen.data
 
 import androidx.room.Entity
@@ -15,8 +13,8 @@ class AreaDto(
     var id: String = "",
     var name: String,
     var description: String,
-    var createdAt: Instant,
-    var lastchangedAt: Instant,
+    var createdAt: String,
+    var lastchangedAt: String,
     var lastchangedBy: String,
     var networkConnectionId: Long?
 

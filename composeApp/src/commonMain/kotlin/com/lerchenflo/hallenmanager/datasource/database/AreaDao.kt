@@ -8,12 +8,13 @@ import androidx.room.Update
 import androidx.room.Upsert
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
+import com.lerchenflo.hallenmanager.layerselection.domain.Layer
+import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.AreaWithItemsDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemWithListsDto
-import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,12 +29,12 @@ interface AreaDao {
             insertAreaDto(area)
         }
         val returnedarea = getAreaDtoById(area.id)!!
-        println("Area upsert: ${returnedarea.toArea()}")
         return returnedarea
     }
 
     @Update
     suspend fun updateAreaDto(area: AreaDto)
+
     @Insert
     suspend fun insertAreaDto(area: AreaDto)
 
@@ -111,6 +112,7 @@ interface AreaDao {
     @Query("SELECT * FROM itemdto")
     fun getAllItems(): Flow<List<ItemWithListsDto>>
 
+    @Transaction
     @Query("SELECT * FROM itemdto WHERE itemid = :itemId")
     suspend fun getItemWithListsById(itemId: String): ItemWithListsDto?
 
@@ -119,8 +121,33 @@ interface AreaDao {
 
 
     @Transaction
-    @Upsert
-    suspend fun upsertLayer(layer: LayerDto)
+    suspend fun upsertLayer(layer: LayerDto): LayerDto {
+        val existing = getLayerById(layer.layerid)
+        if (existing != null) {
+            updateLayerDto(layer)
+        } else {
+            insertLayerDto(layer)
+        }
+        return getLayerDtoById(layer.layerid)!!
+    }
+
+    @Update
+    suspend fun updateLayerDto(layer: LayerDto)
+
+    @Insert
+    suspend fun insertLayerDto(layer: LayerDto)
+
+    @Query("SELECT * FROM LayerDto WHERE layerid = :id LIMIT 1")
+    suspend fun getLayerById(id: String): LayerDto?
+
+    suspend fun getLayersById(ids: List<String>): List<LayerDto?> {
+        return ids.map { layerid ->
+            getLayerById(layerid)
+        }
+    }
+
+    @Query("SELECT * FROM LayerDto WHERE layerid = :id LIMIT 1")
+    suspend fun getLayerDtoById(id: String): LayerDto?
 
     @Transaction
     @Query("SELECT * FROM LayerDto")
@@ -132,6 +159,7 @@ interface AreaDao {
             upsertLayer(it)
         }
     }
+
 
 
 
@@ -153,9 +181,10 @@ interface AreaDao {
 
 
 
+    //TODO: FIx auto key gen
     @Transaction
     @Upsert
-    suspend fun upsertCornerPoints(points: List<CornerPointDto>): List<Long>
+    suspend fun upsertCornerPoints(points: List<CornerPointDto>)
 
     @Query("DELETE FROM cornerpointdto WHERE itemId = :itemId")
     suspend fun deleteCornerPointsForItem(itemId: String)
@@ -212,6 +241,12 @@ interface AreaDao {
     }
 
 
+    @Transaction
+    suspend fun upsertLayer(layer: Layer) : Layer {
+        val upsertedlayer = upsertLayer(layer = layer)
+
+        return getLayerById(upsertedlayer.layerid)!!.toLayer()
+    }
 
 
 }

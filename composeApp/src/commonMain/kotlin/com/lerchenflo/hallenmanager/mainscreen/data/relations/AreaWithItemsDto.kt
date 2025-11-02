@@ -14,5 +14,5 @@ data class AreaWithItemsDto(
         entityColumn = "areaId",
         entity = ItemDto::class
     )
-    val items: List<ItemWithListsDto> // nested relation: Room supports nested @Relation POJOs
+    val items: List<ItemWithListsDto>
 )

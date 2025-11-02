@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.outlined.DensitySmall
 import androidx.compose.material.icons.outlined.Draw
 import androidx.compose.material.icons.outlined.Layers
@@ -84,6 +85,7 @@ import com.lerchenflo.hallenmanager.mainscreen.presentation.search.SearchItemUI
 import com.lerchenflo.hallenmanager.sharedUi.LegendOverlay
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_area
+import hallenmanager.composeapp.generated.resources.add_remote_area
 import hallenmanager.composeapp.generated.resources.custom_paint
 import hallenmanager.composeapp.generated.resources.custom_paint_painting
 import hallenmanager.composeapp.generated.resources.hide_shortaccess_menu
@@ -475,6 +477,31 @@ fun MainScreen(
                                         onClick = {
                                             areadropdownexpanded = false
                                             onAction(MainScreenAction.OnCreateAreaStart)
+                                        }
+                                    )
+
+
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Sync,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+
+                                                Spacer(modifier = Modifier.width(8.dp))
+
+                                                Text(
+                                                    text = stringResource(Res.string.add_remote_area)
+                                                )
+                                            }
+                                        },
+                                        onClick = {
+                                            areadropdownexpanded = false
+                                            onAction(MainScreenAction.OnCreateConnectionStart)
                                         }
                                     )
 
