@@ -2,6 +2,7 @@ package com.lerchenflo.hallenmanager.sharedUi
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -26,7 +27,8 @@ fun LegendOverlay(
     scale: Float,
     gridSpacingInContentPx: Float,
     metersPerGrid: Float = 0.2f,
-    padding: Dp = 12.dp
+    padding: Dp = 12.dp,
+    barColor: Color = MaterialTheme.colorScheme.primary
 ) {
     // small safety
     if (gridSpacingInContentPx <= 0f || metersPerGrid <= 0f) {
@@ -44,7 +46,7 @@ fun LegendOverlay(
     val metersPerScreenPx = metersPerGrid / gridPxOnScreen
 
     // desired visual length for ruler in screen px (target range — we'll pick a 'nice' meter close to this)
-    val desiredPx = 120f
+    val desiredPx = 350f
 
     // meters represented by desiredPx on screen
     val metersAtDesiredPx = metersPerScreenPx * desiredPx
@@ -70,21 +72,21 @@ fun LegendOverlay(
                 val strokeY = h * 0.5f
                 // main line
                 drawLine(
-                    color = Color.Black,
+                    color = barColor,
                     start = Offset(0f, strokeY),
                     end = Offset(w, strokeY),
                     strokeWidth = 2f
                 )
                 // left tick
                 drawLine(
-                    color = Color.Black,
+                    color = barColor,
                     start = Offset(0f, strokeY - 6f),
                     end = Offset(0f, strokeY + 6f),
                     strokeWidth = 2f
                 )
                 // right tick
                 drawLine(
-                    color = Color.Black,
+                    color = barColor,
                     start = Offset(w, strokeY - 6f),
                     end = Offset(w, strokeY + 6f),
                     strokeWidth = 2f
@@ -95,7 +97,7 @@ fun LegendOverlay(
                 for (i in 1 until thirds) {
                     val x = w * (i.toFloat() / thirds)
                     drawLine(
-                        color = Color.Black,
+                        color = barColor,
                         start = Offset(x, strokeY - 4f),
                         end = Offset(x, strokeY + 4f),
                         strokeWidth = 1.2f

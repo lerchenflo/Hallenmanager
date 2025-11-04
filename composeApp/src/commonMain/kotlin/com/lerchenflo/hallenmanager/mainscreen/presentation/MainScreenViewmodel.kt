@@ -127,8 +127,10 @@ class MainScreenViewmodel(
                         }
                         .flowOn(Dispatchers.Default)
                         .collect { searchResults ->
+
                             state = state.copy(
-                                currentSearchResult = searchResults.map {
+                                currentSearchResult = searchResults
+                                    .map {
                                     SearchItem(
                                         item = it,
                                         areaname = state.availableAreas.find { area ->

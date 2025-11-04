@@ -45,6 +45,10 @@ data class Item(
         return false
     }
 
+    fun isShortAccessItem() : Boolean{
+        return !onArea
+    }
+
     /**
      * Returns the absolute color the item will have, including all layers
      *

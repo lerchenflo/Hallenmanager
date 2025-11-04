@@ -764,6 +764,7 @@ fun MainScreen(
 
                                 //Draw items in this area
                                 state.currentArea.items
+                                    .filter { item -> !item.isShortAccessItem() }
                                     .forEach { item ->
                                         if (item.cornerPoints.size > 2) {
                                             key("${item.itemid}_${item.title}") {
@@ -836,7 +837,7 @@ fun MainScreen(
 
 
         //Short access menu
-        if (state.showShortAccessMenu && state.currentArea != null) {
+        if (state.showShortAccessMenu && state.currentArea != null && state.shortAccessItems.isNotEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
