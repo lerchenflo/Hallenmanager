@@ -25,6 +25,7 @@ import io.ktor.util.network.UnresolvedAddressException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -258,6 +259,12 @@ class NetworkUtils(
     @Serializable
     data class ItemResponse(
         val itemid: String,
+        val areaId: String,
+        val title: String,
+        val description: String,
+        val color: Long?,
+        val layers: List<String>,
+        val onArea: Boolean,
         var createdAt: String,
         var lastchangedAt: String,
         var lastchangedBy: String,
@@ -314,7 +321,6 @@ class NetworkUtils(
                 val responseText = request.data.toString()
                 try {
                     val parsedResponse = Json.decodeFromString<ItemResponse>(responseText)
-
 
                     item.copy(
                         itemid = parsedResponse.itemid,
@@ -376,7 +382,7 @@ class NetworkUtils(
                         }
                         is NetworkResult.Success<*> -> {
                             try {
-                                val newitems = Json.decodeFromString<List<ItemRequest>>(response.data.toString())
+                                val newitems = Json.decodeFromString<List<ItemResponse>>(response.data.toString())
 
                                 newitems.forEach { itemRequest ->
                                     itemsForThisConnection.add(
@@ -419,11 +425,14 @@ class NetworkUtils(
                 }
 
                 Pair(itemsForThisConnection, cornerPointsForThisConnection)
-            }.await()
+            }
         }
 
-        val allNewItems = deferredResults.flatMap { it.first }
-        val allNewCornerpoints = deferredResults.flatMap { it.second }
+        // Await all deferred results concurrently
+        val results = deferredResults.awaitAll()
+
+        val allNewItems = results.flatMap { it.first }
+        val allNewCornerpoints = results.flatMap { it.second }
 
         Pair(allNewItems, allNewCornerpoints)
     }

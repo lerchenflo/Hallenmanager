@@ -26,6 +26,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CropLandscape
 import androidx.compose.material.icons.filled.CropPortrait
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Search
@@ -437,11 +438,27 @@ fun MainScreen(
                                                 Row(
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.CropPortrait,
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.primary
-                                                    )
+                                                    if (availablearea.isSynced){
+                                                        Column {
+                                                            Icon(
+                                                                imageVector = Icons.Default.CropLandscape,
+                                                                contentDescription = null,
+                                                                tint = MaterialTheme.colorScheme.primary
+                                                            )
+
+                                                            Icon(
+                                                                imageVector = Icons.Default.Link,
+                                                                contentDescription = null,
+                                                                tint = MaterialTheme.colorScheme.primary
+                                                            )
+                                                        }
+                                                    }else {
+                                                        Icon(
+                                                            imageVector = Icons.Default.CropPortrait,
+                                                            contentDescription = null,
+                                                            tint = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    }
 
                                                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -457,6 +474,7 @@ fun MainScreen(
                                                             color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
                                                         )
                                                     }
+
                                                 }
                                             },
                                             onClick = {

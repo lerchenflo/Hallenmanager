@@ -192,25 +192,24 @@ class AreaRepository(
             it.toItem()
         }.filter { it.isRemoteItem() }
 
-        println("LocalAreas: $localAreas localconnections: $localConnections")
-
         val newareas = networkUtils.areaSync(localConnections, localAreas)
-
-        println("Network sync: $newareas")
 
         newareas.forEach { area ->
             database.areaDao().upsertAreaDto(area)
         }
 
-
-
+        println("Local item count: ${localItems.count()}")
         val itemandcornersync = networkUtils.itemSync(localConnections, localItems)
+        println("Upserted new items from sync: ${itemandcornersync.first.count()}")
+        println("Upserted new Cornerpoints from sync: ${itemandcornersync.second.count()}")
+
 
         itemandcornersync.first.forEach { itemDto ->
             database.areaDao().upsertItem(itemDto)
         }
 
         database.areaDao().upsertCornerPoints(itemandcornersync.second)
+
 
     }
 }

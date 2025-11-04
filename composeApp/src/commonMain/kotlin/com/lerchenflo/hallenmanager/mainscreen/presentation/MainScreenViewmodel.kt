@@ -417,9 +417,12 @@ class MainScreenViewmodel(
                     )
 
                     areaRepository.syncNetworkElements()
+                    val areacount = areaRepository.getAreaCount()
 
-                    if (areaRepository.getAreaCount() != 0){
+                    if (areacount != 0){
+                        println("Loaded a new area from network")
                         initialLoadFinished.value = true
+                        loadDefaultArea()
                     }
                 }
 

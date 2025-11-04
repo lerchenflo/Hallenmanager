@@ -1,5 +1,6 @@
 package com.lerchenflo.hallenmanager.mainscreen.domain
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
@@ -48,6 +49,7 @@ data class Item(
      * Returns the absolute color the item will have, including all layers
      *
      */
+
     fun getAbsoluteColor(): Color {
         val layercolor = layers
             .filter { it.shown }
@@ -56,7 +58,7 @@ data class Item(
 
         //Return itemcolor, else layercolor
         return if (color == null){
-            layercolor ?: Color.Black
+            layercolor ?: Color.Yellow
         }else {
             Color(color.toULong())
         }
