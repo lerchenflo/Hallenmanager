@@ -31,10 +31,10 @@ fun ItemPolygon(
     showTitle: Boolean = true
 ) {
     // Calculate bounding box in CONTENT coordinates (pixels)
-    val minX = item.cornerPoints.minOf { it.x }
-    val minY = item.cornerPoints.minOf { it.y }
-    val maxX = item.cornerPoints.maxOf { it.x }
-    val maxY = item.cornerPoints.maxOf { it.y }
+    val minX = item.cornerPoints.minOf { it.offsetX }
+    val minY = item.cornerPoints.minOf { it.offsetY }
+    val maxX = item.cornerPoints.maxOf { it.offsetX }
+    val maxY = item.cornerPoints.maxOf { it.offsetY }
 
     val width = maxX - minX
     val height = maxY - minY
@@ -69,8 +69,8 @@ fun ItemPolygon(
 
                 val relativePoints = item.cornerPoints.map {
                     Offset(
-                        ((it.x - minX) / width) * size.width,
-                        ((it.y - minY) / height) * size.height
+                        ((it.offsetX - minX) / width) * size.width,
+                        ((it.offsetY - minY) / height) * size.height
                     )
                 }
 

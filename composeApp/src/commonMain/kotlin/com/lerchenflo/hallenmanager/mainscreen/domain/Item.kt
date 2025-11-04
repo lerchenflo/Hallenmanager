@@ -26,7 +26,8 @@ data class Item(
     var createdAt: String,
     var lastchangedAt: String,
     var lastchangedBy: String,
-    val cornerPoints: List<Offset>
+    val cornerPoints: List<CornerPointDto>,
+    var networkConnectionId: Long?
 ) {
 
     /**
@@ -119,38 +120,15 @@ data class Item(
         var x = 0f
         var y = 0f
         cornerPoints.forEach { point ->
-            x += point.x
-            y += point.y
+            x += point.offsetX
+            y += point.offsetY
         }
         return Offset(x / cornerPoints.size, y / cornerPoints.size)
     }
 
-    fun isPolygonClicked(pt: Offset): Boolean {
-        if (cornerPoints.size < 3) return false
-
-        // quick reject via bounding box
-        val minX = cornerPoints.minOf { it.x }
-        val maxX = cornerPoints.maxOf { it.x }
-        val minY = cornerPoints.minOf { it.y }
-        val maxY = cornerPoints.maxOf { it.y }
-        if (pt.x < minX || pt.x > maxX || pt.y < minY || pt.y > maxY) return false
-
-        // ray casting algorithm
-        var inside = false
-        var j = cornerPoints.lastIndex
-        for (i in 0..cornerPoints.lastIndex) {
-            val xi = cornerPoints[i].x; val yi = cornerPoints[i].y
-            val xj = cornerPoints[j].x; val yj = cornerPoints[j].y
-
-            // check if the ray intersects edge (i,j)
-            val intersects = ((yi > pt.y) != (yj > pt.y)) &&
-                    (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi)
-            if (intersects) inside = !inside
-            j = i
-        }
-        return inside
+    fun isRemoteItem() : Boolean {
+        return networkConnectionId != null
     }
-
 }
 
 /**
@@ -163,40 +141,41 @@ data class Item(
 fun Item.withCornerPointsAtOrigin(): Item {
     if (cornerPoints.isEmpty()) return this
 
-    val minX = cornerPoints.minOfOrNull { it.x } ?: 0f
-    val minY = cornerPoints.minOfOrNull { it.y } ?: 0f
+    val minX = cornerPoints.minOfOrNull { it.offsetX } ?: 0f
+    val minY = cornerPoints.minOfOrNull { it.offsetY } ?: 0f
 
     // If already at origin, return unchanged
     if (minX == 0f && minY == 0f) return this
 
-    val shifted = cornerPoints.map { point ->
-
-        point.x - minX
-        point.y - minY
-        Offset(point.x - minX, point.y - minY)
+    cornerPoints.forEach { point ->
+        point.offsetX -= minX
+        point.offsetY -= minY
     }
 
-    return this.copy(cornerPoints = shifted)
+    return this.copy(cornerPoints = cornerPoints)
 }
 
 
-fun Item.toItemDto(areaid: String): ItemWithListsDto = ItemWithListsDto(
+fun Item.toItemDto(): ItemWithListsDto = ItemWithListsDto(
     item = ItemDto(
         itemid = itemid,
         title = title,
-        areaId = areaid,
+        areaId = areaId,
         description = description,
         lastchangedAt = lastchangedAt,
         createdAt = createdAt,
         color = color,
         onArea = onArea,
         lastchangedBy = lastchangedBy,
+        networkConnectionId = networkConnectionId
     ),
     cornerPoints = cornerPoints.map {
         CornerPointDto(
+            id = it.id,
             itemId = itemid,
-            offsetX = it.x,
-            offsetY = it.y
+            offsetX = it.offsetX,
+            offsetY = it.offsetY,
+            networkConnectionId = networkConnectionId
         )
     },
     layers = layers.map {
@@ -216,8 +195,7 @@ fun ItemWithListsDto.toItem(): Item = Item(
     createdAt = item.createdAt,
     color = item.color,
     onArea = item.onArea,
-    cornerPoints = cornerPoints.map {
-        it.asOffset()
-    },
+    cornerPoints = cornerPoints,
     lastchangedBy = item.lastchangedBy,
+    networkConnectionId = item.networkConnectionId
 )

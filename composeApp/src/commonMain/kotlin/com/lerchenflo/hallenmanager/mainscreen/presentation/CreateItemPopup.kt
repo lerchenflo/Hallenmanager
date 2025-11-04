@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.mainscreen.domain.Item
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
+import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.sharedUi.ColorPicker
 import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_item_titletext
@@ -232,13 +233,21 @@ fun CreateItemPopup(
                         title = title,
                         description = description,
                         layers = selectedLayers,
-                        cornerPoints = if (state.currentDrawingOffsets.isEmpty() && state.iteminfopopupItem != null) state.iteminfopopupItem.cornerPoints else state.currentDrawingOffsets,
+                        cornerPoints = if (state.currentDrawingOffsets.isEmpty() && state.iteminfopopupItem != null) state.iteminfopopupItem.cornerPoints else state.currentDrawingOffsets.map { CornerPointDto(
+                            itemId = state.iteminfopopupItem?.itemid ?: "",
+                            offsetX = it.x,
+                            offsetY = it.y,
+                            networkConnectionId = state.currentArea!!.networkConnectionId
+                        ) },
                         color = color?.value?.toLong(),
                         areaId = state.iteminfopopupItem?.areaId ?: state.currentArea?.id ?: "",
                         onArea = true,
                         createdAt = Clock.System.now().toEpochMilliseconds().toString(),
                         lastchangedAt = Clock.System.now().toEpochMilliseconds().toString(),
-                        lastchangedBy = "")
+                        lastchangedBy = "",
+                        networkConnectionId = state.currentArea!!.networkConnectionId
+
+                    )
                 ))
             }) {
                 Text(stringResource(Res.string.done))

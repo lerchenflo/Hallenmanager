@@ -62,15 +62,19 @@ class AreaRepository(
 
         if (parentArea != null){
             if (parentArea.isRemoteArea()) {
-                val updatedItem = networkUtils.upsertItem(item = item, getNetworkConnectionById(parentArea.networkConnectionId!!))
+                val remoteItem = networkUtils.upsertItem(item = item, getNetworkConnectionById(parentArea.networkConnectionId!!))
 
-                returneditem = database.areaDao().upsertItemWithCorners(updatedItem.toItemDto(areaid)).toItem()
+                return if (remoteItem != null){
+                    database.areaDao().upsertItemWithCorners(remoteItem.toItemDto()).toItem()
+                }else {
+                    throw Exception("No network connection")
+                }
             } else {
                 val fixedItem = item.copy(
-                    itemid = Clock.System.now().toEpochMilliseconds().toString()
+                    itemid = item.itemid.ifEmpty { Clock.System.now().toEpochMilliseconds().toString() }
                 )
 
-                returneditem = database.areaDao().upsertItemWithCorners(fixedItem.toItemDto(areaid)).toItem()
+                returneditem = database.areaDao().upsertItemWithCorners(fixedItem.toItemDto()).toItem()
             }
         }
 
@@ -91,9 +95,9 @@ class AreaRepository(
     }
 
     suspend fun upsertLayerList(layers: List<Layer>){
-        database.areaDao().upsertLayerList(layers.map {
-            it.toLayerDto()
-        })
+        layers.forEach { layer ->
+            upsertLayer(layer)
+        }
     }
 
 
@@ -142,7 +146,7 @@ class AreaRepository(
     }
 
     fun getAllItems(): Flow<List<Item>> {
-        return database.areaDao().getAllItems().map { items ->
+        return database.areaDao().getAllItemsFlow().map { items ->
             items.map { itemdto ->
                 itemdto.toItem()
             }
@@ -179,9 +183,14 @@ class AreaRepository(
 
     suspend fun syncNetworkElements(){
         val localConnections = database.areaDao().getAllNetworkConnections()
+
         val localAreas = database.areaDao().getAllAreas().map {
             it.toArea()
         }.filter { it.isRemoteArea() }
+
+        val localItems = database.areaDao().getAllItems().map {
+            it.toItem()
+        }.filter { it.isRemoteItem() }
 
         println("LocalAreas: $localAreas localconnections: $localConnections")
 
@@ -192,5 +201,16 @@ class AreaRepository(
         newareas.forEach { area ->
             database.areaDao().upsertAreaDto(area)
         }
+
+
+
+        val itemandcornersync = networkUtils.itemSync(localConnections, localItems)
+
+        itemandcornersync.first.forEach { itemDto ->
+            database.areaDao().upsertItem(itemDto)
+        }
+
+        database.areaDao().upsertCornerPoints(itemandcornersync.second)
+
     }
 }

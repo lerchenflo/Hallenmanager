@@ -33,7 +33,7 @@ fun Area.toAreaWithItemsDto(): AreaWithItemsDto = AreaWithItemsDto(
         networkConnectionId = networkConnectionId,
     ),
     items = items.map {
-        it.toItemDto(areaid = id)
+        it.toItemDto()
     }
 )
 

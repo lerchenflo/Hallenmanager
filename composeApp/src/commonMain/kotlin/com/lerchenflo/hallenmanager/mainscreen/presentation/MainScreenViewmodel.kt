@@ -356,7 +356,7 @@ class MainScreenViewmodel(
                             for (item in area.items.filter { it.onArea }) {
                                 //println(item)
 
-                                if (isPointInPolygon(action.contentpoint, item.cornerPoints)) {
+                                if (isPointInPolygon(action.contentpoint, item.cornerPoints.map { it.asOffset() })) {
                                     //println("Not clicked")
 
                                     onAction(OnItemClicked(item))
@@ -386,7 +386,7 @@ class MainScreenViewmodel(
                         .copy(
                             onArea = true,
                             cornerPoints = action.item.cornerPoints.map { point ->
-                                point + action.position
+                                point.setOffset(point.asOffset() + action.position)
                             }
                         ), _selectedAreaId.value)
                 }
@@ -449,10 +449,10 @@ class MainScreenViewmodel(
                 return@filter false
             }
 
-            val minX = item.cornerPoints.minOf { it.x } * _scale.value + _offset.value.x
-            val maxX = item.cornerPoints.maxOf { it.x } * _scale.value + _offset.value.x
-            val minY = item.cornerPoints.minOf { it.y } * _scale.value + _offset.value.y
-            val maxY = item.cornerPoints.maxOf { it.y } * _scale.value + _offset.value.y
+            val minX = item.cornerPoints.minOf { it.offsetX } * _scale.value + _offset.value.x
+            val maxX = item.cornerPoints.maxOf { it.offsetX } * _scale.value + _offset.value.x
+            val minY = item.cornerPoints.minOf { it.offsetY } * _scale.value + _offset.value.y
+            val maxY = item.cornerPoints.maxOf { it.offsetY } * _scale.value + _offset.value.y
 
             // Check if bounding box intersects viewport
             maxX >= 0 && minX <= _viewportsize.value.width && maxY >= 0 && minY <= _viewportsize.value.height

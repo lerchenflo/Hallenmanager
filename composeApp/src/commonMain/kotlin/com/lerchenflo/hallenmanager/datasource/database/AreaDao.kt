@@ -92,10 +92,6 @@ interface AreaDao {
     @Insert
     suspend fun insertItem(item: ItemDto)
 
-    @Transaction
-    @Upsert
-    suspend fun upsertItems(items: List<ItemDto>)
-
 
 
 
@@ -110,7 +106,11 @@ interface AreaDao {
 
     @Transaction
     @Query("SELECT * FROM itemdto")
-    fun getAllItems(): Flow<List<ItemWithListsDto>>
+    fun getAllItemsFlow(): Flow<List<ItemWithListsDto>>
+
+    @Transaction
+    @Query("SELECT * FROM itemdto")
+    suspend fun getAllItems(): List<ItemWithListsDto>
 
     @Transaction
     @Query("SELECT * FROM itemdto WHERE itemid = :itemId")
@@ -184,7 +184,24 @@ interface AreaDao {
 
 
 
-    //TODO: FIx auto key gen
+    @Transaction
+    suspend fun upsertCornerPoint(cornerPointDto: CornerPointDto): CornerPointDto {
+        val existing = getCornerPointById(cornerPointDto.id)
+        if (existing != null) {
+            updateCornerPoint(cornerPointDto)
+        } else {
+            insertCornerPoint(cornerPointDto)
+        }
+        return getCornerPointById(cornerPointDto.id)!!
+    }
+
+    @Query("SELECT * FROM cornerpointdto WHERE id = :id")
+    suspend fun getCornerPointById(id: String): CornerPointDto?
+    @Update
+    suspend fun updateCornerPoint(cornerPointDto: CornerPointDto)
+    @Insert
+    suspend fun insertCornerPoint(cornerPointDto: CornerPointDto)
+
     @Transaction
     @Upsert
     suspend fun upsertCornerPoints(points: List<CornerPointDto>)
