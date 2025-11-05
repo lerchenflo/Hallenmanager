@@ -196,9 +196,13 @@ class MainScreenViewmodel(
             is OnAddPoint -> {
                 val newpoint = snapToGrid(action.offset, state.gridspacing)
 
-                val cornerpoints = state.currentDrawingOffsets + newpoint
+                var cornerpoints = state.currentDrawingOffsets
+                val finished = cornerpoints.size >= 2 && cornerpoints.first() == newpoint
 
-                val finished = cornerpoints.first() == cornerpoints.last() && cornerpoints.size >= 2
+                if (!finished){
+                    cornerpoints = state.currentDrawingOffsets + newpoint
+                }
+
                 state = state.copy(
                     currentDrawingOffsets = cornerpoints,
                     iteminfopopupshown = finished,//Finished drawing
@@ -232,7 +236,7 @@ class MainScreenViewmodel(
                 state.currentArea.let { area ->
                     if (area != null) {
                         CoroutineScope(Dispatchers.IO).launch {
-                            areaRepository.upsertItem(action.item, area.id)
+                            areaRepository.upsertItem(action.item)
                         }
                     }
                 }
@@ -390,7 +394,7 @@ class MainScreenViewmodel(
                             cornerPoints = action.item.cornerPoints.map { point ->
                                 point.setOffset(point.asOffset() + action.position)
                             }
-                        ), _selectedAreaId.value)
+                        ))
                 }
             }
 
@@ -399,7 +403,7 @@ class MainScreenViewmodel(
                     //Upsert item but moved to the coordinate startpoint
                     areaRepository.upsertItem(action.item.withCornerPointsAtOrigin().copy(
                         onArea = false,
-                    ), _selectedAreaId.value)
+                    ))
 
                     state = state.copy(
                         iteminfopopupshown = false,

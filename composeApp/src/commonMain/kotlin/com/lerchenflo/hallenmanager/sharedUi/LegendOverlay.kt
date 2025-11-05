@@ -28,7 +28,7 @@ fun LegendOverlay(
     gridSpacingInContentPx: Float,
     metersPerGrid: Float = 0.2f,
     padding: Dp = 12.dp,
-    barColor: Color = MaterialTheme.colorScheme.primary
+    barColor: Color = MaterialTheme.colorScheme.secondary
 ) {
     // small safety
     if (gridSpacingInContentPx <= 0f || metersPerGrid <= 0f) {

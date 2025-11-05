@@ -54,7 +54,7 @@ class AreaRepository(
 
 
 
-    suspend fun upsertItem(item: Item, areaid: String) : Item {
+    suspend fun upsertItem(item: Item) : Item {
 
         lateinit var returneditem : Item
 
@@ -67,7 +67,9 @@ class AreaRepository(
                 return if (remoteItem != null){
                     database.areaDao().upsertItemWithCorners(remoteItem.toItemDto()).toItem()
                 }else {
-                    throw Exception("No network connection")
+                    println("No network connection")
+                    //TODO: SHow infopopup?
+                    item
                 }
             } else {
                 val fixedItem = item.copy(
