@@ -21,7 +21,7 @@ import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
                ],
 
     exportSchema = true,
-    version = 10
+    version = 11
 
 )
 

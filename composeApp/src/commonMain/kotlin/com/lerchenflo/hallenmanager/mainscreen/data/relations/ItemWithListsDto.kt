@@ -18,6 +18,7 @@ data class ItemWithListsDto(
     val cornerPoints: List<CornerPointDto>,
 
     @Relation(
+    //TODO fix this to resolve from list of strings
         parentColumn = "itemid",
         entityColumn = "layerid",
     )

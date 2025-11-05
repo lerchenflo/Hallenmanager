@@ -16,6 +16,7 @@ import com.lerchenflo.hallenmanager.mainscreen.domain.toItemDto
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlin.text.ifEmpty
 import kotlin.time.Clock
 
 class AreaRepository(
@@ -86,10 +87,26 @@ class AreaRepository(
 
     suspend fun upsertLayer(layer: Layer) : Layer {
 
-        val updatedLayer = networkUtils.upsertLayer(layer)
+        lateinit var returnedlayer : Layer
 
-        //TODO: IF online abfrage
-        return database.areaDao().upsertLayer(updatedLayer)
+        if (layer.isRemoteLayer()){
+            val updatedLayer = networkUtils.upsertLayer(layer, getNetworkConnectionById(layer.networkConnectionId!!))
+
+            return if (updatedLayer != null){
+                database.areaDao().upsertLayer(layer = updatedLayer)
+            }else {
+                println("No network connection")
+                layer
+            }
+        } else {
+            val fixedLayer = layer.copy(
+                layerid = layer.layerid.ifEmpty { Clock.System.now().toEpochMilliseconds().toString() }
+            )
+
+            returnedlayer = database.areaDao().upsertLayer(fixedLayer)
+        }
+
+        return returnedlayer
     }
 
     suspend fun upsertConnection(connection: NetworkConnection) {
@@ -159,8 +176,8 @@ class AreaRepository(
         return database.areaDao().getItemsForAreaFlow(areaid)
     }
 
-    fun getAllLayers(): Flow<List<Layer>> {
-        return database.areaDao().getAllLayers().map { layerDtos ->
+    fun getAllLayersFlow(): Flow<List<Layer>> {
+        return database.areaDao().getAllLayersFlow().map { layerDtos ->
             layerDtos.map { layerDto ->
                 layerDto.toLayer()
             }
@@ -194,24 +211,31 @@ class AreaRepository(
             it.toItem()
         }.filter { it.isRemoteItem() }
 
-        val newareas = networkUtils.areaSync(localConnections, localAreas)
+        val localLayers = database.areaDao().getAllLayers()
+            .map { it.toLayer() }
+            .filter { it.isRemoteLayer() }
 
+        val newareas = networkUtils.areaSync(localConnections, localAreas)
         newareas.forEach { area ->
             database.areaDao().upsertAreaDto(area)
         }
+
+
 
         println("Local item count: ${localItems.count()}")
         val itemandcornersync = networkUtils.itemSync(localConnections, localItems)
         println("Upserted new items from sync: ${itemandcornersync.first.count()}")
         println("Upserted new Cornerpoints from sync: ${itemandcornersync.second.count()}")
 
-
         itemandcornersync.first.forEach { itemDto ->
             database.areaDao().upsertItem(itemDto)
         }
-
         database.areaDao().upsertCornerPoints(itemandcornersync.second)
 
+        val newlayers = networkUtils.layerSync(localConnections, localLayers)
+        newlayers.forEach { layerDto ->
+            database.areaDao().upsertLayer(layerdto = layerDto)
+        }
 
     }
 }

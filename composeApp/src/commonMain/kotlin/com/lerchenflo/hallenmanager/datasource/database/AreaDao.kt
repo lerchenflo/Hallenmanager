@@ -10,6 +10,7 @@ import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
+import com.lerchenflo.hallenmanager.layerselection.domain.toLayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
@@ -121,14 +122,14 @@ interface AreaDao {
 
 
     @Transaction
-    suspend fun upsertLayer(layer: LayerDto): LayerDto {
-        val existing = getLayerById(layer.layerid)
+    suspend fun upsertLayer(layerdto: LayerDto): LayerDto {
+        val existing = getLayerById(layerdto.layerid)
         if (existing != null) {
-            updateLayerDto(layer)
+            updateLayerDto(layerdto)
         } else {
-            insertLayerDto(layer)
+            insertLayerDto(layerdto)
         }
-        return getLayerDtoById(layer.layerid)!!
+        return getLayerDtoById(layerdto.layerid)!!
     }
 
     @Update
@@ -151,7 +152,11 @@ interface AreaDao {
 
     @Transaction
     @Query("SELECT * FROM LayerDto")
-    fun getAllLayers(): Flow<List<LayerDto>>
+    fun getAllLayersFlow(): Flow<List<LayerDto>>
+
+    @Transaction
+    @Query("SELECT * FROM LayerDto")
+    suspend fun getAllLayers():List<LayerDto>
 
     @Transaction
     suspend fun upsertLayerList(layers: List<LayerDto>) {
@@ -263,7 +268,7 @@ interface AreaDao {
 
     @Transaction
     suspend fun upsertLayer(layer: Layer) : Layer {
-        val upsertedlayer = upsertLayer(layer = layer)
+        val upsertedlayer = upsertLayer(layerdto = layer.toLayerDto())
 
         return getLayerById(upsertedlayer.layerid)!!.toLayer()
     }

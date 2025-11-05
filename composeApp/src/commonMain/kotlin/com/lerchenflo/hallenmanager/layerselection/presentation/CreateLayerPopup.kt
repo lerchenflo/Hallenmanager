@@ -24,6 +24,7 @@ import hallenmanager.composeapp.generated.resources.add_item_titletext
 import hallenmanager.composeapp.generated.resources.iteminfo
 import hallenmanager.composeapp.generated.resources.name
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 fun CreateLayerPopup(
@@ -79,13 +80,19 @@ fun CreateLayerPopup(
         },
         confirmButton = {
             TextButton(onClick = {
+
+                val currentInstant = Clock.System.now().toEpochMilliseconds().toString()
+
                 onSave(Layer(
                     layerid = layer?.layerid ?: "",
                     name = title,
                     sortId = 0,
                     shown = true,
                     color = color.value.toLong(),
-                    serverId = networkConnectionId
+                    networkConnectionId = networkConnectionId,
+                    createdAt = currentInstant,
+                    lastchangedAt = currentInstant,
+                    lastchangedBy = "you"
                 ))
             }) {
                 Text("OK")

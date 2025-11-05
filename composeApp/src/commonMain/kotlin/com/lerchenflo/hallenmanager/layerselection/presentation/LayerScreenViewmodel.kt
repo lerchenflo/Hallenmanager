@@ -24,7 +24,7 @@ class LayerScreenViewmodel(
 
     init {
         viewModelScope.launch {
-            areaRepository.getAllLayers().collectLatest { layers ->
+            areaRepository.getAllLayersFlow().collectLatest { layers ->
 
                 if (state.availableLayers != layers){
                     state = state.copy(

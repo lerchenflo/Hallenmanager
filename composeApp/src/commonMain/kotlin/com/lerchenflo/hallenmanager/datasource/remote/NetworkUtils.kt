@@ -1,6 +1,7 @@
 package com.lerchenflo.hallenmanager.datasource.remote
 
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
@@ -340,7 +341,7 @@ class NetworkUtils(
 
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    println("Failed to parse area response: $responseText")
+                    println("Failed to parse item response: $responseText")
                     null
                 }
             }
@@ -440,9 +441,134 @@ class NetworkUtils(
 
 
 
-    suspend fun upsertLayer(layer: Layer) : Layer{
-        //TODO network
-        return layer
+
+    @Serializable
+    data class LayerRequest(
+        val layerid: String,
+        val name: String,
+        val sortId: Int,
+        val shown: Boolean,
+        val color: Long,
+    )
+
+    @Serializable
+    data class LayerResponse(
+        val layerid: String,
+        val name: String,
+        val sortId: Int,
+        val shown: Boolean,
+        val color: Long,
+        var createdAt: String,
+        var lastchangedAt: String,
+        var lastchangedBy: String,
+    )
+
+    suspend fun upsertLayer(layer: Layer, remoteServer: NetworkConnection) : Layer? {
+        val requesturl = remoteServer.serverUrl + "/layers"
+
+        val requestlayer = LayerRequest(
+            layerid = layer.layerid,
+            name = layer.name,
+            sortId = layer.sortId,
+            shown = layer.shown,
+            color = layer.color
+        )
+
+        println("Requestlayer: $requestlayer")
+
+        val request = networkRequest(
+            serverURL = requesturl,
+            requestMethod = HttpMethod.Post,
+            requestParams = mapOf(
+                "username" to remoteServer.userName
+            ),
+            body = requestlayer
+        )
+
+        return when (request) {
+            is NetworkResult.Error<*> -> {
+                println("Layer upsert network error")
+                null
+            }
+            is NetworkResult.Success<*> -> {
+                val responseText = request.data.toString()
+                try {
+                    val parsedResponse = Json.decodeFromString<LayerResponse>(responseText)
+
+                    layer.copy(
+                        layerid = parsedResponse.layerid,
+                        name = parsedResponse.name,
+                        sortId = parsedResponse.sortId,
+                        shown = parsedResponse.shown,
+                        color = parsedResponse.color,
+                        createdAt = parsedResponse.createdAt,
+                        lastchangedAt = parsedResponse.lastchangedAt,
+                        lastchangedBy = parsedResponse.lastchangedBy
+                    )
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    println("Failed to parse layer response: $responseText")
+                    null
+                }
+            }
+        }
+    }
+
+
+    suspend fun layerSync(networkConnections: List<NetworkConnection>, localLayers: List<Layer>): List<LayerDto> {
+        val allNewLayers = mutableListOf<LayerDto>()
+
+        networkConnections.forEach { networkConnection ->
+            // Get all timestamps for areas which are from this network connection
+            val localtimestamps = localLayers
+                .mapNotNull { layer ->
+                    if (layer.isRemoteLayer() && layer.networkConnectionId == networkConnection.id) {
+                        IdTimeStamp(
+                            id = layer.layerid,
+                            timeStamp = layer.lastchangedAt
+                        )
+                    } else null
+                }
+
+            val response = networkRequest(
+                serverURL = networkConnection.serverUrl + "/layers/sync",
+                requestMethod = HttpMethod.Post,
+                requestParams = mapOf("username" to networkConnection.userName),
+                body = localtimestamps
+            )
+
+            when (response) {
+                is NetworkResult.Error<*> -> {
+                    println("sync error")
+                }
+                is NetworkResult.Success<*> -> {
+                    try {
+                        val newlayers = Json.decodeFromString<List<LayerResponse>>(response.data.toString())
+
+                        newlayers.forEach { layerResponse ->
+                            allNewLayers.add(LayerDto(
+                                layerid = layerResponse.layerid,
+                                name = layerResponse.name,
+                                sortId = layerResponse.sortId,
+                                shown = layerResponse.shown,
+                                color = layerResponse.color,
+                                networkConnectionId = networkConnection.id,
+                                createdAt = layerResponse.createdAt,
+                                lastchangedAt = layerResponse.lastchangedAt,
+                                lastchangedBy = layerResponse.lastchangedBy
+                            ))
+                        }
+
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        println("Failed to parse sync response: ${response.data.toString()}")
+                    }
+                }
+            }
+        }
+
+        return allNewLayers
     }
 
 

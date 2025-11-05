@@ -81,7 +81,7 @@ class MainScreenViewmodel(
                 }
 
                 viewModelScope.launch {
-                    areaRepository.getAllLayers()
+                    areaRepository.getAllLayersFlow()
                         .flowOn(Dispatchers.IO)
                         .collectLatest { layers ->
                             state = state.copy(

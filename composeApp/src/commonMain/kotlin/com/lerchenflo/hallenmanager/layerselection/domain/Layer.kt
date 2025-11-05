@@ -9,12 +9,19 @@ data class Layer(
     val sortId: Int,
     val shown: Boolean,
     val color: Long,
-    var serverId: Long?
+    var createdAt: String,
+    var lastchangedAt: String,
+    var lastchangedBy: String,
+    var networkConnectionId: Long?
 
 ){
     fun getColor(): Color {
         //println("Layercolor: ${Color(color.toULong())}")
         return Color(color.toULong())
+    }
+
+    fun isRemoteLayer() : Boolean {
+        return networkConnectionId != null
     }
 }
 
@@ -25,7 +32,10 @@ fun Layer.toLayerDto(): LayerDto = LayerDto(
     sortId = sortId,
     shown = shown,
     color = color,
-    serverId = serverId
+    networkConnectionId = networkConnectionId,
+    createdAt = createdAt,
+    lastchangedAt = lastchangedAt,
+    lastchangedBy = lastchangedBy
 )
 
 fun LayerDto.toLayer(): Layer = Layer(
@@ -34,5 +44,8 @@ fun LayerDto.toLayer(): Layer = Layer(
     sortId = sortId,
     shown = shown,
     color = color,
-    serverId = serverId
+    networkConnectionId = networkConnectionId,
+    createdAt = createdAt,
+    lastchangedAt = lastchangedAt,
+    lastchangedBy = lastchangedBy
 )
