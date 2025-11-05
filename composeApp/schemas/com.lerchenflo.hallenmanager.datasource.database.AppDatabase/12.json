@@ -1,8 +1,8 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 11,
-    "identityHash": "80bad8136338ae0895a6aa2bbcd53056",
+    "version": 12,
+    "identityHash": "fb4c9a86cc6254e3dd0278ff3cd726f7",
     "entities": [
       {
         "tableName": "areas",
@@ -170,7 +170,7 @@
       },
       {
         "tableName": "LayerDto",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`layerid` TEXT NOT NULL, `name` TEXT NOT NULL, `sortId` INTEGER NOT NULL, `shown` INTEGER NOT NULL, `color` INTEGER NOT NULL, `layerIds` TEXT NOT NULL, `networkConnectionId` INTEGER, `createdAt` TEXT NOT NULL, `lastchangedAt` TEXT NOT NULL, `lastchangedBy` TEXT NOT NULL, PRIMARY KEY(`layerid`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`layerid` TEXT NOT NULL, `name` TEXT NOT NULL, `sortId` INTEGER NOT NULL, `shown` INTEGER NOT NULL, `color` INTEGER NOT NULL, `networkConnectionId` INTEGER, `createdAt` TEXT NOT NULL, `lastchangedAt` TEXT NOT NULL, `lastchangedBy` TEXT NOT NULL, PRIMARY KEY(`layerid`))",
         "fields": [
           {
             "fieldPath": "layerid",
@@ -203,12 +203,6 @@
             "notNull": true
           },
           {
-            "fieldPath": "layerIds",
-            "columnName": "layerIds",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
             "fieldPath": "networkConnectionId",
             "columnName": "networkConnectionId",
             "affinity": "INTEGER"
@@ -238,6 +232,51 @@
             "layerid"
           ]
         }
+      },
+      {
+        "tableName": "ItemLayerCrossRef",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemid` TEXT NOT NULL, `layerid` TEXT NOT NULL, PRIMARY KEY(`itemid`, `layerid`))",
+        "fields": [
+          {
+            "fieldPath": "itemid",
+            "columnName": "itemid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "layerid",
+            "columnName": "layerid",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "itemid",
+            "layerid"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ItemLayerCrossRef_itemid",
+            "unique": false,
+            "columnNames": [
+              "itemid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ItemLayerCrossRef_itemid` ON `${TABLE_NAME}` (`itemid`)"
+          },
+          {
+            "name": "index_ItemLayerCrossRef_layerid",
+            "unique": false,
+            "columnNames": [
+              "layerid"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ItemLayerCrossRef_layerid` ON `${TABLE_NAME}` (`layerid`)"
+          }
+        ]
       },
       {
         "tableName": "NetworkConnection",
@@ -278,7 +317,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '80bad8136338ae0895a6aa2bbcd53056')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fb4c9a86cc6254e3dd0278ff3cd726f7')"
     ]
   }
 }

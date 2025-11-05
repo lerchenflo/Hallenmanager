@@ -7,6 +7,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
+import com.lerchenflo.hallenmanager.layerselection.data.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
@@ -217,6 +218,14 @@ interface AreaDao {
 
 
 
+    @Insert
+    suspend fun insertItemLayerCrossRef(crossRef: ItemLayerCrossRef)
+
+    @Query("DELETE FROM ItemLayerCrossRef WHERE itemid = :itemId")
+    suspend fun deleteLayersForItem(itemId: String)
+
+    @Query("SELECT * FROM ItemLayerCrossRef WHERE itemid = :itemId")
+    suspend fun getLayerCrossRefsForItem(itemId: String): List<ItemLayerCrossRef>
 
 
 
@@ -249,7 +258,6 @@ interface AreaDao {
         // Upsert the item first
         val updatedItem = upsertItem(item.item)
 
-
         val itemid = if (item.item.itemid == "") updatedItem.itemid else item.item.itemid
 
         // Delete and re-insert corner points
@@ -260,6 +268,24 @@ interface AreaDao {
                 cp.copy(itemId = itemid)
             }
             upsertCornerPoints(pointsWithIds)
+        }
+
+        deleteLayersForItem(itemid)
+        if (item.layers.isNotEmpty()) {
+            // First ensure all layers exist in the database
+            item.layers.forEach { layer ->
+                upsertLayer(layer)
+            }
+
+            // Then create the cross-references
+            item.layers.forEach { layer ->
+                insertItemLayerCrossRef(
+                    ItemLayerCrossRef(
+                        itemid = itemid,
+                        layerid = layer.layerid
+                    )
+                )
+            }
         }
 
         return getItemWithListsById(updatedItem.itemid)!!

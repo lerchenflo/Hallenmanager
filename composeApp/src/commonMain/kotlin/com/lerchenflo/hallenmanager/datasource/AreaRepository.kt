@@ -226,11 +226,15 @@ class AreaRepository(
         val itemandcornersync = networkUtils.itemSync(localConnections, localItems)
         println("Upserted new items from sync: ${itemandcornersync.first.count()}")
         println("Upserted new Cornerpoints from sync: ${itemandcornersync.second.count()}")
+        println("Upserted new LayerCrossRefs from sync: ${itemandcornersync.third.count()}")
 
         itemandcornersync.first.forEach { itemDto ->
             database.areaDao().upsertItem(itemDto)
         }
         database.areaDao().upsertCornerPoints(itemandcornersync.second)
+        itemandcornersync.third.forEach { crossRef ->
+            database.areaDao().insertItemLayerCrossRef(crossRef)
+        }
 
         val newlayers = networkUtils.layerSync(localConnections, localLayers)
         newlayers.forEach { layerDto ->

@@ -1,6 +1,7 @@
 package com.lerchenflo.hallenmanager.datasource.remote
 
 import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.layerselection.data.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
@@ -353,11 +354,12 @@ class NetworkUtils(
     suspend fun itemSync(
         networkConnections: List<NetworkConnection>,
         localItems: List<Item>
-    ): Pair<List<ItemDto>, List<CornerPointDto>> = supervisorScope {
+    ): Triple<List<ItemDto>, List<CornerPointDto>, List<ItemLayerCrossRef>> = supervisorScope {
         val deferredResults = networkConnections.map { networkConnection ->
             async {
                 val itemsForThisConnection = mutableListOf<ItemDto>()
                 val cornerPointsForThisConnection = mutableListOf<CornerPointDto>()
+                val crossRefs = mutableListOf<ItemLayerCrossRef>()
 
                 // Build timestamps for this connection
                 val localtimestamps = localItems
@@ -412,6 +414,15 @@ class NetworkUtils(
                                             )
                                         )
                                     }
+
+                                    itemRequest.layers.forEach { layerid ->
+                                        crossRefs.add(
+                                            ItemLayerCrossRef(
+                                                itemid = itemRequest.itemid,
+                                                layerid = layerid
+                                            )
+                                        )
+                                    }
                                 }
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -425,7 +436,7 @@ class NetworkUtils(
                     println("Unexpected error syncing ${networkConnection.id}: ${e.message}")
                 }
 
-                Pair(itemsForThisConnection, cornerPointsForThisConnection)
+                Triple(itemsForThisConnection, cornerPointsForThisConnection, crossRefs)
             }
         }
 
@@ -434,8 +445,9 @@ class NetworkUtils(
 
         val allNewItems = results.flatMap { it.first }
         val allNewCornerpoints = results.flatMap { it.second }
+        val allNewCrossRefs = results.flatMap { it.third }
 
-        Pair(allNewItems, allNewCornerpoints)
+        Triple(allNewItems, allNewCornerpoints, allNewCrossRefs)
     }
 
 

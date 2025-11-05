@@ -1,8 +1,10 @@
 package com.lerchenflo.hallenmanager.mainscreen.data.relations
 
 import androidx.room.Embedded
+import androidx.room.Ignore
 import androidx.room.Junction
 import androidx.room.Relation
+import com.lerchenflo.hallenmanager.layerselection.data.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
@@ -18,9 +20,9 @@ data class ItemWithListsDto(
     val cornerPoints: List<CornerPointDto>,
 
     @Relation(
-    //TODO fix this to resolve from list of strings
         parentColumn = "itemid",
         entityColumn = "layerid",
+        associateBy = Junction(ItemLayerCrossRef::class)
     )
     val layers: List<LayerDto>
 )
