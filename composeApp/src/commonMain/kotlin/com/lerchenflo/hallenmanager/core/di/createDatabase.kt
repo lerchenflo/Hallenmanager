@@ -2,7 +2,7 @@ package com.lerchenflo.hallenmanager.core.di
 
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.lerchenflo.hallenmanager.data.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.local.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 

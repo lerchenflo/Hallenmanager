@@ -8,7 +8,11 @@
     <string name="desc">Description</string>
     <string name="area_not_created">No area created</string>
     <string name="create_first_area">Create your first area!</string>
+    <string name="connect_to_server">Connect to a server!</string>
+
     <string name="add_area">Create area</string>
+    <string name="add_remote_area">Create remote area</string>
+
     <string name="layers">Layers</string>
     <string name="done">Done</string>
     <string name="use_custom_color">Use custom color</string>
@@ -21,6 +25,14 @@
     <string name="hide_shortaccess_menu">Hide access menu</string>
 
 
+    <string name="add_connection_title">Add server</string>
+    <string name="add_connection_subtext">Add a new server to sync areas</string>
+    <string name="serverurl">Serverurl</string>
+    <string name="serverurl_placeholder">http://192.168.0.10:8080</string>
+    <string name="connection_username">Your name</string>
+    <string name="connection_alias">Alias for this connection</string>
+
+    <string name="connection_selection">Select remote server</string>
 
 
 

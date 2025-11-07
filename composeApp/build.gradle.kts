@@ -32,6 +32,10 @@ kotlin {
     }
     
     jvm()
+
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
     
     sourceSets {
         androidMain.dependencies {
@@ -40,6 +44,9 @@ kotlin {
 
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
+
+            implementation(libs.ktor.client.okhttp)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -78,13 +85,24 @@ kotlin {
             //Reordable Column
             implementation(libs.reorderable)
 
+            //Internet
+            implementation(libs.bundles.ktor)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        nativeMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+
+            implementation(libs.ktor.client.okhttp)
+
+
         }
     }
 }
@@ -135,6 +153,12 @@ compose.desktop {
 
 room{
     schemaDirectory("$projectDir/schemas")
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+    }
 }
 
 dependencies{
