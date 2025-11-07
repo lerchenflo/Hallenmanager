@@ -1,10 +1,9 @@
-package com.lerchenflo.hallenmanager.datasource.database
+package com.lerchenflo.hallenmanager.datasource.local
 
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
-import androidx.room.TypeConverters
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.layerselection.data.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto

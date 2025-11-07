@@ -1,4 +1,4 @@
-package com.lerchenflo.hallenmanager.datasource.database
+package com.lerchenflo.hallenmanager.datasource.local
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -39,6 +39,9 @@ interface AreaDao {
 
     @Insert
     suspend fun insertAreaDto(area: AreaDto)
+
+    @Query("DELETE FROM AREAS WHERE id = :areaid")
+    suspend fun deleteAreaDtoById(areaid: String)
 
 
     @Query("SELECT COUNT(*) FROM areas")
@@ -138,6 +141,9 @@ interface AreaDao {
 
     @Insert
     suspend fun insertLayerDto(layer: LayerDto)
+
+    @Query("DELETE FROM layerdto WHERE layerid = :layerid")
+    suspend fun deleteLayerById(layerid: String)
 
     @Query("SELECT * FROM LayerDto WHERE layerid = :id LIMIT 1")
     suspend fun getLayerById(id: String): LayerDto?
@@ -295,9 +301,21 @@ interface AreaDao {
     @Transaction
     suspend fun upsertLayer(layer: Layer) : Layer {
         val upsertedlayer = upsertLayer(layerdto = layer.toLayerDto())
-
         return getLayerById(upsertedlayer.layerid)!!.toLayer()
     }
 
+
+    @Transaction
+    suspend fun deleteItemById(itemId: String) {
+        // Delete related data first (foreign key constraints)
+        deleteCornerPointsForItem(itemId)
+        deleteLayersForItem(itemId)
+
+        // Delete the item itself
+        deleteItemDtoById(itemId)
+    }
+
+    @Query("DELETE FROM itemdto WHERE itemid = :itemId")
+    suspend fun deleteItemDtoById(itemId: String)
 
 }

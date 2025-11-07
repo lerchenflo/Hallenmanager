@@ -2,7 +2,7 @@ package com.lerchenflo.hallenmanager.core.di
 
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
 import com.lerchenflo.hallenmanager.core.navigation.Route
-import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.local.AppDatabase
 import com.lerchenflo.hallenmanager.datasource.AreaRepository
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkUtils
 import com.lerchenflo.hallenmanager.mainscreen.presentation.MainScreenViewmodel

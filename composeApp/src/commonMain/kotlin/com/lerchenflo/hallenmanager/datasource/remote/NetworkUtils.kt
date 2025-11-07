@@ -1,13 +1,12 @@
 package com.lerchenflo.hallenmanager.datasource.remote
 
-import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.local.AppDatabase
 import com.lerchenflo.hallenmanager.layerselection.data.ItemLayerCrossRef
 import com.lerchenflo.hallenmanager.layerselection.data.LayerDto
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.mainscreen.data.AreaDto
 import com.lerchenflo.hallenmanager.mainscreen.data.CornerPointDto
 import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
-import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.mainscreen.domain.Item
 import com.lerchenflo.hallenmanager.mainscreen.domain.toItemDto
@@ -139,6 +138,7 @@ class NetworkUtils(
         var lastchangedBy: String,
     )
 
+
     /**
      * Upserts an area to the selected networkconnection and returns the areaid
      */
@@ -189,8 +189,19 @@ class NetworkUtils(
     )
 
 
-    suspend fun areaSync(networkConnections: List<NetworkConnection>, localAreas: List<Area>): List<AreaDto> {
+    @Serializable
+    data class AreaSyncResponse(
+        val updated: List<AreaResponse>,
+        val deleted: List<String> // IDs that were deleted
+    )
+
+    /**
+     * Syncs the local areas with the remote server areas
+     * @return a list with new Areas, and a list with areas to delete
+     */
+    suspend fun areaSync(networkConnections: List<NetworkConnection>, localAreas: List<Area>): Pair<List<AreaDto>, List<String>> {
         val allNewAreas = mutableListOf<AreaDto>()
+        val allDeletedAreas = mutableListOf<String>()
 
         networkConnections.forEach { networkConnection ->
             // Get all timestamps for areas which are from this network connection
@@ -217,9 +228,9 @@ class NetworkUtils(
                 }
                 is NetworkResult.Success<*> -> {
                     try {
-                        val newareas = Json.decodeFromString<List<AreaResponse>>(response.data.toString())
+                        val newareas = Json.decodeFromString<AreaSyncResponse>(response.data.toString())
 
-                        newareas.forEach { areaResponse ->
+                        newareas.updated.forEach { areaResponse ->
                             allNewAreas.add(AreaDto(
                                 id = areaResponse.id,
                                 name = areaResponse.name,
@@ -231,6 +242,8 @@ class NetworkUtils(
                             ))
                         }
 
+                        allDeletedAreas.addAll(newareas.deleted)
+
                     } catch (e: Exception) {
                         e.printStackTrace()
                         println("Failed to parse sync response: ${response.data.toString()}")
@@ -239,7 +252,7 @@ class NetworkUtils(
             }
         }
 
-        return allNewAreas
+        return Pair(allNewAreas, allDeletedAreas)
     }
 
 
@@ -350,11 +363,17 @@ class NetworkUtils(
     }
 
 
+    @Serializable
+    data class ItemSyncResponse(
+        val updated: List<ItemResponse>,
+        val deleted: List<String>
+    )
 
     suspend fun itemSync(
         networkConnections: List<NetworkConnection>,
         localItems: List<Item>
-    ): Triple<List<ItemDto>, List<CornerPointDto>, List<ItemLayerCrossRef>> = supervisorScope {
+    ): Pair<Triple<List<ItemDto>, List<CornerPointDto>, List<ItemLayerCrossRef>>, List<String>> = supervisorScope {
+        val deletedItems = mutableListOf<String>()
         val deferredResults = networkConnections.map { networkConnection ->
             async {
                 val itemsForThisConnection = mutableListOf<ItemDto>()
@@ -385,9 +404,9 @@ class NetworkUtils(
                         }
                         is NetworkResult.Success<*> -> {
                             try {
-                                val newitems = Json.decodeFromString<List<ItemResponse>>(response.data.toString())
+                                val newitems = Json.decodeFromString<ItemSyncResponse>(response.data.toString())
 
-                                newitems.forEach { itemRequest ->
+                                newitems.updated.forEach { itemRequest ->
                                     itemsForThisConnection.add(
                                         ItemDto(
                                             itemid = itemRequest.itemid,
@@ -424,6 +443,8 @@ class NetworkUtils(
                                         )
                                     }
                                 }
+
+                                deletedItems.addAll(newitems.deleted)
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 println("Failed to parse sync response for ${networkConnection.id}: ${response.data}")
@@ -436,18 +457,19 @@ class NetworkUtils(
                     println("Unexpected error syncing ${networkConnection.id}: ${e.message}")
                 }
 
-                Triple(itemsForThisConnection, cornerPointsForThisConnection, crossRefs)
+                Pair(Triple(itemsForThisConnection, cornerPointsForThisConnection, crossRefs), deletedItems)
             }
         }
 
         // Await all deferred results concurrently
         val results = deferredResults.awaitAll()
 
-        val allNewItems = results.flatMap { it.first }
-        val allNewCornerpoints = results.flatMap { it.second }
-        val allNewCrossRefs = results.flatMap { it.third }
+        val allNewItems = results.flatMap { it.first.first }
+        val allNewCornerpoints = results.flatMap { it.first.second }
+        val allNewCrossRefs = results.flatMap { it.first.third }
+        val alldeletedItems = results.flatMap { it.second }
 
-        Triple(allNewItems, allNewCornerpoints, allNewCrossRefs)
+        Pair(Triple(allNewItems, allNewCornerpoints, allNewCrossRefs), alldeletedItems)
     }
 
 
@@ -528,8 +550,16 @@ class NetworkUtils(
     }
 
 
-    suspend fun layerSync(networkConnections: List<NetworkConnection>, localLayers: List<Layer>): List<LayerDto> {
+    @Serializable
+    data class LayerSyncResponse(
+        val updated: List<LayerResponse>,
+        val deleted: List<String> // IDs that were deleted
+    )
+
+    suspend fun layerSync(networkConnections: List<NetworkConnection>, localLayers: List<Layer>): Pair<List<LayerDto>, List<String>> {
         val allNewLayers = mutableListOf<LayerDto>()
+        val allDeletedLayers = mutableListOf<String>()
+
 
         networkConnections.forEach { networkConnection ->
             // Get all timestamps for areas which are from this network connection
@@ -556,9 +586,9 @@ class NetworkUtils(
                 }
                 is NetworkResult.Success<*> -> {
                     try {
-                        val newlayers = Json.decodeFromString<List<LayerResponse>>(response.data.toString())
+                        val newlayers = Json.decodeFromString<LayerSyncResponse>(response.data.toString())
 
-                        newlayers.forEach { layerResponse ->
+                        newlayers.updated.forEach { layerResponse ->
                             allNewLayers.add(LayerDto(
                                 layerid = layerResponse.layerid,
                                 name = layerResponse.name,
@@ -572,6 +602,8 @@ class NetworkUtils(
                             ))
                         }
 
+                        allDeletedLayers.addAll(newlayers.deleted)
+
                     } catch (e: Exception) {
                         e.printStackTrace()
                         println("Failed to parse sync response: ${response.data.toString()}")
@@ -580,7 +612,7 @@ class NetworkUtils(
             }
         }
 
-        return allNewLayers
+        return Pair(allNewLayers, allDeletedLayers)
     }
 
 

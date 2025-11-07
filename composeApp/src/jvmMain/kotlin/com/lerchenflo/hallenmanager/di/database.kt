@@ -2,7 +2,7 @@ package com.lerchenflo.hallenmanager.di
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.local.AppDatabase
 import org.koin.dsl.module
 import java.io.File
 

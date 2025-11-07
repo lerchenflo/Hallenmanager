@@ -1,11 +1,10 @@
 package com.lerchenflo.hallenmanager.datasource
 
-import com.lerchenflo.hallenmanager.datasource.database.AppDatabase
+import com.lerchenflo.hallenmanager.datasource.local.AppDatabase
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkUtils
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.layerselection.domain.toLayer
-import com.lerchenflo.hallenmanager.layerselection.domain.toLayerDto
 import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemWithListsDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.mainscreen.domain.Item
@@ -215,31 +214,51 @@ class AreaRepository(
             .map { it.toLayer() }
             .filter { it.isRemoteLayer() }
 
-        val newareas = networkUtils.areaSync(localConnections, localAreas)
-        newareas.forEach { area ->
+        val arearesponse = networkUtils.areaSync(localConnections, localAreas)
+        arearesponse.first.forEach { area ->
             database.areaDao().upsertAreaDto(area)
         }
+        //Delete areas
+        arearesponse.second.forEach { areaid ->
+            database.areaDao().deleteAreaDtoById(areaid)
+        }
 
 
 
-        println("Local item count: ${localItems.count()}")
+
         val itemandcornersync = networkUtils.itemSync(localConnections, localItems)
-        println("Upserted new items from sync: ${itemandcornersync.first.count()}")
-        println("Upserted new Cornerpoints from sync: ${itemandcornersync.second.count()}")
-        println("Upserted new LayerCrossRefs from sync: ${itemandcornersync.third.count()}")
-
-        itemandcornersync.first.forEach { itemDto ->
+        itemandcornersync.first.first.forEach { itemDto ->
             database.areaDao().upsertItem(itemDto)
         }
-        database.areaDao().upsertCornerPoints(itemandcornersync.second)
-        itemandcornersync.third.forEach { crossRef ->
+        database.areaDao().upsertCornerPoints(itemandcornersync.first.second)
+        itemandcornersync.first.third.forEach { crossRef ->
             database.areaDao().insertItemLayerCrossRef(crossRef)
         }
 
+        //Delete items
+        itemandcornersync.second.forEach { itemid ->
+            database.areaDao().deleteItemById(itemid)
+        }
+
+
         val newlayers = networkUtils.layerSync(localConnections, localLayers)
-        newlayers.forEach { layerDto ->
+        newlayers.first.forEach { layerDto ->
             database.areaDao().upsertLayer(layerdto = layerDto)
         }
 
+        newlayers.second.forEach { layerid ->
+            database.areaDao().deleteLayerById(layerid)
+        }
+        println("Local item count: ${localItems.count()}")
+        println("Local Area count: ${localAreas.count()}")
+        println("Local Layer count: ${localLayers.count()}")
+
+        println("Upserted new items from sync: ${itemandcornersync.first.first.count()}")
+        println("Upserted new areas from sync: ${arearesponse.first.count()}")
+        println("Upserted new layers from sync: ${newlayers.first.count()}")
+
+        println("DELETING AREAS: ${arearesponse.second.count()}")
+        println("DELETING LAYERS: ${newlayers.second.count()}")
+        println("DELETING ITEMS: ${itemandcornersync.second.count()}")
     }
 }
