@@ -2,6 +2,7 @@
 
 package com.lerchenflo.hallenmanager.mainscreen.presentation
 
+import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -32,6 +35,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkUtils
@@ -80,6 +85,23 @@ fun AddConnectionPopup(
     val networkUtils: NetworkUtils = koinInject<NetworkUtils>()
     var checkStatus by remember { mutableStateOf<CheckStatus>(CheckStatus.Idle) }
 
+    val testServer: () -> Unit = {
+        if (checkStatus != CheckStatus.Loading){
+            checkStatus = CheckStatus.Loading
+            coroutinescope.launch {
+                if (!serverurl.startsWith("http://")){
+                    serverurl = serverurl.prependIndent("https://") //Default https
+                }
+
+                val success = networkUtils.testServer(serverurl)
+
+                checkStatus = if (success){
+                    CheckStatus.Success
+                } else CheckStatus.Error
+            }
+        }
+    }
+
     AlertDialog(
         title = {
             Text(text = stringResource(Res.string.add_connection_title))
@@ -114,22 +136,22 @@ fun AddConnectionPopup(
                         },
                         modifier = Modifier.weight(1f),
                         isError = (checkStatus == CheckStatus.Error),
-                    )
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Uri,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                testServer()
+                            }
+                        )
+                        )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
                     IconButton(
                         onClick = {
-                            if (checkStatus != CheckStatus.Loading){
-                                checkStatus = CheckStatus.Loading
-                                coroutinescope.launch {
-                                    val success = networkUtils.testServer(serverurl)
-
-                                    checkStatus = if (success){
-                                        CheckStatus.Success
-                                    } else CheckStatus.Error
-                                }
-                            }
+                            testServer()
                         }
                     ) {
 
