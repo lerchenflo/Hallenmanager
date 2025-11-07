@@ -2,6 +2,8 @@ package com.lerchenflo.hallenmanager.datasource.local
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy.Companion.IGNORE
+import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -37,7 +39,7 @@ interface AreaDao {
     @Update
     suspend fun updateAreaDto(area: AreaDto)
 
-    @Insert
+    @Insert(onConflict = REPLACE)
     suspend fun insertAreaDto(area: AreaDto)
 
     @Query("DELETE FROM AREAS WHERE id = :areaid")
@@ -94,7 +96,7 @@ interface AreaDao {
     suspend fun getItemById(itemId: String): ItemDto?
     @Update
     suspend fun updateItem(item: ItemDto)
-    @Insert
+    @Insert(onConflict = REPLACE)
     suspend fun insertItem(item: ItemDto)
 
 
@@ -139,7 +141,7 @@ interface AreaDao {
     @Update
     suspend fun updateLayerDto(layer: LayerDto)
 
-    @Insert
+    @Insert(onConflict = REPLACE)
     suspend fun insertLayerDto(layer: LayerDto)
 
     @Query("DELETE FROM layerdto WHERE layerid = :layerid")
@@ -211,7 +213,7 @@ interface AreaDao {
     suspend fun getCornerPointById(id: String): CornerPointDto?
     @Update
     suspend fun updateCornerPoint(cornerPointDto: CornerPointDto)
-    @Insert
+    @Insert(onConflict = REPLACE)
     suspend fun insertCornerPoint(cornerPointDto: CornerPointDto)
 
     @Transaction
@@ -224,7 +226,7 @@ interface AreaDao {
 
 
 
-    @Insert
+    @Insert(onConflict = IGNORE)
     suspend fun insertItemLayerCrossRef(crossRef: ItemLayerCrossRef)
 
     @Query("DELETE FROM ItemLayerCrossRef WHERE itemid = :itemId")
