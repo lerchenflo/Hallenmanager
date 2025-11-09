@@ -35,7 +35,6 @@ import kotlinx.serialization.json.Json
 
 class NetworkUtils(
     val httpClient: HttpClient,
-    val database: AppDatabase
 ) {
     private suspend fun networkRequest(
         serverURL: String,
@@ -117,6 +116,39 @@ class NetworkUtils(
                 request.data.toString() == "server found"
             }
         }
+    }
+
+    suspend fun getLatestChangeTime(networkConnections: List<NetworkConnection>): Long? {
+        var latestTime: Long? = null
+
+        networkConnections.forEach { networkConnection ->
+            val requesturl = networkConnection.serverUrl + "/latestchange"
+
+            val request = networkRequest(
+                serverURL = requesturl,
+                requestMethod = HttpMethod.Get,
+            )
+
+            when (request) {
+                is NetworkResult.Error<*> -> {
+                    println("Error getting latest change time from ${networkConnection.serverUrl}: ${request.error}")
+                }
+
+                is NetworkResult.Success<*> -> {
+                    try {
+                        val timeMillis = request.data.toString().toLong()
+                        if (latestTime == null || timeMillis > latestTime) {
+                            latestTime = timeMillis
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        println("Failed to parse latest change time: ${request.data}")
+                    }
+                }
+            }
+        }
+
+        return latestTime
     }
 
 
@@ -340,7 +372,7 @@ class NetworkUtils(
                     item.copy(
                         itemid = parsedResponse.itemid,
                         createdAt = parsedResponse.createdAt,
-                        lastchangedAt = parsedResponse.lastchangedBy,
+                        lastchangedAt = parsedResponse.lastchangedAt,
                         lastchangedBy = parsedResponse.lastchangedBy,
                         cornerPoints = parsedResponse.cornerPoints.map {
                             CornerPointDto(

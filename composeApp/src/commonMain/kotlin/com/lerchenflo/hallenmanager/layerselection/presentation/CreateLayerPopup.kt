@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import com.lerchenflo.hallenmanager.layerselection.domain.Layer
 import com.lerchenflo.hallenmanager.sharedUi.ColorPicker
 import hallenmanager.composeapp.generated.resources.Res
-import hallenmanager.composeapp.generated.resources.add_item_titletext
-import hallenmanager.composeapp.generated.resources.iteminfo
+import hallenmanager.composeapp.generated.resources.add_layer_titletext
+import hallenmanager.composeapp.generated.resources.layerinfo
 import hallenmanager.composeapp.generated.resources.name
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
@@ -44,12 +44,12 @@ fun CreateLayerPopup(
 
     AlertDialog(
         title = {
-            Text(text = stringResource(Res.string.iteminfo))
+            Text(text = stringResource(Res.string.layerinfo))
         },
         text = {
             Column {
                 Text(
-                    text = stringResource(Res.string.add_item_titletext),
+                    text = stringResource(Res.string.add_layer_titletext),
                     style = MaterialTheme.typography.bodyMedium
                 )
 

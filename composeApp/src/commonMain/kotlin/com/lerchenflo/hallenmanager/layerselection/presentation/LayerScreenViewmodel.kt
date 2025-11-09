@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
-import com.lerchenflo.hallenmanager.datasource.AreaRepository
+import com.lerchenflo.hallenmanager.datasource.AppRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class LayerScreenViewmodel(
-    private val areaRepository: AreaRepository,
+    private val appRepository: AppRepository,
     private val navigator: Navigator
 ): ViewModel() {
 
@@ -24,7 +24,11 @@ class LayerScreenViewmodel(
 
     init {
         viewModelScope.launch {
-            areaRepository.getAllLayersFlow().collectLatest { layers ->
+            appRepository.getAllLayersFlow().collectLatest {
+                val layers = it.filter { layer ->
+                    layer.networkConnectionId == state.selectedArea.networkConnectionId //Only show layers for the current area (If synced and where synced)
+                }
+
 
                 if (state.availableLayers != layers){
                     state = state.copy(
@@ -60,7 +64,7 @@ class LayerScreenViewmodel(
             is LayerScreenAction.OnCreateLayerSave -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
-                        areaRepository.upsertLayer(action.layer)
+                        appRepository.upsertLayer(action.layer)
 
                         state = state.copy(
                             addlayerpopupshown = false,
@@ -85,14 +89,14 @@ class LayerScreenViewmodel(
 
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
-                        areaRepository.upsertLayerList(action.layers)
+                        appRepository.upsertLayerList(action.layers)
                     }
                 }
             }
 
             is LayerScreenAction.OnLayerVisibilityChange -> {
                 viewModelScope.launch {
-                    areaRepository.upsertLayer(action.layer.copy(
+                    appRepository.upsertLayer(action.layer.copy(
                         shown = action.visible
                     ))
                 }
@@ -100,7 +104,7 @@ class LayerScreenViewmodel(
 
             is LayerScreenAction.OnSelectArea -> {
                 viewModelScope.launch {
-                    val area = areaRepository.getAreaById(action.areaid)
+                    val area = appRepository.getAreaById(action.areaid)
 
                     state = state.copy(
                         selectedArea = area!!

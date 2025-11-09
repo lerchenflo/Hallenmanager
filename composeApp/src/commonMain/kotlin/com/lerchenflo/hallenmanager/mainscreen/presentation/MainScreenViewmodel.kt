@@ -8,9 +8,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lerchenflo.hallenmanager.core.navigation.Navigator
-import com.lerchenflo.hallenmanager.core.navigation.Route
 import com.lerchenflo.hallenmanager.core.navigation.Route.*
-import com.lerchenflo.hallenmanager.datasource.AreaRepository
+import com.lerchenflo.hallenmanager.datasource.AppRepository
 import com.lerchenflo.hallenmanager.datasource.remote.NetworkConnection
 import com.lerchenflo.hallenmanager.mainscreen.domain.Area
 import com.lerchenflo.hallenmanager.util.snapToGrid
@@ -21,9 +20,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -36,7 +35,7 @@ import kotlin.collections.filter
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainScreenViewmodel(
-    private val areaRepository: AreaRepository,
+    private val appRepository: AppRepository,
     private val navigator: Navigator
 ): ViewModel() {
 
@@ -57,7 +56,15 @@ class MainScreenViewmodel(
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
-            areaRepository.syncNetworkElements()
+            appRepository.syncNetworkElements(true)
+
+            appRepository.observeTimestamps(this)
+
+            while (true) {
+
+                appRepository.syncNetworkElements()
+                delay(10000)
+            }
         }
 
 
@@ -72,7 +79,7 @@ class MainScreenViewmodel(
                 viewModelScope.launch {
                     _selectedAreaId
                         .filter { it != "" }
-                        .flatMapLatest { id -> areaRepository.getAreaByIdFlow(id) }
+                        .flatMapLatest { id -> appRepository.getAreaByIdFlow(id) }
                         .flowOn(Dispatchers.IO)
                         .collectLatest { area ->
                             _currentArea.value = area
@@ -81,8 +88,14 @@ class MainScreenViewmodel(
                 }
 
                 viewModelScope.launch {
-                    areaRepository.getAllLayersFlow()
+                    appRepository.getAllLayersFlow()
+                        .combine(_currentArea) { layers, currentArea -> //Combine with currentarea that the layers get updated when the area changes
+                            layers.filter { layer ->
+                                layer.networkConnectionId == currentArea?.networkConnectionId
+                            }
+                        }
                         .flowOn(Dispatchers.IO)
+                        .distinctUntilChanged()
                         .collectLatest { layers ->
                             state = state.copy(
                                 availableLayers = layers
@@ -92,7 +105,7 @@ class MainScreenViewmodel(
 
                 //Available areas dropdown
                 viewModelScope.launch {
-                    areaRepository.getAreas()
+                    appRepository.getAreas()
                         .map { areas ->
                             areas.map {
                                 AvailableArea(
@@ -114,7 +127,7 @@ class MainScreenViewmodel(
 
                 //Item search
                 viewModelScope.launch {
-                    areaRepository.getAllItems()
+                    appRepository.getAllItems()
                         .combine(_searchterm.asStateFlow()) { items, searchTerm ->
                             if (searchTerm.isBlank()) {
                                 emptyList()
@@ -143,7 +156,7 @@ class MainScreenViewmodel(
                 }
 
                 viewModelScope.launch {
-                    areaRepository.getShortAccessItemsFlow()
+                    appRepository.getShortAccessItemsFlow()
                         .collectLatest {
                             state = state.copy(
                                 shortAccessItems = it
@@ -152,7 +165,7 @@ class MainScreenViewmodel(
                 }
 
                 viewModelScope.launch {
-                    areaRepository.getAllNetworkConnectionsFlow()
+                    appRepository.getAllNetworkConnectionsFlow()
                         .collectLatest {
                             state = state.copy(
                                 availableConnections = it
@@ -167,7 +180,7 @@ class MainScreenViewmodel(
 
     private fun loadDefaultArea(){
         CoroutineScope(Dispatchers.IO).launch {
-            val defaultarea = areaRepository.getFirstArea()
+            val defaultarea = appRepository.getFirstArea()
 
             state = state.copy(
                 currentArea = defaultarea
@@ -236,7 +249,7 @@ class MainScreenViewmodel(
                 state.currentArea.let { area ->
                     if (area != null) {
                         CoroutineScope(Dispatchers.IO).launch {
-                            areaRepository.upsertItem(action.item)
+                            appRepository.upsertItem(action.item)
                         }
                     }
                 }
@@ -245,7 +258,7 @@ class MainScreenViewmodel(
             is OnSelectArea -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val area = areaRepository.getAreaById(action.areaid)
+                        val area = appRepository.getAreaById(action.areaid)
 
                         state = state.copy(
                             currentArea = area
@@ -259,7 +272,7 @@ class MainScreenViewmodel(
             is OnAreaDialogSave -> {
                 viewModelScope.launch {
                     CoroutineScope(Dispatchers.IO).launch {
-                        val currentarea = areaRepository.upsertArea(action.area)
+                        val currentarea = appRepository.upsertArea(action.area)
 
                         state = state.copy(
                             currentArea = currentarea,
@@ -388,7 +401,7 @@ class MainScreenViewmodel(
 
             is OnMoveItemToGrid -> {
                 viewModelScope.launch {
-                    areaRepository.upsertItem(action.item
+                    appRepository.upsertItem(action.item
                         .copy(
                             onArea = true,
                             cornerPoints = action.item.cornerPoints.map { point ->
@@ -401,7 +414,7 @@ class MainScreenViewmodel(
             is OnMoveItemToShortAccess -> {
                 viewModelScope.launch {
                     //Upsert item but moved to the coordinate startpoint
-                    areaRepository.upsertItem(action.item.withCornerPointsAtOrigin().copy(
+                    appRepository.upsertItem(action.item.withCornerPointsAtOrigin().copy(
                         onArea = false,
                     ))
 
@@ -414,7 +427,7 @@ class MainScreenViewmodel(
 
             is CreateConnection -> {
                 CoroutineScope(Dispatchers.IO).launch {
-                    areaRepository.upsertConnection(
+                    appRepository.upsertConnection(
                         connection = NetworkConnection(
                             userName = action.userName,
                             serverUrl = action.serverurl,
@@ -422,8 +435,8 @@ class MainScreenViewmodel(
                         )
                     )
 
-                    areaRepository.syncNetworkElements()
-                    val areacount = areaRepository.getAreaCount()
+                    appRepository.syncNetworkElements()
+                    val areacount = appRepository.getAreaCount()
 
                     if (areacount != 0){
                         println("Loaded a new area from network")
