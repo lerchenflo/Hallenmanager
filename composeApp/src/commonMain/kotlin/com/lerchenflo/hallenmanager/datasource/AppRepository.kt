@@ -261,7 +261,6 @@ class AppRepository(
 
         if (!ignoreLocal){
             if (latestservertimestamp == null || latestservertimestamp.toLong() <= timestampCache.value.toLong()){
-                println("No remote changes")
                 return
             }
         }

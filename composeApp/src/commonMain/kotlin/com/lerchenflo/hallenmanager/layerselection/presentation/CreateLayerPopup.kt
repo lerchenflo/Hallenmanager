@@ -23,7 +23,9 @@ import hallenmanager.composeapp.generated.resources.Res
 import hallenmanager.composeapp.generated.resources.add_layer_titletext
 import hallenmanager.composeapp.generated.resources.layerinfo
 import hallenmanager.composeapp.generated.resources.name
+import io.ktor.client.request.invoke
 import org.jetbrains.compose.resources.stringResource
+import kotlin.random.Random
 import kotlin.time.Clock
 
 @Composable
@@ -36,9 +38,7 @@ fun CreateLayerPopup(
     var title by remember { mutableStateOf(layer?.name ?: "") }
 
     var color by remember {
-        mutableStateOf(
-            layer?.color?.let { Color(it.toULong()) } ?: Color(0,255,255)
-        )
+        mutableStateOf(layer?.color?.let { Color(it.toULong()) })
     }
 
 
@@ -69,8 +69,11 @@ fun CreateLayerPopup(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+
+
                 ColorPicker(
                     onSelectColor = {
+                        println("Color set: $it")
                         color = it
                     },
 
@@ -88,7 +91,7 @@ fun CreateLayerPopup(
                     name = title,
                     sortId = 0,
                     shown = true,
-                    color = color.value.toLong(),
+                    color = color?.value?.toLong() ?: getRandomColor().value.toLong(), //Random color if no color is selected
                     networkConnectionId = networkConnectionId,
                     createdAt = currentInstant,
                     lastchangedAt = currentInstant,
@@ -109,5 +112,19 @@ fun CreateLayerPopup(
             onDismiss()
         }
 
+    )
+}
+
+private fun getRandomColor() : Color {
+    val red = Random.nextInt(0x00, 0xFF)
+    val blue = Random.nextInt(0x00, 0xFF)
+    val green = Random.nextInt(0x00, 0xFF)
+    val alpha = Random.nextInt(0x00, 0xFF)
+
+    return Color(
+        red = red,
+        blue = blue,
+        green = green,
+        alpha = alpha
     )
 }
