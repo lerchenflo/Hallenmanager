@@ -2,8 +2,10 @@
 <resources>
     <string name="app_name">Hallenmanager</string>
     <string name="searchbarhint">Search item</string>
-    <string name="add_item_titletext">Configure this new item</string>
-    <string name="add_area_titletext">Configure this new area</string>
+    <string name="add_item_titletext">Configure this item</string>
+    <string name="add_area_titletext">Configure this area</string>
+    <string name="add_layer_titletext">Configure this layer</string>
+
     <string name="name">Name</string>
     <string name="desc">Description</string>
     <string name="area_not_created">No area created</string>
@@ -38,6 +40,8 @@
 
     <string name="iteminfo">Iteminfo</string>
     <string name="areainfo">Areainfo</string>
+    <string name="layerinfo">Layerinfo</string>
+
 
 
 

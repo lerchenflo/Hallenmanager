@@ -12,18 +12,26 @@ import com.lerchenflo.hallenmanager.mainscreen.domain.toArea
 import com.lerchenflo.hallenmanager.mainscreen.domain.toAreaWithItemsDto
 import com.lerchenflo.hallenmanager.mainscreen.domain.toItem
 import com.lerchenflo.hallenmanager.mainscreen.domain.toItemDto
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 import kotlin.text.ifEmpty
 import kotlin.time.Clock
 
-class AreaRepository(
+class AppRepository(
     private val database: AppDatabase,
     private val networkUtils: NetworkUtils
 ) {
 
-    //TODO: Auto generate Keys and use different key if synced
+
+
+
 
     /**
      * Upsert an area to the local db and the remote server if synced
@@ -47,7 +55,7 @@ class AreaRepository(
     }
 
     private suspend fun upsertAreaToDB(area: Area) : Area {
-        val upsertedArea = database.areaDao().upsertAreaWithItems(areaWithItems = area.toAreaWithItemsDto())
+        val upsertedArea = database.dao().upsertAreaWithItems(areaWithItems = area.toAreaWithItemsDto())
         return upsertedArea.toArea()
     }
 
@@ -58,14 +66,14 @@ class AreaRepository(
 
         lateinit var returneditem : Item
 
-        val parentArea = database.areaDao().getAreaById(item.areaId)?.toArea()
+        val parentArea = database.dao().getAreaById(item.areaId)?.toArea()
 
         if (parentArea != null){
             if (parentArea.isRemoteArea()) {
                 val remoteItem = networkUtils.upsertItem(item = item, getNetworkConnectionById(parentArea.networkConnectionId!!))
 
                 return if (remoteItem != null){
-                    database.areaDao().upsertItemWithCorners(remoteItem.toItemDto()).toItem()
+                    database.dao().upsertItemWithCorners(remoteItem.toItemDto()).toItem()
                 }else {
                     println("No network connection")
                     //TODO: SHow infopopup?
@@ -76,7 +84,7 @@ class AreaRepository(
                     itemid = item.itemid.ifEmpty { Clock.System.now().toEpochMilliseconds().toString() }
                 )
 
-                returneditem = database.areaDao().upsertItemWithCorners(fixedItem.toItemDto()).toItem()
+                returneditem = database.dao().upsertItemWithCorners(fixedItem.toItemDto()).toItem()
             }
         }
 
@@ -92,7 +100,7 @@ class AreaRepository(
             val updatedLayer = networkUtils.upsertLayer(layer, getNetworkConnectionById(layer.networkConnectionId!!))
 
             return if (updatedLayer != null){
-                database.areaDao().upsertLayer(layer = updatedLayer)
+                database.dao().upsertLayer(layer = updatedLayer)
             }else {
                 println("No network connection")
                 layer
@@ -102,14 +110,14 @@ class AreaRepository(
                 layerid = layer.layerid.ifEmpty { Clock.System.now().toEpochMilliseconds().toString() }
             )
 
-            returnedlayer = database.areaDao().upsertLayer(fixedLayer)
+            returnedlayer = database.dao().upsertLayer(fixedLayer)
         }
 
         return returnedlayer
     }
 
     suspend fun upsertConnection(connection: NetworkConnection) {
-        database.areaDao().upsertConnection(connection)
+        database.dao().upsertConnection(connection)
     }
 
     suspend fun upsertLayerList(layers: List<Layer>){
@@ -123,11 +131,11 @@ class AreaRepository(
 
 
     suspend fun getAreaCount(): Int {
-        return database.areaDao().getAreaCount()
+        return database.dao().getAreaCount()
     }
 
     fun getAreas(): Flow<List<Area>> {
-        return database.areaDao().getAreas().map { arealist ->
+        return database.dao().getAreas().map { arealist ->
             arealist.map {areaWithItemsDto ->
                 areaWithItemsDto.toArea()
             }
@@ -135,14 +143,14 @@ class AreaRepository(
     }
 
     suspend fun getAllAreas(): List<Area> {
-        return database.areaDao().getAllAreas().map {
+        return database.dao().getAllAreas().map {
             it.toArea()
         }
     }
 
 
     fun getShortAccessItemsFlow(): Flow<List<Item>> {
-        return database.areaDao().getShortAccessItems().map { items ->
+        return database.dao().getShortAccessItems().map { items ->
             items.map {
                 it.toItem()
             }
@@ -150,21 +158,21 @@ class AreaRepository(
     }
 
     fun getAreaByIdFlow(areaid: String = "") : Flow<Area> {
-        return database.areaDao().getAreaByIdFlow(areaid).mapNotNull {
+        return database.dao().getAreaByIdFlow(areaid).mapNotNull {
             it?.toArea()
         }
     }
 
     suspend fun getAreaById(areaId: String) : Area? {
-        return database.areaDao().getAreaById(areaId)?.toArea()
+        return database.dao().getAreaById(areaId)?.toArea()
     }
 
     suspend fun getFirstArea() : Area? {
-        return database.areaDao().getFirstArea()?.toArea()
+        return database.dao().getFirstArea()?.toArea()
     }
 
     fun getAllItems(): Flow<List<Item>> {
-        return database.areaDao().getAllItemsFlow().map { items ->
+        return database.dao().getAllItemsFlow().map { items ->
             items.map { itemdto ->
                 itemdto.toItem()
             }
@@ -172,11 +180,11 @@ class AreaRepository(
     }
 
     fun getItemsFlow(areaid: String): Flow<List<ItemWithListsDto>> {
-        return database.areaDao().getItemsForAreaFlow(areaid)
+        return database.dao().getItemsForAreaFlow(areaid)
     }
 
     fun getAllLayersFlow(): Flow<List<Layer>> {
-        return database.areaDao().getAllLayersFlow().map { layerDtos ->
+        return database.dao().getAllLayersFlow().map { layerDtos ->
             layerDtos.map { layerDto ->
                 layerDto.toLayer()
             }
@@ -188,39 +196,97 @@ class AreaRepository(
 
 
     suspend fun getAllNetworkConnections(): List<NetworkConnection> {
-        return database.areaDao().getAllNetworkConnections()
+        return database.dao().getAllNetworkConnections()
     }
 
     fun getAllNetworkConnectionsFlow(): Flow<List<NetworkConnection>> {
-        return database.areaDao().getAllNetworkConnectionsFlow()
+        return database.dao().getAllNetworkConnectionsFlow()
     }
 
     suspend fun getNetworkConnectionById(id: Long) : NetworkConnection{
-        return database.areaDao().getNetworkConnectionById(id)
+        return database.dao().getNetworkConnectionById(id)
     }
 
-    suspend fun syncNetworkElements(){
-        val localConnections = database.areaDao().getAllNetworkConnections()
 
-        val localAreas = database.areaDao().getAllAreas().map {
+    private val _timestampCache = MutableStateFlow<String>("0")
+    val timestampCache: StateFlow<String> = _timestampCache.asStateFlow()
+
+
+    fun observeTimestamps(scope: CoroutineScope) {
+        scope.launch {
+            database.dao().getLatestAreaTimestamp()
+                .collect { timestamp ->
+                    timestamp?.let {
+                        updateTimeStamp(timestamp)
+                    }
+                }
+        }
+
+        // Observe item timestamps
+        scope.launch {
+            database.dao().getLatestItemTimestamp()
+                .collect { timestamp ->
+                    timestamp?.let {
+                        updateTimeStamp(timestamp)
+
+                    }
+                }
+        }
+
+        // Observe layer timestamps
+        scope.launch {
+            database.dao().getLatestLayerTimestamp()
+                .collect { timestamp ->
+                    timestamp?.let {
+                        updateTimeStamp(timestamp)
+                    }
+                }
+        }
+    }
+
+    private fun updateTimeStamp(timestamp: String) {
+        if (_timestampCache.value.toLong() < timestamp.toLong()){
+            _timestampCache.value = timestamp
+        }
+    }
+
+
+
+    suspend fun syncNetworkElements(ignoreLocal : Boolean = false){
+
+        val localConnections = database.dao().getAllNetworkConnections()
+
+
+        val latestservertimestamp = networkUtils.getLatestChangeTime(localConnections)
+
+        if (!ignoreLocal){
+            if (latestservertimestamp == null || latestservertimestamp.toLong() <= timestampCache.value.toLong()){
+                return
+            }
+        }
+
+
+
+        println("Sync gets executed")
+        val localAreas = database.dao().getAllAreas().map {
             it.toArea()
         }.filter { it.isRemoteArea() }
 
-        val localItems = database.areaDao().getAllItems().map {
+        val localItems = database.dao().getAllItems().map {
             it.toItem()
         }.filter { it.isRemoteItem() }
 
-        val localLayers = database.areaDao().getAllLayers()
+        val localLayers = database.dao().getAllLayers()
             .map { it.toLayer() }
             .filter { it.isRemoteLayer() }
 
         val arearesponse = networkUtils.areaSync(localConnections, localAreas)
         arearesponse.first.forEach { area ->
-            database.areaDao().upsertAreaDto(area)
+            database.dao().upsertAreaDto(area)
         }
         //Delete areas
         arearesponse.second.forEach { areaid ->
-            database.areaDao().deleteAreaDtoById(areaid)
+            database.dao().deleteAreaDtoById(areaid)
         }
 
 
@@ -228,26 +294,26 @@ class AreaRepository(
 
         val itemandcornersync = networkUtils.itemSync(localConnections, localItems)
         itemandcornersync.first.first.forEach { itemDto ->
-            database.areaDao().upsertItem(itemDto)
+            database.dao().upsertItem(itemDto)
         }
-        database.areaDao().upsertCornerPoints(itemandcornersync.first.second)
+        database.dao().upsertCornerPoints(itemandcornersync.first.second)
         itemandcornersync.first.third.forEach { crossRef ->
-            database.areaDao().insertItemLayerCrossRef(crossRef)
+            database.dao().insertItemLayerCrossRef(crossRef)
         }
 
         //Delete items
         itemandcornersync.second.forEach { itemid ->
-            database.areaDao().deleteItemById(itemid)
+            database.dao().deleteItemById(itemid)
         }
 
 
         val newlayers = networkUtils.layerSync(localConnections, localLayers)
         newlayers.first.forEach { layerDto ->
-            database.areaDao().upsertLayer(layerdto = layerDto)
+            database.dao().upsertLayer(layerdto = layerDto)
         }
 
         newlayers.second.forEach { layerid ->
-            database.areaDao().deleteLayerById(layerid)
+            database.dao().deleteLayerById(layerid)
         }
         println("Local item count: ${localItems.count()}")
         println("Local Area count: ${localAreas.count()}")

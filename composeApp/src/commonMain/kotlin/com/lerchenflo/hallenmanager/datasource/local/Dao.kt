@@ -22,7 +22,7 @@ import com.lerchenflo.hallenmanager.mainscreen.data.relations.ItemWithListsDto
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface AreaDao {
+interface Dao {
 
     @Transaction
     suspend fun upsertAreaDto(area: AreaDto): AreaDto {
@@ -236,6 +236,16 @@ interface AreaDao {
     suspend fun getLayerCrossRefsForItem(itemId: String): List<ItemLayerCrossRef>
 
 
+
+    //For sync
+    @Query("SELECT MAX(lastchangedAt) FROM areas")
+    fun getLatestAreaTimestamp(): Flow<String?>
+
+    @Query("SELECT MAX(lastchangedAt) FROM itemdto")
+    fun getLatestItemTimestamp(): Flow<String?>
+
+    @Query("SELECT MAX(lastchangedAt) FROM layerdto")
+    fun getLatestLayerTimestamp(): Flow<String?>
 
 
 

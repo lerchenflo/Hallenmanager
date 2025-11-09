@@ -27,7 +27,7 @@ import com.lerchenflo.hallenmanager.mainscreen.data.ItemDto
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase: RoomDatabase() {
-    abstract fun areaDao(): AreaDao
+    abstract fun dao(): Dao
 
 
     companion object {
