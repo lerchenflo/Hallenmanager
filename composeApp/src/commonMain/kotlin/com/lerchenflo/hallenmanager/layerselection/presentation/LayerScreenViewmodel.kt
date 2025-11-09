@@ -10,7 +10,9 @@ import com.lerchenflo.hallenmanager.datasource.AppRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class LayerScreenViewmodel(
@@ -21,21 +23,24 @@ class LayerScreenViewmodel(
     var state by mutableStateOf(LayerScreenState())
         private set
 
+    private val _selectedArea = MutableStateFlow(state.selectedArea)
+
+
 
     init {
         viewModelScope.launch {
-            appRepository.getAllLayersFlow().collectLatest {
-                val layers = it.filter { layer ->
-                    layer.networkConnectionId == state.selectedArea.networkConnectionId //Only show layers for the current area (If synced and where synced)
+            combine(
+                appRepository.getAllLayersFlow(),
+                _selectedArea
+            ) { layers, selectedArea ->
+                val filtered = layers.filter { layer ->
+                    selectedArea.networkConnectionId == layer.networkConnectionId
                 }
-
-
-                if (state.availableLayers != layers){
-                    state = state.copy(
-                        availableLayers = layers
-                    )
+                filtered
+            }.collectLatest { filteredLayers ->
+                if (state.availableLayers != filteredLayers) {
+                    state = state.copy(availableLayers = filteredLayers)
                 }
-
             }
         }
     }
@@ -106,8 +111,9 @@ class LayerScreenViewmodel(
                 viewModelScope.launch {
                     val area = appRepository.getAreaById(action.areaid)
 
+                    _selectedArea.value = area!!
                     state = state.copy(
-                        selectedArea = area!!
+                        selectedArea = area
                     )
                 }
 
